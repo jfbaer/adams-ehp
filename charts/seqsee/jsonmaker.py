@@ -250,26 +250,6 @@ def extract_edge_attributes(row, edge_type, nodes):
     return ret
 
 
-def lambda_label(word, n):
-    """LaTeX lambda-algebra name for a class's index word, wrapped in $...$
-    for the tooltip's KaTeX pass: "2 1" -> $\\lambda_2\\lambda_1$. On the
-    n = 0 (S/2) column the leading symbol is the cell marker — e_0 (bottom)
-    or e_1 (top) — per the paper's e_{2n}Lambda (+) e_{2n-1}Lambda model.
-    An empty sphere word is the fundamental class iota. Falls back to the
-    raw word if a token is not an index."""
-    parts = str(word).split()
-    if any(not p.isdigit() for p in parts):
-        return word
-    lam = lambda ps: "".join(f"\\lambda_{{{p}}}" for p in ps)
-    if n == 0:
-        if not parts:
-            return word
-        cell = "e_0" if parts[0] == "0" else "e_1"
-        return f"${cell}{lam(parts[1:])}$"
-    if not parts:
-        return "$\\iota$"
-    return f"${lam(parts)}$"
-
 
 def label_from_node_name(node_name):
     """Apply substitutions to a node name to generate a label, wrapped in dollar signs for Latex."""
@@ -297,7 +277,7 @@ def deduplicate_name(name):
     return (name, False)
 
 
-def nodes_to_json(df, view_mode="sphere", filter_value=None, highlight_mode=None, highlight_targets=None, map_column=None, max_stem=None):
+def nodes_to_json(df, view_mode="sphere", filter_value=None, highlight_mode=None, highlight_targets=None, map_column=None, max_stem=None, max_filt=None):
     """Build the "nodes" JSON object (node name -> chart node) from the CSV frame.
 
     Sphere mode plots (stem, Adams filtration); stem mode plots (n, Adams
@@ -343,18 +323,15 @@ def nodes_to_json(df, view_mode="sphere", filter_value=None, highlight_mode=None
         if max_stem is not None and max_stem > 0 and view_mode == "sphere" and x > max_stem:
             continue
 
+        # Filtration cutoff: the total-degree window supports filtration only
+        # up to `max_filt` at the boundary stem, so cap every column there for
+        # a uniform top edge (dangling edges to dropped nodes are skipped).
+        if max_filt is not None and view_mode == "sphere" and y > max_filt:
+            continue
+
         label = try_get_key(row, "label", "")
         if not label:
             label = ""
-        # Tooltips show the class's lambda-algebra name (KaTeX-rendered).
-        try:
-            n_val = int(row["n"])
-        except (KeyError, TypeError, ValueError):
-            n_val = 1
-        if label or (view_mode == "sphere" and n_val >= 2
-                     and int(row["stem"]) == 0
-                     and int(row["Adams filtration"]) == 0):
-            label = lambda_label(label, n_val)
 
         node_data = {
             "x": x,
@@ -677,7 +654,7 @@ def _compute_highlight_targets(highlight_mode, source_csv, filter_value):
     return None
 
 
-def _build_chart_json(input_file, view_mode, filter_value, highlight_mode, source_csv, map_column, max_stem):
+def _build_chart_json(input_file, view_mode, filter_value, highlight_mode, source_csv, map_column, max_stem, max_filt=None):
     """Read a chart CSV and assemble the (not yet validated) chart JSON document."""
     df = pd.read_csv(input_file)
 
@@ -687,7 +664,7 @@ def _build_chart_json(input_file, view_mode, filter_value, highlight_mode, sourc
     highlight_targets = _compute_highlight_targets(highlight_mode, source_csv, filter_value)
 
     # Process nodes first
-    nodes = nodes_to_json(df, view_mode, filter_value, highlight_mode, highlight_targets, map_column, max_stem)
+    nodes = nodes_to_json(df, view_mode, filter_value, highlight_mode, highlight_targets, map_column, max_stem, max_filt)
 
     # Process edges after, since they depend on nodes
     edges = edges_to_json(df, nodes, view_mode, max_stem)
@@ -701,11 +678,11 @@ def _build_chart_json(input_file, view_mode, filter_value, highlight_mode, sourc
     }
 
 
-def process_csv(input_file, output_file, view_mode="sphere", filter_value=None, highlight_mode=None, source_csv=None, quiet=False, map_column=None, max_stem=None):
+def process_csv(input_file, output_file, view_mode="sphere", filter_value=None, highlight_mode=None, source_csv=None, quiet=False, map_column=None, max_stem=None, max_filt=None):
     """Convert a chart CSV to a validated chart JSON file at `output_file`."""
     schema = load_schema()
     json_data = _build_chart_json(
-        input_file, view_mode, filter_value, highlight_mode, source_csv, map_column, max_stem
+        input_file, view_mode, filter_value, highlight_mode, source_csv, map_column, max_stem, max_filt
     )
 
     # Validation and output
@@ -723,14 +700,14 @@ def process_csv(input_file, output_file, view_mode="sphere", filter_value=None, 
         raise e
 
 
-def process_csv_to_dict(input_file, view_mode="sphere", filter_value=None, highlight_mode=None, source_csv=None, map_column=None, max_stem=None):
+def process_csv_to_dict(input_file, view_mode="sphere", filter_value=None, highlight_mode=None, source_csv=None, map_column=None, max_stem=None, max_filt=None):
     """
     Process CSV to JSON data structure without writing to file.
     Useful for batch processing and multi-chart generation.
     """
     schema = load_schema()
     json_data = _build_chart_json(
-        input_file, view_mode, filter_value, highlight_mode, source_csv, map_column, max_stem
+        input_file, view_mode, filter_value, highlight_mode, source_csv, map_column, max_stem, max_filt
     )
 
     # Validation
@@ -824,6 +801,14 @@ def main():
         if max_stem is not None and max_stem <= 0:
             max_stem = None  # 0/negative disables the cutoff (full-width charts)
 
+    max_filt = None
+    if "--max-filt" in argv:
+        i = argv.index("--max-filt")
+        max_filt = int(argv[i + 1]) if i + 1 < len(argv) and argv[i + 1] != "" else None
+        del argv[i:i + 2]
+        if max_filt is not None and max_filt <= 0:
+            max_filt = None
+
     if len(argv) < 2 or len(argv) > 6:
         print("Usage: jsonmaker <input.csv> <output.json> [view_mode] [filter_value] [highlight_mode] [source_csv] [--map COL]")
         print("  view_mode: 'sphere' or 'stem' (default: sphere)")
@@ -840,7 +825,7 @@ def main():
     highlight_mode = argv[4] if len(argv) > 4 and argv[4] != "" else None
     source_csv = argv[5] if len(argv) > 5 and argv[5] != "" else None
 
-    process_csv(input_file, output_file, view_mode, filter_value, highlight_mode, source_csv, map_column=map_column, max_stem=max_stem)
+    process_csv(input_file, output_file, view_mode, filter_value, highlight_mode, source_csv, map_column=map_column, max_stem=max_stem, max_filt=max_filt)
 
 
 if __name__ == "__main__":

@@ -162,6 +162,8 @@ global_css = CssStyle()
 # CLI flag. When set, compute_chart_dimensions clamps the chart width so the
 # plot ends cleanly at this stem and incoming half-lines run off the edge.
 MAX_STEM = None
+# Companion cap on the y-axis (Adams filtration); set from --max-filt.
+MAX_FILT = None
 
 
 def get_theme_colors(theme="light"):
@@ -436,6 +438,11 @@ def compute_chart_dimensions(data):
     # to stem MAX_STEM+1) run off the chart instead of into an empty column.
     if MAX_STEM is not None and MAX_STEM > 0:
         data["header"]["chart"]["width"]["max"] = MAX_STEM
+
+    # Hard filtration cutoff: end the y-axis exactly at MAX_FILT so the
+    # boundary-column filtration ceiling applies uniformly across the chart.
+    if MAX_FILT is not None and MAX_FILT > 0:
+        data["header"]["chart"]["height"]["max"] = MAX_FILT
 
 
 def calculate_absolute_positions(data):
@@ -1737,6 +1744,18 @@ def main():
         del sys.argv[i:i + 2]
         if MAX_STEM is not None and MAX_STEM <= 0:
             MAX_STEM = None
+
+    global MAX_FILT
+    if "--max-filt" in sys.argv:
+        i = sys.argv.index("--max-filt")
+        val = sys.argv[i + 1] if i + 1 < len(sys.argv) else ""
+        try:
+            MAX_FILT = int(val)
+        except ValueError:
+            MAX_FILT = None
+        del sys.argv[i:i + 2]
+        if MAX_FILT is not None and MAX_FILT <= 0:
+            MAX_FILT = None
 
     if len(sys.argv) >= 2 and sys.argv[1] == "--sidebyside":
         # Side-by-side mode:

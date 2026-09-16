@@ -151,7 +151,7 @@ def expected_chart_files(output_dir, n, r, generate_light, generate_dark):
     return paths
 
 
-def generate_chart(csv_file, n, r, output_dir, generate_light, generate_dark, max_stem=None):
+def generate_chart(csv_file, n, r, output_dir, generate_light, generate_dark, max_stem=None, max_filt=None):
     """
     Generate JSON and HTML files for the sphere chart S^n on page E_r.
 
@@ -170,6 +170,8 @@ def generate_chart(csv_file, n, r, output_dir, generate_light, generate_dark, ma
     count = 0
     label = f"S{n} E{r}"
     stem_args = ["--max-stem", str(max_stem)] if max_stem else []
+    if max_filt:
+        stem_args = stem_args + ["--max-filt", str(max_filt)]
 
     # Generate JSON
     success = run_poetry_command(
@@ -201,7 +203,7 @@ def generate_chart(csv_file, n, r, output_dir, generate_light, generate_dark, ma
     return count
 
 
-def generate_map_sidebyside(map_key, n, r, output_dir, generate_light, generate_dark, csv_file):
+def generate_map_sidebyside(map_key, n, r, output_dir, generate_light, generate_dark, csv_file, max_filt=None):
     """
     Generate the side-by-side "map image" HTML for one map at source sphere n and
     page r, reusing the already-generated per-sphere JSONs. The left panel is the
@@ -228,7 +230,8 @@ def generate_map_sidebyside(map_key, n, r, output_dir, generate_light, generate_
     if not os.path.exists(map_json):
         ok = run_poetry_command(
             ["python", "jsonmaker.py", seqsee_path(csv_file), seqsee_path(map_json),
-             "sphere", str(n), "--map", spec["col"]],
+             "sphere", str(n), "--map", spec["col"]]
+            + (["--max-filt", str(max_filt)] if max_filt else []),
             f"{map_key}-map S{n} E{r} source JSON",
         )
         if not ok:
@@ -542,6 +545,14 @@ def main():
     output_dir = args.output_dir
     Path(output_dir).mkdir(exist_ok=True)
 
+    # Uniform filtration ceiling = tot - max_stem: the highest filtration the
+    # total-degree window supports at the boundary stem, applied to every
+    # column so both h0-towers and the boundary column end at the same height.
+    tot = max((int(re.match(r"E\d+_(\d+)\.csv$", os.path.basename(p)).group(1))
+               for p in page_csvs.values()), default=0)
+    filt_cap = (tot - args.max_stem) if (args.max_stem and args.max_stem > 0
+                                         and tot > 0) else None
+
     # Determine n-values per r-value from CSV data
     sphere_n_values = {r: get_n_values_from_csv(path)
                        for r, path in sorted(page_csvs.items())}
@@ -576,7 +587,7 @@ def main():
                 skipped += files_per
                 continue
 
-            count = generate_chart(csv_file, n, r, output_dir, generate_light, generate_dark, args.max_stem)
+            count = generate_chart(csv_file, n, r, output_dir, generate_light, generate_dark, args.max_stem, filt_cap)
             successful += count
 
     # --- Generate map-image side-by-side views (E/H/P/C2) ---
@@ -595,7 +606,7 @@ def main():
                     if n not in src_ns:
                         continue
                     sbs_count += generate_map_sidebyside(
-                        map_key, n, r, output_dir, generate_light, generate_dark, csv_file
+                        map_key, n, r, output_dir, generate_light, generate_dark, csv_file, filt_cap
                     )
 
     print(f"\n=== Generation Complete ===")

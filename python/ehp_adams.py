@@ -1678,6 +1678,22 @@ class SpectralSequencePage:
                         except (ValueError, AttributeError, KeyError):
                             # Product computation failed or not decomposable
                             pass
+                    if not row["h0target"]:
+                        # Extend an established lambda_0-tower to its top. h0 = lambda_0
+                        # climbs the tower (lambda_0^f -> lambda_0^{f+1}, and the even
+                        # stem-(n-1) tower likewise), but the top products fall outside
+                        # the computed relations/multiply window, so the column loses its
+                        # last edge. A tower class' name is a leading index followed by
+                        # all zeros; if the class one filtration up is that name with one
+                        # more trailing zero, draw the structural h0 edge to it.
+                        tokens = row["label"].split()
+                        if tokens and all(t == "0" for t in tokens[1:]):
+                            up = (n, s, f + 1)
+                            if self.has_elements(*up) and self.dimension[up] == 1:
+                                up_el = self.page[up][0]
+                                up_name = names_dict.get(str(up_el), str(up_el))
+                                if up_name.split() == tokens + ["0"]:
+                                    row["h0target"] = f"{n}_{s}_{f + 1}"
                     if h1 is not None:
                         try:
                             product = element * h1
