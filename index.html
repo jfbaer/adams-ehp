@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Spectral Sequence Navigator</title>
+    <style>
+        body {
+            font-family: 'Computer Modern Serif', serif;
+            margin: 0;
+            padding: 20px;
+            background: #eff1f5;
+            color: #4c4f69;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2.2em;
+            margin-bottom: 30px;
+            color: #179299;
+        }
+
+        .csv-section {
+            margin: 30px 0;
+            background: #e6e9ef;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .csv-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-align: center;
+            color: #179299;
+        }
+
+        .family-title {
+            font-size: 1.15em;
+            font-weight: bold;
+            margin: 15px 0 8px 0;
+            color: #5c5f77;
+        }
+
+        .sphere-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+            gap: 8px;
+            max-height: 500px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #dce0e8;
+            border-radius: 8px;
+        }
+
+        .sphere-card {
+            background: #ccd0da;
+            border: 2px solid #bcc0cc;
+            border-radius: 6px;
+            padding: 12px 8px;
+            text-decoration: none;
+            color: #4c4f69;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .sphere-card:hover {
+            background: #179299;
+            color: #eff1f5;
+            border-color: #179299;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .sphere-number {
+            font-size: 1.1em;
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+
+        .sphere-label {
+            font-size: 0.75em;
+            opacity: 0.8;
+        }
+
+        .instructions {
+            background: #dce0e8;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 30px 0;
+        }
+
+        .instructions h3 {
+            margin-top: 0;
+            color: #179299;
+            font-size: 1.3em;
+        }
+
+        .key-bindings {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 10px 20px;
+            margin: 15px 0;
+        }
+
+        .key {
+            font-family: monospace;
+            background: #179299;
+            color: #eff1f5;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+
+        .stats {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #dce0e8;
+            border-radius: 12px;
+            color: #5c5f77;
+            font-size: 1.1em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Interactive Spectral Sequence Navigator</h1>
+
+        <div class="instructions">
+            <h3>Navigation Controls</h3>
+            <div class="key-bindings">
+                <span class="key">s</span> <span>Move to n+1 within the same family (spheres or SO)</span>
+                <span class="key">w</span> <span>Move to n-1 within the same family (spheres or SO)</span>
+                <span class="key">d</span> <span>Move to next page E{r+1} (same space)</span>
+                <span class="key">a</span> <span>Move to previous page E{r-1} (same space)</span>
+                <span class="key">e</span> <span>E-map split-screen: S<sup>n</sup> beside S<sup>n+1</sup></span>
+                <span class="key">h</span> <span>H-map split-screen: S<sup>n</sup> beside S<sup>2n-1</sup></span>
+                <span class="key">p</span> <span>P-map split-screen (odd n&ge;5): S<sup>n</sup> beside S<sup>(n-1)/2</sup></span>
+                <span class="key">c</span> <span>C2-map split-screen: S<sup>n</sup> beside &#120138;/2</span>
+                <span class="key">E/H/P/C</span> <span>Same split-screen, with the map image highlighted</span>
+            </div>
+        </div>
+
+        <div class="csv-section">
+            <div class="csv-title">E2 Page (r = 2)</div>
+            <div class="family-title">Spheres</div>
+            <div class="sphere-grid">
+                <a href="S0_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 0</div>
+                    <div class="sphere-label">&#120138;/2</div>
+                </a>
+                <a href="S2_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 2</div>
+                    <div class="sphere-label">S<sup>2</sup></div>
+                </a>
+                <a href="S3_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 3</div>
+                    <div class="sphere-label">S<sup>3</sup></div>
+                </a>
+                <a href="S4_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 4</div>
+                    <div class="sphere-label">S<sup>4</sup></div>
+                </a>
+                <a href="S5_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 5</div>
+                    <div class="sphere-label">S<sup>5</sup></div>
+                </a>
+                <a href="S6_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 6</div>
+                    <div class="sphere-label">S<sup>6</sup></div>
+                </a>
+                <a href="S7_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 7</div>
+                    <div class="sphere-label">S<sup>7</sup></div>
+                </a>
+                <a href="S8_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 8</div>
+                    <div class="sphere-label">S<sup>8</sup></div>
+                </a>
+                <a href="S9_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 9</div>
+                    <div class="sphere-label">S<sup>9</sup></div>
+                </a>
+                <a href="S10_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 10</div>
+                    <div class="sphere-label">S<sup>10</sup></div>
+                </a>
+                <a href="S11_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 11</div>
+                    <div class="sphere-label">S<sup>11</sup></div>
+                </a>
+                <a href="S12_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 12</div>
+                    <div class="sphere-label">S<sup>12</sup></div>
+                </a>
+                <a href="S13_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 13</div>
+                    <div class="sphere-label">S<sup>13</sup></div>
+                </a>
+                <a href="S14_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 14</div>
+                    <div class="sphere-label">S<sup>14</sup></div>
+                </a>
+                <a href="S15_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 15</div>
+                    <div class="sphere-label">S<sup>15</sup></div>
+                </a>
+                <a href="S16_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 16</div>
+                    <div class="sphere-label">S<sup>16</sup></div>
+                </a>
+                <a href="S17_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 17</div>
+                    <div class="sphere-label">S<sup>17</sup></div>
+                </a>
+                <a href="S18_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 18</div>
+                    <div class="sphere-label">S<sup>18</sup></div>
+                </a>
+                <a href="S19_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 19</div>
+                    <div class="sphere-label">S<sup>19</sup></div>
+                </a>
+                <a href="S20_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 20</div>
+                    <div class="sphere-label">S<sup>20</sup></div>
+                </a>
+                <a href="S21_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 21</div>
+                    <div class="sphere-label">S<sup>21</sup></div>
+                </a>
+                <a href="S22_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 22</div>
+                    <div class="sphere-label">S<sup>22</sup></div>
+                </a>
+                <a href="S23_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 23</div>
+                    <div class="sphere-label">S<sup>23</sup></div>
+                </a>
+                <a href="S24_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 24</div>
+                    <div class="sphere-label">S<sup>24</sup></div>
+                </a>
+                <a href="S25_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 25</div>
+                    <div class="sphere-label">S<sup>25</sup></div>
+                </a>
+                <a href="S26_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 26</div>
+                    <div class="sphere-label">S<sup>26</sup></div>
+                </a>
+                <a href="S27_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 27</div>
+                    <div class="sphere-label">S<sup>27</sup></div>
+                </a>
+                <a href="S28_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 28</div>
+                    <div class="sphere-label">S<sup>28</sup></div>
+                </a>
+                <a href="S29_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 29</div>
+                    <div class="sphere-label">S<sup>29</sup></div>
+                </a>
+                <a href="S30_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 30</div>
+                    <div class="sphere-label">S<sup>30</sup></div>
+                </a>
+                <a href="S31_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 31</div>
+                    <div class="sphere-label">S<sup>31</sup></div>
+                </a>
+                <a href="S32_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 32</div>
+                    <div class="sphere-label">S<sup>32</sup></div>
+                </a>
+                <a href="S33_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 33</div>
+                    <div class="sphere-label">S<sup>33</sup></div>
+                </a>
+                <a href="S34_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 34</div>
+                    <div class="sphere-label">S<sup>34</sup></div>
+                </a>
+                <a href="S35_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 35</div>
+                    <div class="sphere-label">S<sup>35</sup></div>
+                </a>
+                <a href="S36_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 36</div>
+                    <div class="sphere-label">S<sup>36</sup></div>
+                </a>
+                <a href="S37_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 37</div>
+                    <div class="sphere-label">S<sup>37</sup></div>
+                </a>
+                <a href="S38_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 38</div>
+                    <div class="sphere-label">S<sup>38</sup></div>
+                </a>
+                <a href="S39_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 39</div>
+                    <div class="sphere-label">S<sup>39</sup></div>
+                </a>
+                <a href="S40_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 40</div>
+                    <div class="sphere-label">S<sup>40</sup></div>
+                </a>
+                <a href="S41_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 41</div>
+                    <div class="sphere-label">S<sup>41</sup></div>
+                </a>
+                <a href="S42_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 42</div>
+                    <div class="sphere-label">S<sup>42</sup></div>
+                </a>
+                <a href="S43_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 43</div>
+                    <div class="sphere-label">S<sup>43</sup></div>
+                </a>
+                <a href="S44_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 44</div>
+                    <div class="sphere-label">S<sup>44</sup></div>
+                </a>
+                <a href="S45_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 45</div>
+                    <div class="sphere-label">S<sup>45</sup></div>
+                </a>
+                <a href="S46_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 46</div>
+                    <div class="sphere-label">S<sup>46</sup></div>
+                </a>
+                <a href="S47_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 47</div>
+                    <div class="sphere-label">S<sup>47</sup></div>
+                </a>
+                <a href="S48_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 48</div>
+                    <div class="sphere-label">S<sup>48</sup></div>
+                </a>
+                <a href="S49_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 49</div>
+                    <div class="sphere-label">S<sup>49</sup></div>
+                </a>
+                <a href="S50_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 50</div>
+                    <div class="sphere-label">S<sup>50</sup></div>
+                </a>
+                <a href="S51_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 51</div>
+                    <div class="sphere-label">S<sup>51</sup></div>
+                </a>
+                <a href="S52_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 52</div>
+                    <div class="sphere-label">S<sup>52</sup></div>
+                </a>
+                <a href="S53_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 53</div>
+                    <div class="sphere-label">S<sup>53</sup></div>
+                </a>
+                <a href="S54_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 54</div>
+                    <div class="sphere-label">S<sup>54</sup></div>
+                </a>
+                <a href="S55_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 55</div>
+                    <div class="sphere-label">S<sup>55</sup></div>
+                </a>
+                <a href="S56_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 56</div>
+                    <div class="sphere-label">S<sup>56</sup></div>
+                </a>
+                <a href="S57_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 57</div>
+                    <div class="sphere-label">S<sup>57</sup></div>
+                </a>
+                <a href="S58_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 58</div>
+                    <div class="sphere-label">S<sup>58</sup></div>
+                </a>
+                <a href="S59_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 59</div>
+                    <div class="sphere-label">S<sup>59</sup></div>
+                </a>
+                <a href="S60_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 60</div>
+                    <div class="sphere-label">S<sup>60</sup></div>
+                </a>
+                <a href="S61_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 61</div>
+                    <div class="sphere-label">S<sup>61</sup></div>
+                </a>
+                <a href="S62_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 62</div>
+                    <div class="sphere-label">S<sup>62</sup></div>
+                </a>
+                <a href="S63_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 63</div>
+                    <div class="sphere-label">S<sup>63</sup></div>
+                </a>
+                <a href="S64_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 64</div>
+                    <div class="sphere-label">S<sup>64</sup></div>
+                </a>
+                <a href="S65_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 65</div>
+                    <div class="sphere-label">S<sup>65</sup></div>
+                </a>
+                <a href="S66_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 66</div>
+                    <div class="sphere-label">S<sup>66</sup></div>
+                </a>
+                <a href="S67_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 67</div>
+                    <div class="sphere-label">S<sup>67</sup></div>
+                </a>
+                <a href="S68_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 68</div>
+                    <div class="sphere-label">S<sup>68</sup></div>
+                </a>
+                <a href="S69_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 69</div>
+                    <div class="sphere-label">S<sup>69</sup></div>
+                </a>
+                <a href="S70_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 70</div>
+                    <div class="sphere-label">S<sup>70</sup></div>
+                </a>
+                <a href="S71_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 71</div>
+                    <div class="sphere-label">S<sup>71</sup></div>
+                </a>
+                <a href="S72_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 72</div>
+                    <div class="sphere-label">S<sup>72</sup></div>
+                </a>
+                <a href="S73_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 73</div>
+                    <div class="sphere-label">S<sup>73</sup></div>
+                </a>
+                <a href="S74_E2.html" class="sphere-card">
+                    <div class="sphere-number">n = 74</div>
+                    <div class="sphere-label">S<sup>74</sup></div>
+                </a>
+            </div>
+        </div>
+
+        <div class="csv-section">
+            <div class="csv-title">E3 Page (r = 3)</div>
+            <div class="family-title">Spheres</div>
+            <div class="sphere-grid">
+                <a href="S0_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 0</div>
+                    <div class="sphere-label">&#120138;/2</div>
+                </a>
+                <a href="S2_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 2</div>
+                    <div class="sphere-label">S<sup>2</sup></div>
+                </a>
+                <a href="S3_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 3</div>
+                    <div class="sphere-label">S<sup>3</sup></div>
+                </a>
+                <a href="S4_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 4</div>
+                    <div class="sphere-label">S<sup>4</sup></div>
+                </a>
+                <a href="S5_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 5</div>
+                    <div class="sphere-label">S<sup>5</sup></div>
+                </a>
+                <a href="S6_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 6</div>
+                    <div class="sphere-label">S<sup>6</sup></div>
+                </a>
+                <a href="S7_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 7</div>
+                    <div class="sphere-label">S<sup>7</sup></div>
+                </a>
+                <a href="S8_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 8</div>
+                    <div class="sphere-label">S<sup>8</sup></div>
+                </a>
+                <a href="S9_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 9</div>
+                    <div class="sphere-label">S<sup>9</sup></div>
+                </a>
+                <a href="S10_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 10</div>
+                    <div class="sphere-label">S<sup>10</sup></div>
+                </a>
+                <a href="S11_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 11</div>
+                    <div class="sphere-label">S<sup>11</sup></div>
+                </a>
+                <a href="S12_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 12</div>
+                    <div class="sphere-label">S<sup>12</sup></div>
+                </a>
+                <a href="S13_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 13</div>
+                    <div class="sphere-label">S<sup>13</sup></div>
+                </a>
+                <a href="S14_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 14</div>
+                    <div class="sphere-label">S<sup>14</sup></div>
+                </a>
+                <a href="S15_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 15</div>
+                    <div class="sphere-label">S<sup>15</sup></div>
+                </a>
+                <a href="S16_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 16</div>
+                    <div class="sphere-label">S<sup>16</sup></div>
+                </a>
+                <a href="S17_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 17</div>
+                    <div class="sphere-label">S<sup>17</sup></div>
+                </a>
+                <a href="S18_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 18</div>
+                    <div class="sphere-label">S<sup>18</sup></div>
+                </a>
+                <a href="S19_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 19</div>
+                    <div class="sphere-label">S<sup>19</sup></div>
+                </a>
+                <a href="S20_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 20</div>
+                    <div class="sphere-label">S<sup>20</sup></div>
+                </a>
+                <a href="S21_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 21</div>
+                    <div class="sphere-label">S<sup>21</sup></div>
+                </a>
+                <a href="S22_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 22</div>
+                    <div class="sphere-label">S<sup>22</sup></div>
+                </a>
+                <a href="S23_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 23</div>
+                    <div class="sphere-label">S<sup>23</sup></div>
+                </a>
+                <a href="S24_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 24</div>
+                    <div class="sphere-label">S<sup>24</sup></div>
+                </a>
+                <a href="S25_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 25</div>
+                    <div class="sphere-label">S<sup>25</sup></div>
+                </a>
+                <a href="S26_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 26</div>
+                    <div class="sphere-label">S<sup>26</sup></div>
+                </a>
+                <a href="S27_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 27</div>
+                    <div class="sphere-label">S<sup>27</sup></div>
+                </a>
+                <a href="S28_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 28</div>
+                    <div class="sphere-label">S<sup>28</sup></div>
+                </a>
+                <a href="S29_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 29</div>
+                    <div class="sphere-label">S<sup>29</sup></div>
+                </a>
+                <a href="S30_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 30</div>
+                    <div class="sphere-label">S<sup>30</sup></div>
+                </a>
+                <a href="S31_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 31</div>
+                    <div class="sphere-label">S<sup>31</sup></div>
+                </a>
+                <a href="S32_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 32</div>
+                    <div class="sphere-label">S<sup>32</sup></div>
+                </a>
+                <a href="S33_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 33</div>
+                    <div class="sphere-label">S<sup>33</sup></div>
+                </a>
+                <a href="S34_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 34</div>
+                    <div class="sphere-label">S<sup>34</sup></div>
+                </a>
+                <a href="S35_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 35</div>
+                    <div class="sphere-label">S<sup>35</sup></div>
+                </a>
+                <a href="S36_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 36</div>
+                    <div class="sphere-label">S<sup>36</sup></div>
+                </a>
+                <a href="S37_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 37</div>
+                    <div class="sphere-label">S<sup>37</sup></div>
+                </a>
+                <a href="S38_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 38</div>
+                    <div class="sphere-label">S<sup>38</sup></div>
+                </a>
+                <a href="S39_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 39</div>
+                    <div class="sphere-label">S<sup>39</sup></div>
+                </a>
+                <a href="S40_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 40</div>
+                    <div class="sphere-label">S<sup>40</sup></div>
+                </a>
+                <a href="S41_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 41</div>
+                    <div class="sphere-label">S<sup>41</sup></div>
+                </a>
+                <a href="S42_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 42</div>
+                    <div class="sphere-label">S<sup>42</sup></div>
+                </a>
+                <a href="S43_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 43</div>
+                    <div class="sphere-label">S<sup>43</sup></div>
+                </a>
+                <a href="S44_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 44</div>
+                    <div class="sphere-label">S<sup>44</sup></div>
+                </a>
+                <a href="S45_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 45</div>
+                    <div class="sphere-label">S<sup>45</sup></div>
+                </a>
+                <a href="S46_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 46</div>
+                    <div class="sphere-label">S<sup>46</sup></div>
+                </a>
+                <a href="S47_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 47</div>
+                    <div class="sphere-label">S<sup>47</sup></div>
+                </a>
+                <a href="S48_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 48</div>
+                    <div class="sphere-label">S<sup>48</sup></div>
+                </a>
+                <a href="S49_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 49</div>
+                    <div class="sphere-label">S<sup>49</sup></div>
+                </a>
+                <a href="S50_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 50</div>
+                    <div class="sphere-label">S<sup>50</sup></div>
+                </a>
+                <a href="S51_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 51</div>
+                    <div class="sphere-label">S<sup>51</sup></div>
+                </a>
+                <a href="S52_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 52</div>
+                    <div class="sphere-label">S<sup>52</sup></div>
+                </a>
+                <a href="S53_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 53</div>
+                    <div class="sphere-label">S<sup>53</sup></div>
+                </a>
+                <a href="S54_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 54</div>
+                    <div class="sphere-label">S<sup>54</sup></div>
+                </a>
+                <a href="S55_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 55</div>
+                    <div class="sphere-label">S<sup>55</sup></div>
+                </a>
+                <a href="S56_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 56</div>
+                    <div class="sphere-label">S<sup>56</sup></div>
+                </a>
+                <a href="S57_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 57</div>
+                    <div class="sphere-label">S<sup>57</sup></div>
+                </a>
+                <a href="S58_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 58</div>
+                    <div class="sphere-label">S<sup>58</sup></div>
+                </a>
+                <a href="S59_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 59</div>
+                    <div class="sphere-label">S<sup>59</sup></div>
+                </a>
+                <a href="S60_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 60</div>
+                    <div class="sphere-label">S<sup>60</sup></div>
+                </a>
+                <a href="S61_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 61</div>
+                    <div class="sphere-label">S<sup>61</sup></div>
+                </a>
+                <a href="S62_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 62</div>
+                    <div class="sphere-label">S<sup>62</sup></div>
+                </a>
+                <a href="S63_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 63</div>
+                    <div class="sphere-label">S<sup>63</sup></div>
+                </a>
+                <a href="S64_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 64</div>
+                    <div class="sphere-label">S<sup>64</sup></div>
+                </a>
+                <a href="S65_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 65</div>
+                    <div class="sphere-label">S<sup>65</sup></div>
+                </a>
+                <a href="S66_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 66</div>
+                    <div class="sphere-label">S<sup>66</sup></div>
+                </a>
+                <a href="S67_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 67</div>
+                    <div class="sphere-label">S<sup>67</sup></div>
+                </a>
+                <a href="S68_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 68</div>
+                    <div class="sphere-label">S<sup>68</sup></div>
+                </a>
+                <a href="S69_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 69</div>
+                    <div class="sphere-label">S<sup>69</sup></div>
+                </a>
+                <a href="S70_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 70</div>
+                    <div class="sphere-label">S<sup>70</sup></div>
+                </a>
+                <a href="S71_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 71</div>
+                    <div class="sphere-label">S<sup>71</sup></div>
+                </a>
+                <a href="S72_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 72</div>
+                    <div class="sphere-label">S<sup>72</sup></div>
+                </a>
+                <a href="S73_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 73</div>
+                    <div class="sphere-label">S<sup>73</sup></div>
+                </a>
+                <a href="S74_E3.html" class="sphere-card">
+                    <div class="sphere-number">n = 74</div>
+                    <div class="sphere-label">S<sup>74</sup></div>
+                </a>
+            </div>
+        </div>
+
+        <div class="csv-section">
+            <div class="csv-title">E4 Page (r = 4)</div>
+            <div class="family-title">Spheres</div>
+            <div class="sphere-grid">
+                <a href="S0_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 0</div>
+                    <div class="sphere-label">&#120138;/2</div>
+                </a>
+                <a href="S2_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 2</div>
+                    <div class="sphere-label">S<sup>2</sup></div>
+                </a>
+                <a href="S3_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 3</div>
+                    <div class="sphere-label">S<sup>3</sup></div>
+                </a>
+                <a href="S4_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 4</div>
+                    <div class="sphere-label">S<sup>4</sup></div>
+                </a>
+                <a href="S5_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 5</div>
+                    <div class="sphere-label">S<sup>5</sup></div>
+                </a>
+                <a href="S6_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 6</div>
+                    <div class="sphere-label">S<sup>6</sup></div>
+                </a>
+                <a href="S7_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 7</div>
+                    <div class="sphere-label">S<sup>7</sup></div>
+                </a>
+                <a href="S8_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 8</div>
+                    <div class="sphere-label">S<sup>8</sup></div>
+                </a>
+                <a href="S9_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 9</div>
+                    <div class="sphere-label">S<sup>9</sup></div>
+                </a>
+                <a href="S10_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 10</div>
+                    <div class="sphere-label">S<sup>10</sup></div>
+                </a>
+                <a href="S11_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 11</div>
+                    <div class="sphere-label">S<sup>11</sup></div>
+                </a>
+                <a href="S12_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 12</div>
+                    <div class="sphere-label">S<sup>12</sup></div>
+                </a>
+                <a href="S13_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 13</div>
+                    <div class="sphere-label">S<sup>13</sup></div>
+                </a>
+                <a href="S14_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 14</div>
+                    <div class="sphere-label">S<sup>14</sup></div>
+                </a>
+                <a href="S15_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 15</div>
+                    <div class="sphere-label">S<sup>15</sup></div>
+                </a>
+                <a href="S16_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 16</div>
+                    <div class="sphere-label">S<sup>16</sup></div>
+                </a>
+                <a href="S17_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 17</div>
+                    <div class="sphere-label">S<sup>17</sup></div>
+                </a>
+                <a href="S18_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 18</div>
+                    <div class="sphere-label">S<sup>18</sup></div>
+                </a>
+                <a href="S19_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 19</div>
+                    <div class="sphere-label">S<sup>19</sup></div>
+                </a>
+                <a href="S20_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 20</div>
+                    <div class="sphere-label">S<sup>20</sup></div>
+                </a>
+                <a href="S21_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 21</div>
+                    <div class="sphere-label">S<sup>21</sup></div>
+                </a>
+                <a href="S22_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 22</div>
+                    <div class="sphere-label">S<sup>22</sup></div>
+                </a>
+                <a href="S23_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 23</div>
+                    <div class="sphere-label">S<sup>23</sup></div>
+                </a>
+                <a href="S24_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 24</div>
+                    <div class="sphere-label">S<sup>24</sup></div>
+                </a>
+                <a href="S25_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 25</div>
+                    <div class="sphere-label">S<sup>25</sup></div>
+                </a>
+                <a href="S26_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 26</div>
+                    <div class="sphere-label">S<sup>26</sup></div>
+                </a>
+                <a href="S27_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 27</div>
+                    <div class="sphere-label">S<sup>27</sup></div>
+                </a>
+                <a href="S28_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 28</div>
+                    <div class="sphere-label">S<sup>28</sup></div>
+                </a>
+                <a href="S29_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 29</div>
+                    <div class="sphere-label">S<sup>29</sup></div>
+                </a>
+                <a href="S30_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 30</div>
+                    <div class="sphere-label">S<sup>30</sup></div>
+                </a>
+                <a href="S31_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 31</div>
+                    <div class="sphere-label">S<sup>31</sup></div>
+                </a>
+                <a href="S32_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 32</div>
+                    <div class="sphere-label">S<sup>32</sup></div>
+                </a>
+                <a href="S33_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 33</div>
+                    <div class="sphere-label">S<sup>33</sup></div>
+                </a>
+                <a href="S34_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 34</div>
+                    <div class="sphere-label">S<sup>34</sup></div>
+                </a>
+                <a href="S35_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 35</div>
+                    <div class="sphere-label">S<sup>35</sup></div>
+                </a>
+                <a href="S36_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 36</div>
+                    <div class="sphere-label">S<sup>36</sup></div>
+                </a>
+                <a href="S37_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 37</div>
+                    <div class="sphere-label">S<sup>37</sup></div>
+                </a>
+                <a href="S38_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 38</div>
+                    <div class="sphere-label">S<sup>38</sup></div>
+                </a>
+                <a href="S39_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 39</div>
+                    <div class="sphere-label">S<sup>39</sup></div>
+                </a>
+                <a href="S40_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 40</div>
+                    <div class="sphere-label">S<sup>40</sup></div>
+                </a>
+                <a href="S41_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 41</div>
+                    <div class="sphere-label">S<sup>41</sup></div>
+                </a>
+                <a href="S42_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 42</div>
+                    <div class="sphere-label">S<sup>42</sup></div>
+                </a>
+                <a href="S43_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 43</div>
+                    <div class="sphere-label">S<sup>43</sup></div>
+                </a>
+                <a href="S44_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 44</div>
+                    <div class="sphere-label">S<sup>44</sup></div>
+                </a>
+                <a href="S45_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 45</div>
+                    <div class="sphere-label">S<sup>45</sup></div>
+                </a>
+                <a href="S46_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 46</div>
+                    <div class="sphere-label">S<sup>46</sup></div>
+                </a>
+                <a href="S47_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 47</div>
+                    <div class="sphere-label">S<sup>47</sup></div>
+                </a>
+                <a href="S48_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 48</div>
+                    <div class="sphere-label">S<sup>48</sup></div>
+                </a>
+                <a href="S49_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 49</div>
+                    <div class="sphere-label">S<sup>49</sup></div>
+                </a>
+                <a href="S50_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 50</div>
+                    <div class="sphere-label">S<sup>50</sup></div>
+                </a>
+                <a href="S51_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 51</div>
+                    <div class="sphere-label">S<sup>51</sup></div>
+                </a>
+                <a href="S52_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 52</div>
+                    <div class="sphere-label">S<sup>52</sup></div>
+                </a>
+                <a href="S53_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 53</div>
+                    <div class="sphere-label">S<sup>53</sup></div>
+                </a>
+                <a href="S54_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 54</div>
+                    <div class="sphere-label">S<sup>54</sup></div>
+                </a>
+                <a href="S55_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 55</div>
+                    <div class="sphere-label">S<sup>55</sup></div>
+                </a>
+                <a href="S56_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 56</div>
+                    <div class="sphere-label">S<sup>56</sup></div>
+                </a>
+                <a href="S57_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 57</div>
+                    <div class="sphere-label">S<sup>57</sup></div>
+                </a>
+                <a href="S58_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 58</div>
+                    <div class="sphere-label">S<sup>58</sup></div>
+                </a>
+                <a href="S59_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 59</div>
+                    <div class="sphere-label">S<sup>59</sup></div>
+                </a>
+                <a href="S60_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 60</div>
+                    <div class="sphere-label">S<sup>60</sup></div>
+                </a>
+                <a href="S61_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 61</div>
+                    <div class="sphere-label">S<sup>61</sup></div>
+                </a>
+                <a href="S62_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 62</div>
+                    <div class="sphere-label">S<sup>62</sup></div>
+                </a>
+                <a href="S63_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 63</div>
+                    <div class="sphere-label">S<sup>63</sup></div>
+                </a>
+                <a href="S64_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 64</div>
+                    <div class="sphere-label">S<sup>64</sup></div>
+                </a>
+                <a href="S65_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 65</div>
+                    <div class="sphere-label">S<sup>65</sup></div>
+                </a>
+                <a href="S66_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 66</div>
+                    <div class="sphere-label">S<sup>66</sup></div>
+                </a>
+                <a href="S67_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 67</div>
+                    <div class="sphere-label">S<sup>67</sup></div>
+                </a>
+                <a href="S68_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 68</div>
+                    <div class="sphere-label">S<sup>68</sup></div>
+                </a>
+                <a href="S69_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 69</div>
+                    <div class="sphere-label">S<sup>69</sup></div>
+                </a>
+                <a href="S70_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 70</div>
+                    <div class="sphere-label">S<sup>70</sup></div>
+                </a>
+                <a href="S71_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 71</div>
+                    <div class="sphere-label">S<sup>71</sup></div>
+                </a>
+                <a href="S72_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 72</div>
+                    <div class="sphere-label">S<sup>72</sup></div>
+                </a>
+                <a href="S73_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 73</div>
+                    <div class="sphere-label">S<sup>73</sup></div>
+                </a>
+                <a href="S74_E4.html" class="sphere-card">
+                    <div class="sphere-number">n = 74</div>
+                    <div class="sphere-label">S<sup>74</sup></div>
+                </a>
+            </div>
+        </div>
+
+        <div class="csv-section">
+            <div class="csv-title">E5 Page (r = 5)</div>
+            <div class="family-title">Spheres</div>
+            <div class="sphere-grid">
+                <a href="S0_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 0</div>
+                    <div class="sphere-label">&#120138;/2</div>
+                </a>
+                <a href="S2_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 2</div>
+                    <div class="sphere-label">S<sup>2</sup></div>
+                </a>
+                <a href="S3_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 3</div>
+                    <div class="sphere-label">S<sup>3</sup></div>
+                </a>
+                <a href="S4_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 4</div>
+                    <div class="sphere-label">S<sup>4</sup></div>
+                </a>
+                <a href="S5_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 5</div>
+                    <div class="sphere-label">S<sup>5</sup></div>
+                </a>
+                <a href="S6_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 6</div>
+                    <div class="sphere-label">S<sup>6</sup></div>
+                </a>
+                <a href="S7_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 7</div>
+                    <div class="sphere-label">S<sup>7</sup></div>
+                </a>
+                <a href="S8_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 8</div>
+                    <div class="sphere-label">S<sup>8</sup></div>
+                </a>
+                <a href="S9_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 9</div>
+                    <div class="sphere-label">S<sup>9</sup></div>
+                </a>
+                <a href="S10_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 10</div>
+                    <div class="sphere-label">S<sup>10</sup></div>
+                </a>
+                <a href="S11_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 11</div>
+                    <div class="sphere-label">S<sup>11</sup></div>
+                </a>
+                <a href="S12_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 12</div>
+                    <div class="sphere-label">S<sup>12</sup></div>
+                </a>
+                <a href="S13_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 13</div>
+                    <div class="sphere-label">S<sup>13</sup></div>
+                </a>
+                <a href="S14_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 14</div>
+                    <div class="sphere-label">S<sup>14</sup></div>
+                </a>
+                <a href="S15_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 15</div>
+                    <div class="sphere-label">S<sup>15</sup></div>
+                </a>
+                <a href="S16_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 16</div>
+                    <div class="sphere-label">S<sup>16</sup></div>
+                </a>
+                <a href="S17_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 17</div>
+                    <div class="sphere-label">S<sup>17</sup></div>
+                </a>
+                <a href="S18_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 18</div>
+                    <div class="sphere-label">S<sup>18</sup></div>
+                </a>
+                <a href="S19_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 19</div>
+                    <div class="sphere-label">S<sup>19</sup></div>
+                </a>
+                <a href="S20_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 20</div>
+                    <div class="sphere-label">S<sup>20</sup></div>
+                </a>
+                <a href="S21_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 21</div>
+                    <div class="sphere-label">S<sup>21</sup></div>
+                </a>
+                <a href="S22_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 22</div>
+                    <div class="sphere-label">S<sup>22</sup></div>
+                </a>
+                <a href="S23_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 23</div>
+                    <div class="sphere-label">S<sup>23</sup></div>
+                </a>
+                <a href="S24_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 24</div>
+                    <div class="sphere-label">S<sup>24</sup></div>
+                </a>
+                <a href="S25_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 25</div>
+                    <div class="sphere-label">S<sup>25</sup></div>
+                </a>
+                <a href="S26_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 26</div>
+                    <div class="sphere-label">S<sup>26</sup></div>
+                </a>
+                <a href="S27_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 27</div>
+                    <div class="sphere-label">S<sup>27</sup></div>
+                </a>
+                <a href="S28_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 28</div>
+                    <div class="sphere-label">S<sup>28</sup></div>
+                </a>
+                <a href="S29_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 29</div>
+                    <div class="sphere-label">S<sup>29</sup></div>
+                </a>
+                <a href="S30_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 30</div>
+                    <div class="sphere-label">S<sup>30</sup></div>
+                </a>
+                <a href="S31_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 31</div>
+                    <div class="sphere-label">S<sup>31</sup></div>
+                </a>
+                <a href="S32_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 32</div>
+                    <div class="sphere-label">S<sup>32</sup></div>
+                </a>
+                <a href="S33_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 33</div>
+                    <div class="sphere-label">S<sup>33</sup></div>
+                </a>
+                <a href="S34_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 34</div>
+                    <div class="sphere-label">S<sup>34</sup></div>
+                </a>
+                <a href="S35_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 35</div>
+                    <div class="sphere-label">S<sup>35</sup></div>
+                </a>
+                <a href="S36_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 36</div>
+                    <div class="sphere-label">S<sup>36</sup></div>
+                </a>
+                <a href="S37_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 37</div>
+                    <div class="sphere-label">S<sup>37</sup></div>
+                </a>
+                <a href="S38_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 38</div>
+                    <div class="sphere-label">S<sup>38</sup></div>
+                </a>
+                <a href="S39_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 39</div>
+                    <div class="sphere-label">S<sup>39</sup></div>
+                </a>
+                <a href="S40_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 40</div>
+                    <div class="sphere-label">S<sup>40</sup></div>
+                </a>
+                <a href="S41_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 41</div>
+                    <div class="sphere-label">S<sup>41</sup></div>
+                </a>
+                <a href="S42_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 42</div>
+                    <div class="sphere-label">S<sup>42</sup></div>
+                </a>
+                <a href="S43_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 43</div>
+                    <div class="sphere-label">S<sup>43</sup></div>
+                </a>
+                <a href="S44_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 44</div>
+                    <div class="sphere-label">S<sup>44</sup></div>
+                </a>
+                <a href="S45_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 45</div>
+                    <div class="sphere-label">S<sup>45</sup></div>
+                </a>
+                <a href="S46_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 46</div>
+                    <div class="sphere-label">S<sup>46</sup></div>
+                </a>
+                <a href="S47_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 47</div>
+                    <div class="sphere-label">S<sup>47</sup></div>
+                </a>
+                <a href="S48_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 48</div>
+                    <div class="sphere-label">S<sup>48</sup></div>
+                </a>
+                <a href="S49_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 49</div>
+                    <div class="sphere-label">S<sup>49</sup></div>
+                </a>
+                <a href="S50_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 50</div>
+                    <div class="sphere-label">S<sup>50</sup></div>
+                </a>
+                <a href="S51_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 51</div>
+                    <div class="sphere-label">S<sup>51</sup></div>
+                </a>
+                <a href="S52_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 52</div>
+                    <div class="sphere-label">S<sup>52</sup></div>
+                </a>
+                <a href="S53_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 53</div>
+                    <div class="sphere-label">S<sup>53</sup></div>
+                </a>
+                <a href="S54_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 54</div>
+                    <div class="sphere-label">S<sup>54</sup></div>
+                </a>
+                <a href="S55_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 55</div>
+                    <div class="sphere-label">S<sup>55</sup></div>
+                </a>
+                <a href="S56_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 56</div>
+                    <div class="sphere-label">S<sup>56</sup></div>
+                </a>
+                <a href="S57_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 57</div>
+                    <div class="sphere-label">S<sup>57</sup></div>
+                </a>
+                <a href="S58_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 58</div>
+                    <div class="sphere-label">S<sup>58</sup></div>
+                </a>
+                <a href="S59_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 59</div>
+                    <div class="sphere-label">S<sup>59</sup></div>
+                </a>
+                <a href="S60_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 60</div>
+                    <div class="sphere-label">S<sup>60</sup></div>
+                </a>
+                <a href="S61_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 61</div>
+                    <div class="sphere-label">S<sup>61</sup></div>
+                </a>
+                <a href="S62_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 62</div>
+                    <div class="sphere-label">S<sup>62</sup></div>
+                </a>
+                <a href="S63_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 63</div>
+                    <div class="sphere-label">S<sup>63</sup></div>
+                </a>
+                <a href="S64_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 64</div>
+                    <div class="sphere-label">S<sup>64</sup></div>
+                </a>
+                <a href="S65_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 65</div>
+                    <div class="sphere-label">S<sup>65</sup></div>
+                </a>
+                <a href="S66_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 66</div>
+                    <div class="sphere-label">S<sup>66</sup></div>
+                </a>
+                <a href="S67_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 67</div>
+                    <div class="sphere-label">S<sup>67</sup></div>
+                </a>
+                <a href="S68_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 68</div>
+                    <div class="sphere-label">S<sup>68</sup></div>
+                </a>
+                <a href="S69_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 69</div>
+                    <div class="sphere-label">S<sup>69</sup></div>
+                </a>
+                <a href="S70_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 70</div>
+                    <div class="sphere-label">S<sup>70</sup></div>
+                </a>
+                <a href="S71_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 71</div>
+                    <div class="sphere-label">S<sup>71</sup></div>
+                </a>
+                <a href="S72_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 72</div>
+                    <div class="sphere-label">S<sup>72</sup></div>
+                </a>
+                <a href="S73_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 73</div>
+                    <div class="sphere-label">S<sup>73</sup></div>
+                </a>
+                <a href="S74_E5.html" class="sphere-card">
+                    <div class="sphere-number">n = 74</div>
+                    <div class="sphere-label">S<sup>74</sup></div>
+                </a>
+            </div>
+        </div>
+
+        <div class="stats">
+            Generated 296 interactive charts &bull; Light mode only
+        </div>
+    </div>
+
+    <script>
+        // Theme-aware navigation for index page (only if both themes available)
+        document.addEventListener('DOMContentLoaded', function() {
+            const cardsWithThemes = document.querySelectorAll('.sphere-card[data-light][data-dark]');
+            if (cardsWithThemes.length > 0) {
+                const currentTheme = sessionStorage.getItem('seqsee-theme') || 'light';
+
+                cardsWithThemes.forEach(card => {
+                    const lightFile = card.getAttribute('data-light');
+                    const darkFile = card.getAttribute('data-dark');
+
+                    if (currentTheme === 'dark' && darkFile) {
+                        card.href = darkFile;
+                    } else {
+                        card.href = lightFile;
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html>
