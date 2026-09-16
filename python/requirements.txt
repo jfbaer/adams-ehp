@@ -1,0 +1,15 @@
+# Core dependencies for uASS Spectral Sequence Computation Engine
+
+# SageMath 9.0 or higher is required for:
+# - Finite field arithmetic (GF(2))
+# - Vector spaces and linear algebra
+# - Affine geometry computations
+#
+# Note: SageMath must be installed separately from conda-forge or built from source.
+# See: https://doc.sagemath.org/html/en/installation/
+#
+# For conda:
+#   conda install -c conda-forge sage
+#
+# After SageMath is installed, no additional pip packages are required.
+# All other dependencies (csv, json, ast, collections, re, os, etc.) are Python standard library.

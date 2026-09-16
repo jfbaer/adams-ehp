@@ -1,0 +1,11 @@
+# Unstable d4 differentials — resolved by hand / interpage proof-by-contradiction.
+# Each is a specific-sphere value that is hand-checkable; applied before the E4 computation.
+# n s f row col value   (row = target index, col = source index)
+# d4 at (36,50,10), desuspended by hand from the forced d4 at (37,50,10)
+# via E-naturality (the uncertain_plus gate skipped the automatic
+# desuspension because of the open d2 at (36,51,8), but the deduction is
+# sound: the phantom direction 36_50_10_0 has E = 0, so the imposed
+# matrix is scenario-independent). d4(36_50_10_1) = 36_49_14; the zero
+# row is vacuous if the open d2 kills 36_50_10_0.
+36 50 10 0 1 1
+36 50 10 0 0 0

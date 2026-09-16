@@ -1,0 +1,29 @@
+# Unstable d3 differentials — resolved by hand / interpage proof-by-contradiction.
+# Each is a specific-sphere value that is hand-checkable; applied before the E3 computation.
+# n s f row col value   (row = target index, col = source index)
+5 47 10 0 0 0
+6 34 10 0 0 1
+6 37 10 0 0 1
+6 42 14 0 0 1
+6 43 10 0 0 1
+6 43 10 0 1 1
+6 45 14 0 0 1
+6 48 7 0 0 0
+6 48 7 1 0 0
+7 47 16 1 0 1
+10 38 10 0 0 1
+10 38 10 1 0 0
+10 41 10 0 0 0
+10 41 10 1 0 1
+10 41 10 2 0 0
+10 44 10 1 0 0
+10 46 14 0 0 1
+10 46 14 1 0 0
+10 49 14 0 0 1
+11 51 10 0 0 0
+13 51 9 0 0 0
+13 51 9 0 1 0
+14 36 7 0 1 1
+14 42 7 1 0 0
+14 47 11 0 0 1
+19 51 6 0 0 1

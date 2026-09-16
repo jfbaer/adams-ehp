@@ -1,0 +1,19 @@
+cff-version: 1.2.0
+message: "If you use this software or its data in your research, please cite both the paper and the software."
+title: "Adams-EHP: automated proofs of unstable Adams differentials"
+authors:
+  # TODO: add ORCID(s) before publishing.
+  - family-names: "Baer"
+    given-names: "Jake Francis"
+repository-code: "https://github.com/jfbaer/adams-ehp"
+license: Apache-2.0
+# TODO: fill in the arXiv ID / DOI once the paper is posted.
+preferred-citation:
+  type: article
+  title: "Automated proofs of unstable Adams differentials"
+  authors:
+    - family-names: "Baer"
+      given-names: "Jake Francis"
+  year: 2026
+  # url: "https://arxiv.org/abs/XXXX.XXXXX"
+  # doi: "10.XXXXX/XXXXXX"

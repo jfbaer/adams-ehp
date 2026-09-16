@@ -1,0 +1,16 @@
+[tool.poetry]
+# Dependency-only project: we don't install a package here, we just want an
+# environment in which to run generate_charts.py and the bundled
+# seqsee/ scripts. `poetry install` therefore only resolves the deps below.
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.11"
+compact-json = "^1"
+jinja2 = "^3"
+jsonschema = "^4"
+pandas = "^2"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,962 @@
+<!-- template.html.jinja — single-chart view (one spectral-sequence page, pan/zoom + keyboard navigation) -->
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ theme }}">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ data.get("header", {}).get("metadata", {}).get("htmltitle", "") }}</title>
+
+  <!-- Theming: the theme is fixed at render time (server-rendered data-theme
+       attr; no runtime switching on publication charts). All colors live in
+       per-theme CSS variable blocks generated from themes.json via
+       build_theme_css, so the data-theme attribute alone selects the palette. -->
+  <style>
+{{ theme_css }}
+    /* Paint the root element themed on first parse (the <html data-theme> attr
+       is server-rendered, so var(--bg-color) resolves immediately). Together
+       with per-theme color-scheme this removes the white flash on navigation. */
+    html {
+      background-color: var(--bg-color);
+    }
+    body {
+      background-color: var(--bg-color) !important;
+      color: var(--text-color) !important;
+    }
+    svg, svg * {
+      background-color: var(--bg-color) !important;
+    }
+    /* Flash prevention only — must NOT be !important, or it would defeat the
+       color-alias classes (an edge is class="defaultEdge d3" and the d3 color
+       has to win). */
+    .defaultNode {
+      fill: var(--text-color);
+      stroke: var(--text-color);
+    }
+    .defaultEdge {
+      stroke: var(--text-color);
+      /* stroke-width comes from the generated CSS (input_schema.json's
+         defaultEdge thickness x scale); a value here would be dead, the
+         generated rule is emitted later at equal specificity. */
+    }
+    .grid {
+      stroke: var(--grid-color) !important;
+    }
+    /* Differential edges link to their why graph. All d_r lines sharing a
+       source tridegree act as ONE differential: hovering any of them widens
+       the whole group (class managed in JS), clicking opens its proof. */
+    .why-clickable {
+      cursor: pointer;
+    }
+    .defaultEdge.why-hover {
+      stroke-width: 5;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.2/dist/katex.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/dreampulse/computer-modern-web-font@master/fonts.css" />
+  <!-- KaTeX for math rendering -->
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.2/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.2/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+  <!-- svg-pan-zoom for obvious reasons -->
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+  <!-- Hammer.js for touch controls -->
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <!-- Path data polyfill for SVG path manipulation -->
+  <script src="https://cdn.jsdelivr.net/npm/path-data-polyfill@1.0.6/path-data-polyfill.min.js"></script>
+  <style>
+    body {
+      font-family: "Computer Modern Serif", serif;
+      font-size: 20pt;
+      margin: 0;
+      overflow: hidden;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    /* KaTeX font size fix */
+    .katex {
+      font-size: 1em !important;
+    }
+
+    #canvas-container {
+      width: 100vw;
+      height: 100vh;
+      position: absolute;
+    }
+
+/* Dynamically generated CSS styles */
+{{ css_styles }}
+
+    #tooltip {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      background-color: var(--surface-color);
+      border: 1px solid var(--text-color);
+      color: var(--text-color);
+      padding: 5px;
+      z-index: 10;
+      border-radius: 4px;
+    }
+
+    #title-container {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      right: 20px;
+      z-index: 5;
+      pointer-events: none;
+      text-align: center;
+    }
+
+    #main-title {
+      font-size: 24px;
+      font-weight: bold;
+      color: var(--text-color);
+      background-color: var(--bg-color);
+      border: 1px solid var(--surface-color);
+      padding: 15px 25px;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+      display: inline-block;
+      max-width: 80%;
+      line-height: 1.3;
+      transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .axis {
+      stroke: var(--text-color);
+      stroke-width: 2px;
+    }
+
+    .tick {
+      font-size: 12pt;
+      fill: var(--text-color);
+    }
+
+    .x-tick {
+      text-anchor: middle;
+      dominant-baseline: hanging;
+    }
+
+    .y-tick {
+      text-anchor: end;
+      dominant-baseline: middle;
+    }
+
+  </style>
+</head>
+
+<!-- We set `visibility: visible` in JS after some preprocessing -->
+<body style="visibility: hidden; background-color: var(--bg-color); color: var(--text-color)">
+  <div id="title-container">
+    <div id="main-title"></div>
+  </div>
+  <div id="canvas-container">
+    <svg id="svg-canvas" width="100%" height="100%">
+      <defs>
+        <!-- Define the arrowhead markers -->
+        <marker id='arrow-simple' orient="auto" markerWidth='3' markerHeight='4' refX='0.1' refY='2' fill="context-fill"
+          stroke="context-stroke">
+          <path d='M0,0 V4 L2,2 Z' />
+        </marker>
+        <!-- Define the grid pattern -->
+        <pattern id="grid" width="{{ 2*spacing }}" height="{{ 2*spacing }}" patternUnits="userSpaceOnUse">
+          <path id="grid-path" d="M {{ 2*spacing }} 0 L 0 0 0 {{ 2*spacing }}" class="grid" style="fill: none;"/>
+        </pattern>
+      </defs>
+      <g id="content-group" class="svg-pan-zoom_viewport">
+        <!-- Translate the grid so that it covers the appropriate region outside the first quadrant -->
+        <g id="origin-translate" transform="translate({{ data.header.chart.width.min * spacing }} {{ -data.header.chart.height.min * spacing }})">
+          <!-- Apply the grid pattern to a background rectangle -->
+          <rect
+            id="grid-background"
+            width="{{ (data.header.chart.width.max - data.header.chart.width.min) * spacing }}px"
+            height="{{ (data.header.chart.height.max - data.header.chart.height.min) * spacing }}px"
+            fill="url(#grid)"
+          />
+        </g>
+        <!-- Nodes and Edges generated statically by Python -->
+        {{ static_svg_content }}
+      </g>
+      <g id="axes-group">
+        <!-- X-axis -->
+        <line id="x-axis" class="axis" />
+        <!-- Y-axis -->
+        <line id="y-axis" class="axis" />
+        <!-- Blocks under and to the left to hide the content -->
+        <rect id="x-block" x="0" y="0" fill="var(--bg-color)" />
+        <rect id="y-block" x="0" y="0" fill="var(--bg-color)" />
+        <!-- Tick marks. We use Jinja2 templating syntax to place them automatically -->
+        <g id="ticks" class="tick">
+          <g id="x-ticks" class="x-tick">
+            {%- for i in range(data.header.chart.width.min, data.header.chart.width.max + 1, axis_interval) %}
+              <text x="{{ i * spacing }}" y="{{ 0.5 * spacing }}">{{ i }}</text>
+            {%- endfor %}
+          </g>
+          <g id="y-ticks" class="y-tick">
+            {%- for j in range(data.header.chart.height.min, data.header.chart.height.max + 1, axis_interval) %}
+              <text x="{{ 0.5 * spacing }}" y="{{ j * spacing }}">{{ j }}</text>
+            {%- endfor %}
+          </g>
+        </g>
+      </g>
+    </svg>
+  </div>
+  <div id="tooltip"></div>
+  <script>
+    // The theme is fixed at render time (choose it with main.py's theme
+    // argument); there is no runtime switching on publication charts. All
+    // colors live in per-theme CSS variable blocks in <head>, so applying the
+    // theme is a single data-theme attribute flip on <html>.
+    let currentTheme = "{{ theme }}";
+
+    function applyTheme() {
+      document.documentElement.dataset.theme = currentTheme;
+    }
+
+    // Kept for compatibility with callers (page-load hook, injected scripts):
+    // all colors are CSS variables now, so applying a theme is just the
+    // attribute flip in applyTheme().
+    function updateThemeColors() {
+      applyTheme();
+    }
+
+    // ——— SVG coordinate helpers (shared with the side-by-side template) ———
+    function applyFunctionToPath(path, fn) {
+      let pathData = [];
+      for (let seg of path.getPathData()) {
+        if (seg.type === "M") {
+          let [x, y] = seg.values;
+          pathData.push({ type: "M", values: fn(x, y) });
+        } else if (seg.type === "L") {
+          let [x, y] = seg.values;
+          pathData.push({ type: "L", values: fn(x, y) });
+        } else if (seg.type === "C") {
+          let [x1, y1, x2, y2, x, y] = seg.values;
+          pathData.push({ type: "C", values: [...fn(x1, y1), ...fn(x2, y2), ...fn(x, y)] });
+        } else if (seg.type === "Q") {
+          let [x1, y1, x, y] = seg.values;
+          pathData.push({ type: "Q", values: [...fn(x1, y1), ...fn(x, y)] });
+        }
+      }
+      path.setPathData(pathData);
+    }
+
+    function applyFunctionToElement(element, attributeName, fn) {
+      const currentValue = parseFloat(element.getAttribute(attributeName));
+      element.setAttribute(attributeName, fn(currentValue));
+    }
+
+    const applyOffsetToElement = (element, attributeName, offset) => {
+      applyFunctionToElement(element, attributeName, (value) => value + offset)
+    };
+
+    const negateValueInElement = (element, attributeName) => {
+      applyFunctionToElement(element, attributeName, (value) => -value)
+    };
+
+    const applyYOffsetToPath = (path, offset) => {
+      applyFunctionToPath(path, (x, y) => [x, y + offset])
+    };
+
+    const negateYValuesInPath = (path) => {
+      applyFunctionToPath(path, (x, y) => [x, -y])
+    };
+
+    window.addEventListener("DOMContentLoaded", () => {
+      var canvasHeight = 0;
+      var canvasWidth = 0;
+      const spacing = {{ spacing }};
+      const axisSpacing = 0.6 * spacing;
+
+      const half_grid_width = parseFloat(window.getComputedStyle(document.getElementById("grid-path")).strokeWidth) / 2;
+
+      // Displace the gridlines slightly. If we don't do this, the gridlines will appear to be
+      // at half thickness because of clipping.
+      applyFunctionToPath(document.getElementById("grid-path"), (x, y) => [x + half_grid_width, y + half_grid_width]);
+
+      // Negate all y-coordinates:
+
+      // - all elements in content-group
+      document
+        .querySelectorAll("#content-group *")
+        .forEach((element) => {
+          if (element.tagName === "line") {
+            negateValueInElement(element, "y1");
+            negateValueInElement(element, "y2");
+          } else if (element.tagName === "circle") {
+            negateValueInElement(element, "cy");
+          } else if (element.tagName === "rect") {
+            // For rectangles, adjust for center positioning since y represents top-left corner
+            const height = parseFloat(element.getAttribute("height"));
+            const currentY = parseFloat(element.getAttribute("y"));
+            const centerY = currentY + height/2; // Convert to center
+            const newCenterY = -centerY; // Apply negation to center
+            const newY = newCenterY - height/2; // Convert back to top-left
+            element.setAttribute("y", newY.toString());
+          } else if (element.tagName === "text") {
+            negateValueInElement(element, "y");
+          } else if (element.tagName === "path") {
+            negateYValuesInPath(element);
+          }
+        });
+
+      // - axes
+      document
+        .querySelectorAll("#axes-group line")
+        .forEach((element) => {
+          if (element.id === "x-axis") {
+            element.setAttribute("x1", axisSpacing);
+            element.setAttribute("y1", -axisSpacing);
+            element.setAttribute("x2", canvasWidth);
+            element.setAttribute("y2", -axisSpacing);
+          } else if (element.id === "y-axis") {
+            element.setAttribute("x1", axisSpacing);
+            element.setAttribute("y1", -axisSpacing);
+            element.setAttribute("x2", axisSpacing);
+            element.setAttribute("y2", canvasHeight);
+          }
+        });
+
+      // - axis blocks
+      document
+        .querySelectorAll("#axes-group rect")
+        .forEach((element) => {
+          if (element.id === "x-block") {
+            element.setAttribute("width", canvasWidth);
+            element.setAttribute("height", axisSpacing);
+            element.setAttribute("y", -axisSpacing);
+          } else if (element.id === "y-block") {
+            element.setAttribute("width", axisSpacing);
+            element.setAttribute("height", 0);
+          }
+        });
+
+      // - ticks
+      document
+        .querySelectorAll("#axes-group text")
+        .forEach((element) => {
+          negateValueInElement(element, "y");
+        });
+
+      // Handler for resizing the canvas. Adjusts all y-values by comparing the
+      // new and old canvas sizes. Since we have already negated all y-values,
+      // we only need to add an offset everywhere.
+      function onResize() {
+        const newCanvasHeight = document.documentElement.clientHeight;
+        const newCanvasWidth = document.documentElement.clientWidth;
+        const xOffset = newCanvasWidth - canvasWidth;
+        const yOffset = newCanvasHeight - canvasHeight;
+
+        // Adjust y-values for all elements in content-group
+        document
+          .querySelectorAll("#content-group *")
+          .forEach((element) => {
+            if (element.tagName === "line") {
+              applyOffsetToElement(element, "y1", yOffset);
+              applyOffsetToElement(element, "y2", yOffset);
+            } else if (element.tagName === "circle") {
+              applyOffsetToElement(element, "cy", yOffset);
+            } else if (element.tagName === "rect") {
+              // For rectangles, apply offset accounting for center-based positioning
+              const height = parseFloat(element.getAttribute("height"));
+              const currentY = parseFloat(element.getAttribute("y"));
+              const centerY = currentY + height/2; // Convert to center
+              const newCenterY = centerY + yOffset; // Apply offset to center
+              const newY = newCenterY - height/2; // Convert back to top-left
+              element.setAttribute("y", newY.toString());
+            } else if (element.tagName === "text") {
+              applyOffsetToElement(element, "y", yOffset);
+            } else if (element.tagName === "path") {
+              applyYOffsetToPath(element, yOffset);
+            }
+          });
+
+        // Adjust y-value for grid transformation. We also undo the displacement we applied earlier
+        document
+          .getElementById("grid-background")
+          .setAttribute(
+            "transform",
+            `scale(1 -1) translate(${-half_grid_width} ${-half_grid_width}) translate(0 ${-newCanvasHeight})`
+          );
+
+        // Put in end values for axes and apply y-flip
+        document
+          .querySelectorAll("#axes-group line")
+          .forEach((element) => {
+            if (element.id === "x-axis") {
+              applyOffsetToElement(element, "y1", yOffset);
+              applyOffsetToElement(element, "x2", xOffset);
+              applyOffsetToElement(element, "y2", yOffset);
+            } else if (element.id === "y-axis") {
+              applyOffsetToElement(element, "y1", yOffset);
+            }
+          });
+
+        // Do the same for axis blocks
+        document
+          .querySelectorAll("#axes-group rect")
+          .forEach((element) => {
+            if (element.id === "x-block") {
+              applyOffsetToElement(element, "width", xOffset);
+              applyOffsetToElement(element, "y", yOffset);
+            } else if (element.id === "y-block") {
+              applyOffsetToElement(element, "height", yOffset);
+            }
+          });
+
+        // And ticks
+        document
+          .querySelectorAll("#axes-group text")
+          .forEach((element) => {
+            applyOffsetToElement(element, "y", yOffset);
+          });
+
+        // Try to restore saved viewport, otherwise reset to default
+        const stored = sessionStorage.getItem('seqsee_viewport');
+        if (stored) {
+          try {
+            const viewport = JSON.parse(stored);
+            window.panZoom.zoom(viewport.zoom);
+            window.panZoom.pan({ x: viewport.x, y: viewport.y });
+          } catch (e) {
+            // Fallback to default if restore fails
+            window.panZoom.reset();
+            window.panZoom.panBy({ x: 2 * axisSpacing, y: -2 * axisSpacing });
+          }
+        } else {
+          // Default behavior for first load
+          window.panZoom.reset();
+          window.panZoom.panBy({ x: 2 * axisSpacing, y: -2 * axisSpacing });
+        }
+
+        canvasHeight = newCanvasHeight;
+        canvasWidth = newCanvasWidth;
+      }
+      window.addEventListener("resize", onResize);
+
+      // Handler to zoom axes when grid is zoomed
+      function handleCTM(ctm) {
+        const scale = ctm.a;
+        const xTranslate = ctm.e;
+        const yTranslate = ctm.f;
+
+        document.querySelectorAll("#x-ticks").forEach((element) => {
+          element.setAttribute("transform", `translate(${xTranslate} 0)`);
+        });
+        document.querySelectorAll("#x-ticks text").forEach((element) => {
+          const xCoord = parseInt(element.textContent) * spacing;
+          element.setAttribute("x", xCoord * scale);
+        });
+        document.querySelectorAll("#y-ticks").forEach((element) => {
+          element.setAttribute("transform", `translate(0 ${yTranslate})`);
+        });
+        document.querySelectorAll("#y-ticks text").forEach((element) => {
+          const yCoord = parseInt(element.textContent) * spacing;
+          element.setAttribute("y", (canvasHeight - yCoord) * scale);
+        });
+      }
+
+      // Initialize Hammer.js for touch controls.
+      // Taken from https://github.com/bumbu/svg-pan-zoom/blob/master/demo/mobile.html
+      const hammerEventsHandler = {
+        haltEventListeners: ['touchstart', 'touchend', 'touchmove', 'touchleave', 'touchcancel'],
+        init: function(options) {
+          var instance = options.instance
+            , initialScale = 1
+            , pannedX = 0
+            , pannedY = 0
+
+          // Init Hammer
+          // Listen only for pointer and touch events
+          this.hammer = Hammer(options.svgElement, {
+            inputClass: Hammer.SUPPORT_POINTER_EVENTS ? Hammer.PointerEventInput : Hammer.TouchInput
+          })
+
+          // Enable pinch
+          this.hammer.get('pinch').set({enable: true})
+
+          // Handle double tap
+          this.hammer.on('doubletap', function(ev){
+            instance.zoomAtPoint(ev.center.x, ev.center.y)
+          })
+
+          // Handle pan
+          this.hammer.on('panstart panmove', function(ev){
+            // Fix https://github.com/hammerjs/hammer.js/issues/1134 using
+            // https://github.com/hammerjs/hammer.js/issues/871#issuecomment-179143062
+            if (Date.now() - lastPinchTime < 200) {
+              return;  // ignore a pan gesture that immediately follows a pinch
+            }
+
+            // On pan start reset panned variables
+            if (ev.type === 'panstart') {
+              pannedX = 0
+              pannedY = 0
+            }
+
+            // Pan only the difference
+            instance.panBy({x: ev.deltaX - pannedX, y: ev.deltaY - pannedY})
+            pannedX = ev.deltaX
+            pannedY = ev.deltaY
+          })
+
+          // Handle pinch
+          var lastPinchTime;
+          this.hammer.on('pinchstart pinchmove', function(ev){
+            lastPinchTime = Date.now();
+            // On pinch start remember initial zoom
+            if (ev.type === 'pinchstart') {
+              initialScale = instance.getZoom()
+              instance.zoomAtPoint(initialScale * ev.scale, {x: ev.center.x, y: ev.center.y})
+            }
+
+            instance.zoomAtPoint(initialScale * ev.scale, {x: ev.center.x, y: ev.center.y})
+          })
+
+          // Prevent moving the page on some devices when panning over SVG
+          options.svgElement.addEventListener('touchmove', function(e){ e.preventDefault(); });
+        },
+        destroy: function(){
+          this.hammer.destroy()
+        }
+      }
+
+      // Initialize svg-pan-zoom for panning and zooming
+      window.panZoom = svgPanZoom("#svg-canvas", {
+        zoomEnabled: true,
+        panEnabled: true,
+        mouseWheelZoomEnabled: false,
+        fit: false,
+        center: false,
+        minZoom: 0.1,
+        maxZoom: 10,
+        zoomScaleSensitivity: 0.15,
+        onUpdatedCTM: handleCTM,
+        customEventsHandler: hammerEventsHandler,
+      });
+
+      // Custom wheel handler: two-finger swipe = pan, pinch (ctrlKey) = zoom
+      document.getElementById("svg-canvas").addEventListener("wheel", function(event) {
+        event.preventDefault();
+        if (event.ctrlKey) {
+          // Trackpad pinch-to-zoom sends wheel events with ctrlKey=true
+          const rect = event.currentTarget.getBoundingClientRect();
+          const point = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+          const zoomFactor = Math.pow(1.02, -event.deltaY);
+          const currentZoom = window.panZoom.getZoom();
+          window.panZoom.zoomAtPoint(currentZoom * zoomFactor, point);
+        } else {
+          // Two-finger swipe = pan
+          window.panZoom.panBy({ x: -event.deltaX, y: -event.deltaY });
+        }
+      }, { passive: false });
+
+      onResize();
+
+      // Additional viewport restoration after initialization
+      setTimeout(() => {
+        restoreViewport();
+      }, 200);
+
+      // Generate dynamic title based on current page
+      function generateTitle() {
+        // Stem charts (stem{k}_E{r}.html) are titled E_r(π^k).
+        const stemMatch = window.location.pathname.split('/').pop().match(/^stem(\d+)_E(\d+)/);
+        let titleText;
+        if (stemMatch) {
+          titleText = `$\\mathrm{E}_{${stemMatch[2]}}(\\pi^{${stemMatch[1]}})$`;
+        } else {
+          const current = parseCurrentLocation();
+          if (current.n === 0) {
+            // The n=0 sphere chart is the mod-2 Moore spectrum E_r(S/2).
+            titleText = `$\\mathrm{E}_{${current.r}}(\\mathbb{S}/2)$`;
+          } else {
+            titleText = `$\\mathrm{E}_{${current.r}}(S^{${current.n}})$`;
+          }
+        }
+        document.getElementById('main-title').textContent = titleText;
+      }
+
+      generateTitle();
+
+      // Render LaTeX in the main title
+      window.renderMathInElement(document.getElementById('main-title'), {
+        delimiters: [
+          {left: '$$', right: '$$', display: true},
+          {left: '$', right: '$', display: false},
+          {left: '\\(', right: '\\)', display: false},
+          {left: '\\[', right: '\\]', display: true}
+        ],
+        throwOnError: false
+      });
+
+      // Show the SVG after y-values are adjusted
+      document.body.style.visibility = "visible";
+
+      window.addEventListener("keydown", function (event) {
+
+        const panSpeed = spacing;
+        switch (event.key) {
+          // Add arrow key controls for panning
+          case "ArrowUp":
+            event.preventDefault();
+            window.panZoom.panBy({ x: 0, y: panSpeed });
+            break;
+          case "ArrowDown":
+            event.preventDefault();
+            window.panZoom.panBy({ x: 0, y: -panSpeed });
+            break;
+          case "ArrowLeft":
+            event.preventDefault();
+            window.panZoom.panBy({ x: panSpeed, y: 0 });
+            break;
+          case "ArrowRight":
+            event.preventDefault();
+            window.panZoom.panBy({ x: -panSpeed, y: 0 });
+            break;
+          // Add + and - key controls for zooming
+          case "+":
+          case "=":
+            event.preventDefault();
+            window.panZoom.zoomIn();
+            break;
+          case "-":
+          case "_":
+            event.preventDefault();
+            window.panZoom.zoomOut();
+            break;
+          // Add controls for resetting pan and zoom
+          case "Backspace":
+          case "0":
+          case ")":
+            event.preventDefault();
+            onResize();
+            break;
+
+          // Enhanced navigation controls
+          case "s":
+          case "S":
+            event.preventDefault();
+            navigateToSphere(1); // n -> n+1
+            break;
+          case "w":
+          case "W":
+            event.preventDefault();
+            navigateToSphere(-1); // n -> n-1
+            break;
+          case "d":
+          case "D":
+            event.preventDefault();
+            navigateToPage(1); // r -> r+1
+            break;
+          case "a":
+          case "A":
+            event.preventDefault();
+            navigateToPage(-1); // r -> r-1
+            break;
+          // e/h/p/c open the corresponding map's split-screen; the shift
+          // variant (E/H/P/C) opens it with the map image pre-highlighted.
+          case "e":
+          case "E":
+            event.preventDefault();
+            openMapSideBySide("E", event.key === "E");
+            break;
+          case "h":
+          case "H":
+            event.preventDefault();
+            openMapSideBySide("H", event.key === "H");
+            break;
+          case "p":
+          case "P":
+            event.preventDefault();
+            openMapSideBySide("P", event.key === "P");
+            break;
+          case "c":
+          case "C":
+            event.preventDefault();
+            openMapSideBySide("C2", event.key === "C");
+            break;
+        }
+      });
+
+      // ——— Viewport preservation (survives w/a/s/d navigation) ———
+      function getCurrentViewport() {
+        if (!window.panZoom) return null;
+        const pan = window.panZoom.getPan();
+        const zoom = window.panZoom.getZoom();
+        return { x: pan.x, y: pan.y, zoom: zoom };
+      }
+
+      function storeViewport() {
+        const viewport = getCurrentViewport();
+        if (viewport) {
+          sessionStorage.setItem('seqsee_viewport', JSON.stringify(viewport));
+        }
+      }
+
+      function restoreViewport() {
+        const stored = sessionStorage.getItem('seqsee_viewport');
+        if (stored && window.panZoom) {
+          try {
+            const viewport = JSON.parse(stored);
+
+            // Wait a bit for the SVG to be fully initialized
+            setTimeout(() => {
+              if (window.panZoom) {
+                window.panZoom.zoom(viewport.zoom);
+                window.panZoom.pan({ x: viewport.x, y: viewport.y });
+              }
+            }, 100);
+          } catch (e) {
+            console.log("Failed to restore viewport:", e);
+          }
+        }
+      }
+
+      // ——— Chart-to-chart keyboard navigation (w/s spheres, a/d pages) ———
+      function parseCurrentLocation() {
+        const path = window.location.pathname;
+        const filename = path.split('/').pop();
+
+        // Parse filename like S{n}_E{r}.html, with optional _dark/_mode suffix
+        const match = filename.match(/(S)(\d+)_E(\d+)(?:_([^.]+))?\.html/);
+        if (match) {
+          const family = match[1];
+          const mode = match[4];
+          const isDarkTheme = mode === 'dark';
+          const actualMode = isDarkTheme ? null : mode; // 'dark' is theme, not mode
+
+          return {
+            family: family,
+            n: parseInt(match[2]),
+            r: parseInt(match[3]),
+            mode: actualMode,
+            isDarkTheme: isDarkTheme
+          };
+        }
+
+        // Stem charts: stem{k}_E{r}.html (family 'stem', n = the stem k).
+        // Without this branch they fell through to the sphere default and
+        // s/w/a/d jumped to sphere files instead of stepping stems/pages.
+        const stemMatch = filename.match(/^stem(\d+)_E(\d+)(?:_([^.]+))?\.html/);
+        if (stemMatch) {
+          const stemMode = stemMatch[3];
+          const stemIsDark = stemMode === 'dark';
+          return {
+            family: 'stem',
+            n: parseInt(stemMatch[1]),
+            r: parseInt(stemMatch[2]),
+            mode: stemIsDark ? null : stemMode,
+            isDarkTheme: stemIsDark
+          };
+        }
+
+        // Fallback for old format S{n}.html
+        const oldMatch = filename.match(/S(\d+)\.html/);
+        if (oldMatch) {
+          return {
+            family: 'S',
+            n: parseInt(oldMatch[1]),
+            r: 2, // Default to E2
+            mode: null
+          };
+        }
+
+        return { family: 'S', n: 2, r: 2, mode: null };
+      }
+
+      function buildFilename(n, r, mode = null) {
+        // The theme is baked into the generated files (light vs _dark
+        // variants), so navigation targets files matching the current URL's
+        // family prefix and suffix pattern.
+        const current = parseCurrentLocation();
+        const prefix = current.family || 'S';
+
+        if (mode) {
+          // For special modes (highlighting), always use light version for now
+          return `${prefix}${n}_E${r}_${mode}.html`;
+        }
+
+        if (current.isDarkTheme) {
+          return `${prefix}${n}_E${r}_dark.html`;
+        }
+        return `${prefix}${n}_E${r}.html`;
+      }
+
+      function navigateToSphere(delta) {
+        const current = parseCurrentLocation();
+
+        // The n=0 sphere chart is the mod-2 Moore spectrum E_r(S/2). It sits
+        // just below n=2 in the sphere family (there is no n=1 chart), so s/w
+        // hop straight across the gap between S/2 and S^2.
+        let newN;
+        if (current.family === 'stem') {
+          // Stem charts step the stem k: no S/2 special cases, no baked-in
+          // upper bound (generation decides how many stems exist).
+          newN = current.n + delta;
+          if (newN < 0) return;
+        } else if (current.family === 'S' && current.n === 0) {
+          if (delta < 0) return;   // nothing below the Moore spectrum
+          newN = 2;                // s: E_r(S/2) -> E_r(S^2)
+        } else if (current.family === 'S' && current.n === 2 && delta < 0) {
+          newN = 0;                // w: E_r(S^2) -> E_r(S/2)
+        } else {
+          newN = current.n + delta;
+          // Stay within the generated S2..S{max} range (max_n from main.py).
+          if (newN <= 1 || newN > MAX_MAP_N) return;
+        }
+
+        storeViewport(); // Store current viewport before navigating
+        const newFilename = buildFilename(newN, current.r, current.mode);
+        window.location.href = newFilename;
+      }
+
+      function navigateToPage(delta) {
+        const current = parseCurrentLocation();
+        const newR = current.r + delta;
+
+        if (newR <= 1 || newR > 5) return; // Don't go below r=2 or above r=5 (E2-E5 range)
+
+        storeViewport(); // Store current viewport before navigating
+        const newFilename = buildFilename(current.n, newR, current.mode);
+        window.location.href = newFilename;
+      }
+
+      // ——— Map "image" side-by-side views (E / H / P / C2) ———
+      // Source sphere n -> target chart n. C2 targets the n=0 chart (S/2).
+      const MAP_ARITH = {
+        E:  n => n + 1,
+        H:  n => 2 * n - 1,
+        P:  n => (n - 1) / 2,   // domain: odd n >= 5
+        C2: n => 0,             // domain: odd n (the S/2 = C2 chart)
+      };
+      const MAX_MAP_N = {{ max_n | default(72) }};
+
+      // Open the side-by-side "map image" view for the given map. The lowercase
+      // key opens it; the shift variant opens it with the image pre-highlighted.
+      // Only meaningful for sphere charts. Out-of-domain / out-of-range presses
+      // are a no-op (guarded here so we don't navigate to a file that generation
+      // skipped because its target chart doesn't exist).
+      function openMapSideBySide(mapKey, showImage) {
+        const current = parseCurrentLocation();
+        if (current.family !== 'S') return;
+        const n = current.n;
+        if (mapKey === 'P' && (n % 2 === 0 || n < 5)) return;
+        if (mapKey === 'C2' && n % 2 === 0) return;
+        const targetN = MAP_ARITH[mapKey](n);
+        if (!Number.isInteger(targetN) || targetN === n) return;
+        if (targetN === 1 || targetN < 0 || targetN > MAX_MAP_N) return; // no S^1; keep in range
+        storeViewport();
+        if (showImage) {
+          sessionStorage.setItem('seqsee_sbs_map', '1');
+        } else {
+          sessionStorage.removeItem('seqsee_sbs_map');
+        }
+        const suffix = current.isDarkTheme ? '_dark' : '';
+        window.location.href = `S${n}_E${current.r}_${mapKey}sbs${suffix}.html`;
+      }
+
+      // ——— Node tooltips (KaTeX-rendered class labels) ———
+      const tooltip = document.getElementById("tooltip");
+
+      // Adams-Novikov charts carry raw LaTeX labels (no $ delimiters)
+      const isAdamsNovikov = {{ 'true' if data.get("header", {}).get("metadata", {}).get("adamsNovikov", False) else 'false' }};
+
+      // Add hover events to all nodes (circles and rectangles) for tooltips
+      document.querySelectorAll("circle, rect").forEach((node) => {
+        node.addEventListener("mouseover", function (event) {
+          const label = this.getAttribute("data-label");
+          if (label) {
+            if (isAdamsNovikov) {
+              // For Adams-Novikov mode: render LaTeX directly using katex.render()
+              try {
+                katex.render(label, tooltip, {
+                  displayMode: false,
+                  throwOnError: false
+                });
+              } catch (e) {
+                // Fallback to plain text if KaTeX fails
+                tooltip.innerHTML = label;
+              }
+            } else {
+              // For regular mode: use renderMathInElement with delimiters
+              tooltip.innerHTML = label;
+              window.renderMathInElement(tooltip, {
+                delimiters: [
+                  {left: '$$', right: '$$', display: true},
+                  {left: '$', right: '$', display: false},
+                  {left: '\\(', right: '\\)', display: false},
+                  {left: '\\[', right: '\\]', display: true}
+                ],
+                throwOnError : false
+              });
+            }
+            tooltip.style.display = "block";
+          }
+        });
+        node.addEventListener("mousemove", function (event) {
+          tooltip.style.left = event.clientX + 10 + "px";
+          tooltip.style.top = event.clientY + 10 + "px";
+        });
+        node.addEventListener("mouseout", function (event) {
+          tooltip.style.display = "none";
+        });
+      });
+
+      // ——— Why-graph click-through ———
+      // A differential edge (class "defaultEdge dR",
+      // sphere mode only -- stem-mode E edges inherit a dR color alias but
+      // also carry class "E") opens the proof-graph browser at that
+      // differential. For an "incoming" half-line the edge's data-source is
+      // the on-chart *target*; the true source sits one stem right, r
+      // filtrations down.
+      const WHY_GRAPHS_URL = "../../python/why_graphs/index.html";
+      const whyGroups = new Map();  // "r|n|s|f" -> {edges: [...], url}
+      document.querySelectorAll("#edges-group .defaultEdge").forEach((edge) => {
+        const drClass = [...edge.classList].find((c) => /^d\d+$/.test(c));
+        if (!drClass || edge.classList.contains("E")) return;
+        const src = edge.getAttribute("data-source");
+        if (!src) return;
+        const parts = src.replace(/^[A-Za-z]+/, "").split("_").map(Number);
+        if (parts.length < 3 || parts.slice(0, 3).some(isNaN)) return;
+        const r = Number(drClass.slice(1));
+        let [n, s, f] = parts;
+        if (edge.classList.contains("incoming")) {
+          s = s + 1;
+          f = f - r;
+        }
+        // Group by source tridegree (the node-name index, parts[3], is
+        // intentionally dropped): all d_r lines out of one tridegree are one
+        // differential and hover/click as a unit.
+        const key = `${r}|${n}|${s}|${f}`;
+        if (!whyGroups.has(key)) {
+          whyGroups.set(key, {
+            edges: [],
+            url: `${WHY_GRAPHS_URL}#d${r}/${n}/${s}/${f}`,
+          });
+        }
+        whyGroups.get(key).edges.push(edge);
+      });
+      whyGroups.forEach((group) => {
+        group.edges.forEach((edge) => {
+          edge.classList.add("why-clickable");
+          edge.addEventListener("mouseenter", () =>
+            group.edges.forEach((e) => e.classList.add("why-hover")));
+          edge.addEventListener("mouseleave", () =>
+            group.edges.forEach((e) => e.classList.remove("why-hover")));
+          edge.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            window.open(group.url);
+          });
+        });
+      });
+
+      // Apply initial theme colors on page load
+      updateThemeColors();
+    });
+  </script>
+</body>
+
+</html>

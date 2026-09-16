@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1020" height="348" viewBox="0 0 1020 348" font-family="ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, sans-serif">
+  <!-- Adams-EHP pipeline, Catppuccin mocha. -->
+  <defs>
+    <marker id="arrow" orient="auto" markerUnits="strokeWidth" markerWidth="3" markerHeight="4" refX="3" refY="2">
+      <path d="M 0 0 V 4 L 3 2 Z" fill="#585b70"/>
+    </marker>
+  </defs>
+  <path d="M 250 71.0 C 322.5 71.0, 322.5 174.0, 360 174.0" fill="none" stroke="#585b70" stroke-width="2"/>
+  <path d="M 250 277.0 C 322.5 277.0, 322.5 174.0, 360 174.0" fill="none" stroke="#585b70" stroke-width="2"/>
+  <path d="M 360 174.0 L 395 174.0" fill="none" stroke="#585b70" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M 625 174.0 C 697.5 174.0, 697.5 71.0, 770 71.0" fill="none" stroke="#585b70" stroke-width="2" marker-end="url(#arrow)"/>
+  <path d="M 625 174.0 C 697.5 174.0, 697.5 277.0, 770 277.0" fill="none" stroke="#585b70" stroke-width="2" marker-end="url(#arrow)"/>
+  <rect x="20" y="26" width="230" height="90" rx="16" fill="none" stroke="#fab387" stroke-width="2"/>
+  <text x="135.0" y="49.0" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="12.5" fill="#7f849c">rust/</text>
+  <text x="135.0" y="72.0" text-anchor="middle" font-size="17" font-weight="600" fill="#cdd6f4">unstable Adams E&#8322;-page</text>
+  <text x="135.0" y="93.0" text-anchor="middle" font-size="11" fill="#a6adc8">Curtis algorithm</text>
+  <rect x="20" y="232" width="230" height="90" rx="16" fill="none" stroke="#f9e2af" stroke-width="2"/>
+  <text x="135.0" y="250.0" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="12.5" fill="#7f849c">python/stable/</text>
+  <text x="135.0" y="272.0" text-anchor="middle" font-size="16" font-weight="600" fill="#cdd6f4">input stable Adams</text>
+  <text x="135.0" y="290.0" text-anchor="middle" font-size="16" font-weight="600" fill="#cdd6f4">differentials</text>
+  <text x="135.0" y="308.0" text-anchor="middle" font-size="9.5" fill="#a6adc8">Lin&#8211;Wang&#8211;Xu &#183; Isaksen&#8211;Wang&#8211;Xu</text>
+  <rect x="395" y="129" width="230" height="90" rx="16" fill="none" stroke="#89b4fa" stroke-width="2"/>
+  <text x="510.0" y="147.0" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="12.5" fill="#7f849c">python/</text>
+  <text x="510.0" y="169.0" text-anchor="middle" font-size="16" font-weight="600" fill="#cdd6f4">unstable Adams</text>
+  <text x="510.0" y="187.0" text-anchor="middle" font-size="16" font-weight="600" fill="#cdd6f4">differentials</text>
+  <text x="510.0" y="205.0" text-anchor="middle" font-size="11" fill="#a6adc8">EHP naturality &#183; Leibniz</text>
+  <rect x="770" y="26" width="230" height="90" rx="16" fill="none" stroke="#89b4fa" stroke-width="2"/>
+  <text x="885.0" y="61.0" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="12.5" fill="#7f849c">python/why.py</text>
+  <text x="885.0" y="86.0" text-anchor="middle" font-size="17" font-weight="600" fill="#cdd6f4">proof diagrams</text>
+  <rect x="770" y="232" width="230" height="90" rx="16" fill="none" stroke="#94e2d5" stroke-width="2"/>
+  <text x="885.0" y="267.0" text-anchor="middle" font-family="ui-monospace, Menlo, monospace" font-size="12.5" fill="#7f849c">charts/</text>
+  <text x="885.0" y="292.0" text-anchor="middle" font-size="17" font-weight="600" fill="#cdd6f4">interactive charts</text>
+</svg>
