@@ -2133,6 +2133,43 @@ circle {
       };
       const MAX_MAP_N = 72;
 
+      // Prefetch the keyboard-navigation neighbors so s/w/a/d and the
+      // split-screen keys land on a warm cache — the pages are static,
+      // so the fetch is the avoidable part of navigation lag.
+      (function () {
+        const cur = parseCurrentLocation();
+        const targets = new Set();
+        [-1, 1].forEach((d) => {
+          let n2 = cur.n + d;
+          if (cur.family === 'S') {
+            if (cur.n === 0 && d > 0) n2 = 2;
+            else if (cur.n === 2 && d < 0) n2 = 0;
+            else if (n2 <= 1 || n2 > MAX_MAP_N) n2 = null;
+          } else if (n2 < 0) n2 = null;
+          if (n2 !== null) targets.add(buildFilename(n2, cur.r, cur.mode));
+          const r2 = cur.r + d;
+          if (r2 >= 2 && r2 <= 5) targets.add(buildFilename(cur.n, r2, cur.mode));
+        });
+        if (cur.family === 'S') {
+          const suffix = cur.isDarkTheme ? '_dark' : '';
+          for (const k of Object.keys(MAP_ARITH)) {
+            if (k === 'P' && (cur.n % 2 === 0 || cur.n < 5)) continue;
+            if (k === 'C2' && cur.n % 2 === 0) continue;
+            const tn = MAP_ARITH[k](cur.n);
+            if (Number.isInteger(tn) && tn !== cur.n && tn >= 0
+                && tn !== 1 && tn <= MAX_MAP_N) {
+              targets.add(`S${cur.n}_E${cur.r}_${k}sbs${suffix}.html`);
+            }
+          }
+        }
+        targets.forEach((href) => {
+          const l = document.createElement('link');
+          l.rel = 'prefetch';
+          l.href = href;
+          document.head.appendChild(l);
+        });
+      })();
+
       // Open the side-by-side "map image" view for the given map. The lowercase
       // key opens it; the shift variant opens it with the image pre-highlighted.
       // Only meaningful for sphere charts. Out-of-domain / out-of-range presses
