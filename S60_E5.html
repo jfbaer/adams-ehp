@@ -2021,7 +2021,7 @@ circle {
       // differential. For an "incoming" half-line the edge's data-source is
       // the on-chart *target*; the true source sits one stem right, r
       // filtrations down.
-      const WHY_GRAPHS_URL = "../../python/why_graphs/index.html";
+      const WHY_GRAPHS_URL = "why_graphs/index.html";
       const whyGroups = new Map();  // "r|n|s|f" -> {edges: [...], url}
       document.querySelectorAll("#edges-group .defaultEdge").forEach((edge) => {
         const drClass = [...edge.classList].find((c) => /^d\d+$/.test(c));
