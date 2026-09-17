@@ -107,7 +107,6 @@ cluster-specific.
   `c2.rs` (Mahowald's map)
 - `io/cache.rs`, `io/csv.rs`: on-disk working storage and CSV/JSON exports
 - `census.rs`, `grading.rs`: page statistics, grading types
-- `verify.rs`: consistency checks behind the `verify-c2` subcommand
 
 ---
 
