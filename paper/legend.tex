@@ -1,0 +1,177 @@
+
+
+% Flow-chart styles (panel, ctpnode, description*) are defined in the lambda.tex preamble.
+%
+% The legend is split into four separate figures so that each panel can be
+% cross-referenced individually. Each carries an empty \caption{}, so amsart
+% prints just the small "Figure N." label with no descriptive text. The [H]
+% placement plus tightened float/caption spacing keeps all four on one page.
+
+\clearpage
+\begingroup
+\setlength{\intextsep}{0.1cm}%
+\setlength{\textfloatsep}{0.1cm}%
+\setlength{\abovecaptionskip}{3pt}%
+\setlength{\belowcaptionskip}{0pt}%
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PANEL 1 — TERMINAL NODES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=latex, line join=bevel]
+\node (leafpanel) [panel] at (0,0) {
+  \begin{tikzpicture}
+    % Fix the panel content width so all four panels are the same width
+    \node[inner sep=0] at (-7.75,0) {}; \node[inner sep=0] at (7.75,0) {};
+    % Title
+    \node[font=\bfseries] at (0,2) {Terminal Nodes};
+
+    % Row of nodes
+    \node (gray) at (-5,1) [ctpnode, fill=CtpOverlay2] {$\mathbf{(n,s,f)}$};
+    \node (peach1) at (0,1) [ctpnode, fill=CtpPeach] {$\mathbf{X(s,f)}$};
+
+    \node (red) at (5,1) [ctpnode, fill=CtpRed] {$\mathbf{(n,s,f)}$};
+    % Description boxes
+    \node[description] at (-5,-0.2) {$\mathcal{D}_r^{n,s,f} = \textcolor{CtpPeach}{\mathbf{0}} + \textcolor{CtpGreen}{\operatorname{Hom}(\mathcal{U}_r^{n,s,f}, \mathcal{U}_r^{n,s-1,f+r})}$};
+    \node[description-small] at (5,-0.2) {Trivial target};
+    \node[description-small] at (0,-0.2) {Stable input};
+  \end{tikzpicture}
+};
+\end{tikzpicture}
+\caption{}\label{fig:legend-terminal}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PANEL 2 — INTERNAL NODES
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=latex, line join=bevel]
+\node (innerpanel) [panel] at (0,0) {
+  \begin{tikzpicture}
+    % Fix the panel content width so all four panels are the same width
+    \node[inner sep=0] at (-7.75,0) {}; \node[inner sep=0] at (7.75,0) {};
+    % Title
+    \node[font=\bfseries] at (0,2) {Internal Nodes};
+
+    % Row of nodes
+    \node (blue) at (-5,1) [ctpnode, fill=CtpSky] {$\mathbf{(n,s,f)}$};
+    \node (green) at (0,1) [ctpnode, fill=CtpGreen] {$\mathbf{(n,s,f)}$};
+    \node (red2) at (5,1) [ctpnode, fill=CtpRed] {$\mathbf{(n,s,f)}$};
+
+    % Description boxes
+    \node[description-wide] at (-5,-0.2) {$\{0\} < \textcolor{CtpGreen}{\mathcal{I}_r^{n, s, f}} < \operatorname{Hom}\big(\mathcal{U}_r^{n, s, f}, \mathcal{U}_r^{n, s - 1, f + r}\big)$};
+    \node[description-small] at (0,-0.2) {$\mathcal{D}_r^{n, s, f} = \textcolor{CtpPeach}{\mathbf{d}_r} + \textcolor{CtpGreen}{\{0\}}$};
+    \node[description-small] at (5,-0.2) {$\mathcal{D}_r^{n, s, f} = \textcolor{CtpPeach}{\mathbf{0}} + \textcolor{CtpGreen}{\{0\}}$};
+  \end{tikzpicture}
+};
+\end{tikzpicture}
+\caption{}\label{fig:legend-internal}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PANEL 3 — ARROWS
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=latex, line join=bevel]
+\node (arrowpanel) [panel] at (0,0) {
+  \begin{tikzpicture}
+    % Fix the panel content width so all four panels are the same width
+    \node[inner sep=0] at (-7.75,0) {}; \node[inner sep=0] at (7.75,0) {};
+    % Title
+    \node[font=\bfseries] at (0,2.8) {Maps};
+
+    % First arrow diagram
+    \begin{scope}[shift={(-4,0)}]
+      \node (top1) at (0,2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n,s,f)}$};
+      \node (left1) at (-1.5,1) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{F(n,s,f)}$};
+      \node (right1) at (1.5,1) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n,s,f)}$};
+
+      \draw [CtpText,->, very thick] (top1) to[out=225,in=90]
+        node [above left,CtpText,inner sep=2pt] {$\mathbf{F}$} (left1);
+      \draw [CtpText, very thick] (top1) to[out=315,in=90] (right1);
+    \end{scope}
+
+    % Second arrow diagram (copy)
+    \begin{scope}[shift={(4,0)}]
+      \node (top2) at (0,2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{F(n,s,f)}$};
+      \node (left2) at (-1.5,1) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n, s, f)}$};
+      \node (right2) at (1.5,1) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{F(n,s,f)}$};
+
+      \draw [CtpText,->, very thick] (left2) to[out=90,in=225]
+        node [above left,CtpText,inner sep=2pt] {$\mathbf{F}$} (top2);
+      \draw [CtpText, very thick] (top2) to[out=315,in=90] (right2);
+    \end{scope}
+
+    % Description boxes for arrow diagrams
+    \node[description-leibniz] at (-4,-0.5) {$\mathcal{D}_r^{n, s, f} \update \mathrm{F}_*^{-1}\!\big(\mathrm{F}^*(\mathcal{D}_r^{\mathrm{F}(n, s, f)})\big)$};
+    \node[description-leibniz] at (4,-0.5) {$\mathcal{D}_r^{\mathrm{F}(n,s,f)} \update (\mathrm{F}^*)^{-1}\!\big(\mathrm{F}_*(\mathcal{D}_r^{n, s, f})\big)$};
+  \end{tikzpicture}
+};
+\end{tikzpicture}
+\caption{}\label{fig:legend-maps}
+\end{figure}
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+%% PANEL 4 — LEIBNIZ RULE
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}[>=latex, line join=bevel]
+\node (leibnizpanel) [panel] at (0,0) {
+  \begin{tikzpicture}
+    % Fix the panel content width so all four panels are the same width
+    \node[inner sep=0] at (-7.75,0) {}; \node[inner sep=0] at (7.75,0) {};
+    % Title
+    \node[font=\bfseries] at (0,3.0) {Products};
+
+    % Left — deducing the left factor ($\mathrm{E}y$ a cycle)
+    \begin{scope}[shift={(-4.0,0)}]
+      \node (ltop1) at (0,2.2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n,s,f)}$};
+      \node (lleft1) at (-2.2,1.2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n,s,f)}$};
+      \node (lmid1) at (0,1.2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n{+}s,s',f')}$};
+      \node (lright1) at (2.3,1.2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n,s{+}s',f{+}f')}$};
+
+      \draw [CtpText, very thick] (ltop1) to[out=270,in=90] (lleft1);
+      \draw [CtpText, very thick] (ltop1) to[out=270,in=90] (lmid1);
+      \draw [CtpText, very thick] (ltop1) to[out=270,in=90] (lright1);
+
+      \node[description-leibniz] at (0,0.1) {$\mathcal{D}_r^{n,s,f} \update (R_y)_*^{-1}\!\big(R_{\mathrm{E}y}^*(\mathcal{D}_r^{n, s + s', f + f'})\big)$};
+    \end{scope}
+
+    % Right — deducing the right factor ($x$ a cycle)
+    \begin{scope}[shift={(4.0,0)}]
+      \node (ltop2) at (0,2.2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n{+}s,s',f')}$};
+      \node (lleft2) at (-2.2,1.2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n,s,f)}$};
+      \node (lmid2) at (0,1.2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n{+}s,s',f')}$};
+      \node (lright2) at (2.3,1.2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n,s{+}s',f{+}f')}$};
+
+      \draw [CtpText, very thick] (ltop2) to[out=270,in=90] (lleft2);
+      \draw [CtpText, very thick] (ltop2) to[out=270,in=90] (lmid2);
+      \draw [CtpText, very thick] (ltop2) to[out=270,in=90] (lright2);
+
+      \node[description-leibniz] at (0,0.1) {$\mathcal{D}_r^{n+s,s',f'} \update \bigl((L_x)_* \circ \mathrm{E}^*\bigr)^{-1}\!\big((L_x \circ \mathrm{E})^*(\mathcal{D}_r^{n, s + s', f + f'})\big)$};
+    \end{scope}
+
+    % Bottom center — deducing the product (full Leibniz rule)
+    \begin{scope}[shift={(0,-3.3)}]
+      \node (ltop3) at (0,2.2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n,s{+}s',f{+}f')}$};
+      \node (lleft3) at (-2.2,1.2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n,s,f)}$};
+      \node (lmid3) at (0,1.2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n{+}s,s',f')}$};
+      \node (lright3) at (2.3,1.2) [ctpnode, fill=CtpBase, text=CtpText] {$\mathbf{(n,s{+}s',f{+}f')}$};
+
+      \draw [CtpText, very thick] (ltop3) to[out=270,in=90] (lleft3);
+      \draw [CtpText, very thick] (ltop3) to[out=270,in=90] (lmid3);
+      \draw [CtpText, very thick] (ltop3) to[out=270,in=90] (lright3);
+
+      \node[description, text width=12.2cm] at (0,0.1) {$\mathcal{D}_r^{n, s+s', f+f'} \update \bigl((M \circ (\mathrm{id} \otimes \mathrm{E}))^*\bigr)^{-1}\big(M_*(\mathcal{D}_r^{n, s, f} \otimes \mathrm{id}) + M_*(\mathrm{id} \otimes \mathrm{E}^*(\mathcal{D}_r^{n + s, s', f'}))\big)$};
+    \end{scope}
+  \end{tikzpicture}
+};
+\end{tikzpicture}
+\caption{}\label{fig:legend-products}
+\end{figure}
+
+\endgroup
