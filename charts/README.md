@@ -22,7 +22,8 @@ spectral-sequence charts: one JSON + HTML page per sphere `S^n` per page
 
 The rendering engine is a trimmed copy of
 [SeqSee](https://github.com/JoeyBF/SeqSee) by Joey Beauvais-Feisthauer and
-Dan Isaksen, bundled here as `seqsee/`.
+Dan Isaksen, bundled here as `seqsee/`; its MIT license is in
+[`seqsee/LICENSE`](seqsee/LICENSE).
 
 ## Shipped data
 
@@ -55,12 +56,16 @@ Run from this `charts/` directory (the script shells out to the bundled
 `seqsee/` package, so the working directory matters):
 
 ```bash
-poetry run python generate_charts.py \
-    --charts-dir data \               # where the E{r}_{N}.csv files live
-    --output-dir interactive_charts \ # where to write the charts
-    --mode light \                    # light | dark | both
-    --max-stem 50                     # clip charts at this stem (0 = full width)
+poetry run python generate_charts.py --charts-dir data \
+    --output-dir interactive_charts --mode light --max-stem 50
 ```
+
+| Flag | Meaning |
+|---|---|
+| `--charts-dir` | where the `E{r}_{N}.csv` files live |
+| `--output-dir` | where to write the charts |
+| `--mode` | `light` \| `dark` \| `both` |
+| `--max-stem` | clip charts at this stem (0 = full width); also sets the uniform filtration ceiling to `N − max_stem` (26 at the defaults) |
 
 Those are the defaults (`--sidebyside` is the one opt-in; the Pages workflow
 passes it). Differentials arriving from just past the stem clip are drawn as
@@ -68,6 +73,16 @@ incoming half-lines. Point `--charts-dir ../python/charts` at a fresh
 propagator run instead of the shipped data. Existing output files are
 detected and skipped, so re-runs only fill in what's missing; relative paths
 are resolved relative to this directory.
+
+## Proof diagrams
+
+Each nonzero differential in a chart links to its why-graph proof diagram.
+The hosted site bundles the rendered SVGs, but they are not shipped in this
+repository — in a local build the click-throughs point at
+`python/why_graphs/`, which stays empty until you generate them (three
+passes of [`python/make_why_graphs.py`](../python/make_why_graphs.py):
+`--page r`, then `--render-svg`, then `--merge-manifest`; see
+[`python/README.md`](../python/README.md)).
 
 ## Input format
 

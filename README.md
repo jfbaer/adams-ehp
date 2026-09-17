@@ -42,8 +42,8 @@ SageMath engine then treats each unknown unstable Adams differential as an
 affine subspace of possible matrices and shrinks those subspaces by
 intersecting with constraints imposed by the algebraic EHP maps and algebraic
 compositions, recording a replayable proof chain for each deduction. The
-method is developed in Section 3 of the [preprint](paper/lambda.pdf), *The
-computation of unstable Adams differentials*.
+method is developed in Section 3 (*The computation of unstable Adams
+differentials*) of the [preprint](paper/lambda.pdf).
 
 <p align="center">
   <picture>
@@ -58,19 +58,21 @@ With a Rust toolchain (`cargo`) and [SageMath](https://doc.sagemath.org/html/en/
 9.0+ on your `PATH`, two commands run the whole pipeline:
 
 ```bash
-( cd rust   && cargo run --release -- generate -d 50 -o ../build/E2_50 )
-( cd python && sage -python run.py 50 --data ../build/E2_50 )
+( cd rust   && cargo run --release -- generate -d 51 -o ../build/E2_51 )
+( cd python && sage -python run.py 50 --data ../build/E2_51 )
 ```
 
 The first generates the E2 page and its product tables (Curtis
 algorithm); the second computes the d2–d5 differentials and chart CSVs
 (into `python/charts/`). The loader reads the generated table's actual
 coverage and lowers its bound to fit, so the two degrees need not be
-matched by hand. Bound 50 takes a few minutes; the shipped dataset's full
+matched by hand (a `-d N` table supports propagation through total degree
+`N - 1`). Bound 50 takes a few minutes; the shipped dataset's full
 range is total degree 76, reproducible with `-d 77` / `run.py 76` (the
 rust and python stages each take several hours). The shipped data is
-never modified; the fresh E2 lands in `build/`, and the propagator writes
-its page data to `python/data/E{r}/` and chart CSVs to `python/charts/`.
+never modified; the fresh E2 lands in `build/`, and the propagator caches
+d2 alongside it (under `--data`), writes its d3–d5 page data to
+`python/data/E{r}/`, and writes chart CSVs to `python/charts/`.
 
 To then browse your run as interactive charts:
 
@@ -89,7 +91,7 @@ the slow part of a chart build)
 | [`python/`](python/) | the propagator: a SageMath engine computing d2–d5 with proof chains, plus the `why.py` proof-diagram tool |
 | [`python/stable/`](python/stable/) | the stable inputs: known Adams differentials for the sphere and the cofiber of 2 (Lin–Wang–Xu, Isaksen–Wang–Xu) |
 | [`charts/`](charts/) | the chart generator: turns propagator CSVs into the interactive HTML charts (bundled trimmed [SeqSee](https://github.com/JoeyBF/SeqSee)) |
-| [`paper/`](paper/lambda.pdf) | the preprint (PDF) |
+| [`paper/`](paper/) | the preprint: LaTeX source and [PDF](paper/lambda.pdf) |
 
 ## Citing this work
 
@@ -112,7 +114,7 @@ Licensed under the Apache License, Version 2.0; see [`LICENSE`](LICENSE).
 
 The chart renderer is a trimmed, bundled copy of
 [SeqSee](https://github.com/JoeyBF/SeqSee) by Joey Beauvais-Feisthauer and
-Dan Isaksen (its license ships in [`charts/seqsee/`](charts/seqsee/)). The stable
+Dan Isaksen (its license ships in [`charts/seqsee/LICENSE`](charts/seqsee/LICENSE)). The stable
 Adams differentials seeding the propagator come from the machine-verified
 computations of Weinan Lin, Guozhen Wang, and Zhouli Xu
 ([arXiv:2412.10876](https://arxiv.org/abs/2412.10876),

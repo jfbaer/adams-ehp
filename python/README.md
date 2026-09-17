@@ -95,6 +95,9 @@ Every deduced differential carries a proof chain (the *why graphs* of the
 sage -python why.py 9 37 7 -r 3     # proof of d3 at (n, s, f) = (9, 37, 7)
 ```
 
+(This reads the `data/E{r}/d{r}` caches a completed `run.py` leaves behind —
+they are not shipped, so run the pipeline first.)
+
 This writes `why_9_37_7.dot` and, if graphviz is installed, renders it to
 PDF. Nodes are tridegrees; terminal (orange) nodes are known stable or
 Lambda(C2) differentials; edges are labeled by the map used (E/H/P), and
@@ -130,7 +133,13 @@ constraints arrive. (See §*Uncertainties* in the [preprint](../paper/lambda.pdf
 - `uncertainty.py`: `UncertaintyManager`, indeterminacy bookkeeping
 - `spurious.py`: the spurious-uncertainty resolver run after each page
 - `why.py`: proof-diagram CLI; `make_why_graphs.py` renders every proof to
-  SVG for the browser in `why_graphs/`
+  SVG for the browser in `why_graphs/`, in three passes per page:
+
+  ```bash
+  sage -python make_why_graphs.py --page 2   # proof trees -> DOT (needs sage; repeat per page)
+  python3 make_why_graphs.py --render-svg    # DOT -> SVG (parallel, needs graphviz)
+  python3 make_why_graphs.py --merge-manifest  # build the viewer's manifest.js
+  ```
 
 ---
 

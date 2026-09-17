@@ -34,13 +34,17 @@ To regenerate the full E2 dataset used by the python propagator and run it
 end to end:
 
 ```bash
-cargo run --release -- generate -d 77 -o ../python/data/E2
-cd ../python && sage -python run.py 76
+cargo run --release -- generate -d 77 -o ../build/E2_77
+cd ../python && sage -python run.py 76 --data ../build/E2_77
 ```
 
 (A `-d N` table supports propagation through total degree `N - 1`, so
-`-d 77` reproduces the shipped range; bare `run.py` defaults to 70, and the
-loader reads the table's actual coverage and lowers its bound to fit.)
+`-d 77` reproduces the shipped propagation range of total degree 76; bare
+`run.py` defaults to 70, and the loader reads the table's actual coverage
+and lowers its bound to fit. Write fresh runs to a scratch directory as
+above — the shipped tables in `../python/data/E2/` were assembled from
+banded `--mult-floor`/`--mult-ceil` runs, so a plain `-d 77` run produces
+the same propagation range but not byte-identical files.)
 
 To regenerate only the Lambda(C2) data and copy the outputs into
 `../python/data/E2/`:
@@ -103,6 +107,7 @@ cluster-specific.
   `c2.rs` (Mahowald's map)
 - `io/cache.rs`, `io/csv.rs`: on-disk working storage and CSV/JSON exports
 - `census.rs`, `grading.rs`: page statistics, grading types
+- `verify.rs`: consistency checks behind the `verify-c2` subcommand
 
 ---
 

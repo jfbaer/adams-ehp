@@ -2,6 +2,8 @@
 TODO.md
 checklist.md
 REFACTOR_SPEC.md
+AUDIT-*.md
+charts/make_bounds_true.py
 
 # macOS
 .DS_Store
