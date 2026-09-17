@@ -1,8 +1,9 @@
 //! Optional instrumentation: data-shape census and tag-lookup counters.
 //!
 //! Enabled by setting `LAMBDA_CENSUS=1`; all output goes to stderr via `log`
-//! and never touches the CSV outputs. The numbers drive the storage/algorithm
-//! decisions for high-degree runs (see the repository optimization notes).
+//! and never touches the CSV outputs. The numbers (poly sizes, tag-lookup hit
+//! rates, store growth) inform the storage and algorithm choices that keep
+//! high-degree runs inside memory budgets.
 
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicU64, Ordering};

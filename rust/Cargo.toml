@@ -3,8 +3,8 @@ name = "lambda_e2"
 version = "0.1.0"
 edition = "2021"
 description = "Lambda-algebra E2 pages for the EHP spectral sequence (Curtis algorithm) and operations on them: products, Hopf H, suspension E, Whitehead P, and Mahowald's map to Lambda(C2)"
-readme = "../README.md"
-# No license chosen yet; prevent accidental publication to crates.io.
+readme = "README.md"
+license = "Apache-2.0"
 publish = false
 
 [dependencies]

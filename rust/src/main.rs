@@ -98,12 +98,11 @@ struct Opts {
     mult_floor: i32,
 
     /// Only compute E2_relations rows with total degree s+f at or below this
-    /// ceiling (use with --mult-floor to compute a band). Measured behavior
-    /// (2026-08-18, deg-50/65/July cross-comparison): emitted rows are always
-    /// correct and the basis is identical across runs; deeper tables only ADD
-    /// rows (fanout, factor-column <= degree, h0-tower depth). Only rows
-    /// landing AT the table degree (margin 0) come out genuinely partial —
-    /// set the ceiling at least 1 below --degree. Default: no ceiling.
+    /// ceiling (use with --mult-floor to compute a band). Emitted rows are
+    /// always correct and the basis is identical across runs; deeper tables
+    /// only ADD rows. Rows landing AT the table degree come out genuinely
+    /// partial — set the ceiling at least 1 below --degree. Default: no
+    /// ceiling.
     #[arg(long, global = true)]
     mult_ceil: Option<i32>,
 
