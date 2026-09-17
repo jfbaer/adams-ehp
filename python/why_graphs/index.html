@@ -79,6 +79,20 @@
 <script src="manifest.js"></script>
 <script>
 "use strict";
+// manifest.js is generated, not shipped: without it, explain instead of
+// dying on the undefined MANIFEST below.
+if (typeof MANIFEST === "undefined") {
+  document.body.innerHTML =
+    '<div style="display:flex;height:100vh;align-items:center;' +
+    'justify-content:center;font:16px/1.6 -apple-system,sans-serif;' +
+    'color:#4c4f69;background:#eff1f5;text-align:center;padding:0 2em">' +
+    '<div><b>No proof-diagram manifest found.</b><br>' +
+    'Generate the why graphs first — three passes of ' +
+    '<code>make_why_graphs.py</code> (<code>--page r</code>, ' +
+    '<code>--render-svg</code>, <code>--merge-manifest</code>); ' +
+    'see python/README.md.</div></div>';
+  throw new Error("manifest.js missing");
+}
 const $ = id => document.getElementById(id);
 
 const defaultFilters = () => ({

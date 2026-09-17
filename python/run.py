@@ -43,63 +43,12 @@ from lib import Element
 
 TOT = 70  # default total degree; the loader lowers it if the data covers less
 
-# Manually seeded d3 differentials, applied to the E3 page before compute().
-# Each entry is (n, s, f, image): the image is d3 of the FIRST basis vector of
-# (n, s, f), written in the target (n, s-1, f+3) basis. For a 1-dimensional
-# source this determines d3 entirely; for a higher-dimensional source it fixes
-# only the first basis vector and leaves the rest for compute() to resolve.
-MANUAL_D3 = [
-    # Temporarily disabled while shaking down truncated-range runs: these
-    # images are written in the full-range (tot=79) E3 bases, and applying
-    # them against a truncated page's differential shapes crashes. To
-    # re-enable for the definitive full-range run, uncomment the entries AND
-    # restore the apply_manual_differentials(ss.current_page, MANUAL_D3) call
-    # in main() after the E3 page turn (call removed in a later cleanup).
-    # (7, 47, 16, [1, 1]),
-    # (5, 47, 10, [0]),
-    # (6, 34, 10, [1]),
-    # (6, 37, 10, [1]),
-    # (6, 40, 10, [0, 1]),
-    # (6, 42, 14, [1]),
-    # (6, 45, 14, [1]),
-    # (6, 48, 14, [0, 1]),
-    # (11, 43, 6, [0]),
-]
-
-
-def apply_manual_differentials(page, entries):
-    """Force d(first basis vector of (n,s,f)) = image for each entry on `page`.
-
-    The images are written in the target bidegree's basis as it exists on the
-    FULL-RANGE (tot=79) page. On a truncated run the homology near the top of
-    the window can come out with different dimensions (boundary differentials
-    are less determined), so any seed whose target basis no longer matches is
-    skipped with a warning rather than applied against the wrong basis."""
-    r = page.d.r
-    for n, s, f, image in entries:
-        if (n, s, f) not in page.page:
-            print(f"  skip d{r}({n}, {s}, {f}): tridegree not on this page")
-            continue
-        target_dim = page.dimension[n, s - 1, f + r]
-        if target_dim != len(image):
-            print(f"  skip d{r}({n}, {s}, {f}): seed image is written in a "
-                  f"{len(image)}-dim basis at ({n}, {s - 1}, {f + r}) but this "
-                  f"page has dimension {target_dim} there (truncated range?)")
-            continue
-        source = page.page[n, s, f][0]
-        target = Element(
-            n, s - 1, f + r, vector(GF(2), image), spectral_sequence=page
-        )
-        page.d.set_element_differential(source, target, page.page)
-        print(f"  set d{r}({n}, {s}, {f}) first basis vector -> {image}")
-
-
 def load_entry_list(path):
     """Parse a hand-written differential list into (n, s, f, row, col, value)
     tuples. Lines are `n s f row col value`; blank lines and `#` comments are
-    ignored. Missing file -> empty list. Used for the Unstable{r}/Spurious{r}
-    lists produced by lambda-bridge/build_hand_lists.py (this run only loads
-    Unstable{r}; run_spurious_check.py imports this helper for Spurious{r})."""
+    ignored. Missing file -> empty list. Used for the optional Unstable{r}
+    hand lists (hand-proved differentials layered on top of the stable
+    inputs; see stable/README.md for the input-data conventions)."""
     entries = []
     if not os.path.exists(path):
         return entries
@@ -110,8 +59,8 @@ def load_entry_list(path):
                 continue
             parts = line.split()
             # A malformed line is a hand-editing accident; silently dropping
-            # it would silently delete a hand-proved differential (FINDINGS.md,
-            # "load_entry_list silently drops malformed hand-list lines").
+            # it would silently delete a hand-proved differential, so fail
+            # loudly instead.
             if len(parts) != 6:
                 raise ValueError(
                     f"{path}:{lineno}: malformed hand-list line "
@@ -145,9 +94,10 @@ MAX_EXTRA_CONVERGENCE_PASSES = 5
 
 def compute_to_fixpoint(ss, verify):
     """ss.compute(), optionally re-run until the differential state stops
-    changing. compute()'s own exit test discards several progress signals
-    (FINDINGS.md: "compute() termination guard"), so with `verify` this both
-    detects and heals a premature exit; 0 extra passes = converged first try."""
+    changing. compute()'s own exit test ignores some progress signals (it can
+    declare a fixpoint while later constraint passes would still shrink
+    subspaces), so with `verify` this both detects and heals a premature
+    exit; 0 extra passes = converged first try."""
     ss.compute()
     if not verify:
         return
@@ -214,8 +164,8 @@ def main():
         "--verify-converged", action="store_true",
         help="after each compute(), re-run it until the differential state "
              "stops changing and report how many extra passes were needed. "
-             "Guards against the known premature-fixpoint exit in compute() "
-             "(FINDINGS.md); use for the definitive publication run.",
+             "Guards against a premature fixpoint exit in compute(); use "
+             "for the definitive publication run.",
     )
     args = parser.parse_args()
     tot = args.tot

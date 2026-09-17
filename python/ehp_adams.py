@@ -1563,8 +1563,8 @@ class SpectralSequencePage:
                 h3 = None
                 # The [0] resolutions below treat each hi multiplier bidegree
                 # as one-dimensional; a dim >= 2 bidegree would silently drop
-                # products from the chart (FINDINGS.md — adjudicated vacuous
-                # on the shipped range, asserted against future extensions).
+                # products from the chart. Vacuous on the shipped range
+                # (verified), asserted here against future extensions.
                 for hi_stem in (0, 1, 3, 7):
                     if (self.has_elements(n + s, hi_stem, 1)
                             and len(self.page[n + s, hi_stem, 1]) > 1):

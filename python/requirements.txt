@@ -1,3 +1,6 @@
+# This file intentionally declares no pip packages: `pip install -r
+# requirements.txt` is a no-op. Everything here runs inside SageMath.
+#
 # Core dependencies for uASS Spectral Sequence Computation Engine
 
 # SageMath 9.0 or higher is required for:

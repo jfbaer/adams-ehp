@@ -30,9 +30,9 @@ Classes:
 Main Operations:
 - d(element): Apply differential to an element
 - turn_page_with_uncertainty(): Compute homology H(E_r, d_r) = E_{r+1}
-- check_stable(): Resolve stable-range (n > s+1) and C2 (n=0) differentials from the
-  entry-level CSVs exported by the UI session (stable/stable_sphere_diffs.csv,
-  stable/c2_diffs.csv), falling back to the legacy Stable{r}/C2{r} txt tables
+- check_stable(): Resolve stable-range (n > s+1) and C2 (n=0) differentials
+  from the entry-level input CSVs (stable/stable_sphere_diffs.csv,
+  stable/c2_diffs.csv; provenance in stable/README.md)
 
 Proof chains are visualized as flow charts by why.py (write_why_graph).
 
@@ -686,8 +686,8 @@ class DifferentialsPage(key_defaultdict):
                   f"session's dimensions (cache computed at a larger range)")
         return truncated
 
-    # Entry-level known-differential CSVs exported from the ehp_chart UI
-    # session (lambda-bridge/export_stable_csvs.py). 7 columns
+    # Entry-level known-differential CSVs (stable/, provenance documented in
+    # stable/README.md). 7 columns
     # r,n,s,f,row,col,value with row = TARGET index and col = SOURCE index in
     # the exporting session's basis; our matrices are source x target, so an
     # entry (row, col, v) pins M[col, row] = v. Explicit zeros are information.
@@ -764,9 +764,9 @@ class DifferentialsPage(key_defaultdict):
         the hand-written Unstable{r}/Spurious{r} lists; `label` records which
         list the entries came from in the proof reasons. Entries whose tridegree
         is absent from this page, or whose row/col exceed its dimensions, are
-        skipped with a warning — a drifted basis on a turned page must never be
-        misapplied against the wrong indices (same guard as
-        apply_manual_differentials). Returns the number actually imposed."""
+        skipped with a warning — a drifted basis on a turned page must never
+        be misapplied against the wrong indices. Returns the number actually
+        imposed."""
         applied = 0
         skipped = 0
         for (n, s, f, row, col, value) in entries:
@@ -815,86 +815,14 @@ class DifferentialsPage(key_defaultdict):
         return count > 0
 
     def check_stable(self):
-        """Resolve stable-range (n > s + 1) and C2 (n == 0) differentials; each column independently prefers the entry-level CSV exported from the interactive session when it has rows for this r, falling back to its Stable{r}/C2{r} presence table otherwise (the r = 6..8 C2 tables exist only as txt); returns True if any differential was set"""
+        """Resolve stable-range (n > s + 1) and C2 (n == 0) differentials
+        from the entry-level CSVs in stable/ (see stable/README.md for
+        format and provenance); returns True if any differential was set."""
         stable_csv, c2_csv = self._known_diff_entries() or ({}, {})
         csv_changed = False
         if stable_csv or c2_csv:
             csv_changed = self._check_stable_csv(stable_csv, c2_csv)
-        if stable_csv and c2_csv:
-            return csv_changed
-
-        stable_tuples = set()
-        c2_tuples = set()
-
-        # Load stable tuples for n=71
-        import os
-        stable_filename = f"stable/Stable{self.r}.txt" if os.path.exists("stable") and os.path.isdir("stable") else f"Stable{self.r}.txt"
-        try:
-            with open(stable_filename, "r") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        tuple_str = line.strip("()")
-                        s, f = map(int, tuple_str.split(", "))
-                        stable_tuples.add((s, f))
-        except FileNotFoundError:
-            pass
-
-        # Load C2 tuples for n=0
-        c2_filename = f"stable/C2{self.r}.txt" if os.path.exists("stable") and os.path.isdir("stable") else f"C2{self.r}.txt"
-        try:
-            with open(c2_filename, "r") as f:
-                for line in f:
-                    line = line.strip()
-                    if line:
-                        tuple_str = line.strip("()")
-                        s, f = map(int, tuple_str.split(", "))
-                        c2_tuples.add((s, f))
-        except FileNotFoundError:
-            pass
-
-        count = 0
-        for (n, s, f) in list(self.keys()):
-            # Stable spheres carry the stable differential (n > s + 1); the C2
-            # column is n == 0. Everything else is out of scope for this table.
-            if not (n > s + 1 or n == C2_N_VALUE):
-                continue
-            # Skip a column already handled at entry level by its CSV.
-            if (stable_csv if n > s + 1 else c2_csv):
-                continue
-            diff = self[n, s, f]
-            # Stable{r}.txt (stable spheres) and C2{r}.txt (n == 0) list every
-            # tridegree carrying a nonzero d_r; both tables are complete here.
-            check_tuples = stable_tuples if n > s + 1 else c2_tuples
-
-            # Record the table as the assumed input in the proof reason, so why
-            # graphs terminate at an S(s, f)/C2(s, f) node instead of an
-            # unexplained sourceless constraint (same labels as the CSV path).
-            label = "stable" if n > s + 1 else "C2"
-
-            if (s, f) not in check_tuples:
-                # Absent from the table => the d_r matrix here is zero, whatever
-                # the source and target dimensions. Force it to zero unless it is
-                # already exactly zero.
-                if not (diff.dimension() == 0 and diff.v.is_zero()):
-                    diff.set_subspace(diff.ambient.zero(), diff.ambient.span([]))
-                    self.counter += 1
-                    diff.add_reason(self.counter, 0, 0, 0, 0, 0, 0, label)
-                    count += 1
-            elif diff.dimension() == 1 and diff.v.is_zero():
-                # Present in the table => a nonzero d_r. Resolve the still-open
-                # one-dimensional case to its nonzero coset representative.
-                linear_part = diff.subspace.linear_part()
-                offset = (
-                    linear_part.basis()[0]
-                    if linear_part.dimension() > 0
-                    else diff.ambient.zero()
-                )
-                diff.set_subspace(offset, diff.ambient.span([]))
-                self.counter += 1
-                diff.add_reason(self.counter, 0, 0, 0, 0, 0, 0, label)
-                count += 1
-        return csv_changed or count > 0
+        return csv_changed
 
     def ratio_solved(self):
         """
