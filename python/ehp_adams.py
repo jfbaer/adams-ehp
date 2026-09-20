@@ -396,7 +396,7 @@ class SpectralSequencePage:
             for n, s, f in unknown_tridegrees:
                 writer.writerow([n, s, f])
 
-    def save_to_directory(self, directory, has_C2=True):
+    def save_to_directory(self, directory):
         """Save page data to directory (pure file I/O, no computation)"""
         os.makedirs(directory, exist_ok=True)
         r_value = self.d.r
@@ -407,12 +407,9 @@ class SpectralSequencePage:
         # Write products
         write_products(f"{directory}/E{r_value}_relations.csv", self.products)
 
-        # Write maps (conditionally for C2)
-        map_names = ['E', 'H', 'P']
-        if has_C2:
-            map_names.append('C2')
-
-        for map_name in map_names:
+        # Write the E/H/P/C2 map tables (the hi product tables are charted,
+        # not saved)
+        for map_name in standard_map_names(self.has_C2, with_hi=False):
             if map_name in self.maps and hasattr(self.maps[map_name], 'table'):
                 write_maps(f"{directory}/E{r_value}_{map_name}.csv",
                           self.maps[map_name].table)
@@ -435,14 +432,15 @@ class SpectralSequencePage:
         for (n, s, f), bidegree_elements in self.page.items():
             self.dimension[n, s, f] = len(bidegree_elements)
 
-    def initialize_maps(self, has_C2=True):
-        """Initialize map objects from standard templates"""
-        map_names = ['E', 'H', 'P']
-        if has_C2:
-            map_names.append('C2')
-            map_names.extend(C2_PRODUCT_MAPS)
+    @property
+    def has_C2(self):
+        """True when the C2 mapping-cone data is loaded on this page (the C2
+        map, and with it the hi product maps, were initialized)."""
+        return 'C2' in self.maps
 
-        for map_name in map_names:
+    def initialize_maps(self, with_C2=True):
+        """Initialize map objects from standard templates"""
+        for map_name in standard_map_names(with_C2):
             map_template = STANDARD_MAPS[map_name]
             # Only the hi product maps carry their domain restriction (n==0);
             # E/H/P/C2 keep the historical always-true default.
@@ -453,7 +451,6 @@ class SpectralSequencePage:
                 map_template.f,
                 domain_check=map_template.domain_check if map_name in C2_PRODUCT_MAPS else None,
             )
-
 
     def map_matrix(self, map_name, n, s, f):
         if map_name not in self.maps:
@@ -1232,14 +1229,13 @@ class SpectralSequencePage:
                 changed |= self.natural_rev(n, s, f, map_name, locked=True)
         return changed
 
-    def compute(self, has_C2=True, use_active_pairs=True):
+    def compute(self, use_active_pairs=True):
         """Compute differentials using constraints.
 
         Iterates naturality, C2 naturality, d^2 = 0, and Leibniz passes until
         a full outer pass makes no change anywhere (a true fixpoint).
 
         Args:
-            has_C2: Whether to apply C2 map constraints
             use_active_pairs: If True, only process Leibniz pairs where at least
                             one differential is not forced (significant speedup!)
         """
@@ -1250,7 +1246,7 @@ class SpectralSequencePage:
         # single call pins everything the inputs cover; repeating it inside
         # the loop below would be a no-op.
         self.d.check_stable()
-        if has_C2 and 'C2' in self.maps:
+        if self.has_C2:
             self.C2()
         loop_count = 0
 
@@ -1281,7 +1277,7 @@ class SpectralSequencePage:
             # initial call, but n=0 tridegrees beyond the inputs' coverage
             # (r >= 6 past total degree HIGH_R_TRIVIAL_TOT) can still shrink
             # mid-page and feed the odd spheres.
-            if has_C2 and 'C2' in self.maps:
+            if self.has_C2:
                 progress |= self.C2()
             progress |= self.d_squared()
             progress |= self._natural_rev_sweep()
@@ -1310,7 +1306,7 @@ class SpectralSequencePage:
         else:
             print("  naturality deductions by map: none")
 
-    def next_page(self, has_C2=True):
+    def next_page(self):
         """
         Compute the next page E_{r+1} from E_r (pure mathematical computation).
 
@@ -1323,9 +1319,6 @@ class SpectralSequencePage:
         - Compute induced maps or products (handled by SpectralSequence)
         - Save to disk (use save_to_directory() separately)
         - Build caches (done after induced structures are computed)
-
-        Args:
-            has_C2: Whether C2 map should be initialized (default: True)
         """
         # Carry max_t forward unchanged: the usable region already shrinks by
         # one total degree per page through the growing differential reach
@@ -1349,8 +1342,9 @@ class SpectralSequencePage:
         # Initialize differential structure for next page
         new_ss.d = DifferentialsPage(r=self.d.r + 1, dimension_dict=new_ss.dimension)
 
-        # Initialize map objects (but not their tables - computed by SpectralSequence)
-        new_ss.initialize_maps(has_C2=has_C2)
+        # Initialize map objects (but not their tables - computed by
+        # SpectralSequence), mirroring this page's map set
+        new_ss.initialize_maps(with_C2=self.has_C2)
 
         return new_ss
 
@@ -1392,7 +1386,7 @@ class SpectralSequencePage:
             return x.vect
         return reduce_against(x.vect, self.turned_page[x_n, x_s, x_f].B)
 
-    def write_spheres(self, has_C2=True, charts_dir=None):
+    def write_spheres(self, charts_dir=None):
         """Write the chart CSV {charts_dir}/E{r}_{max_t}.csv: one row per basis
         element in every charted column (spheres, plus the n=0 Lambda(C2)
         column; n=1 is skipped), with columns for the h0-h3 products, the
@@ -1578,7 +1572,7 @@ class SpectralSequencePage:
                         except (ValueError, AttributeError, KeyError):
                             # Product computation failed or not decomposable
                             pass
-                    if n == 0 and has_C2 and 'h0' in self.maps:
+                    if n == 0 and 'h0' in self.maps:
                         # The n=0 column's hi products live in the hi map
                         # tables (E2_C2_products.csv on E2, induced on later
                         # pages), not in the sphere multiplication table the
@@ -1593,12 +1587,8 @@ class SpectralSequencePage:
                                         [str(b) for b in image.decompose()])
                             except (ValueError, AttributeError, KeyError):
                                 pass
-                    # Output maps (conditionally for C2)
-                    map_names = ['E', 'H', 'P']
-                    if has_C2:
-                        map_names.append('C2')
-
-                    for map_name in map_names:
+                    # Output the E/H/P/C2 map images
+                    for map_name in standard_map_names(self.has_C2, with_hi=False):
                         if map_name in self.maps and hasattr(self.maps[map_name], 'table'):
                             try:
                                 image = self.maps[map_name].apply(element)
@@ -1627,10 +1617,14 @@ class SpectralSequence:
     - File I/O and serialization
     """
 
-    def __init__(self, initial_r=2, has_C2=True):
+    def __init__(self, initial_r=2):
         self.pages = {}  # Dictionary mapping r -> SpectralSequencePage
         self.current_r = initial_r
-        self.has_C2 = has_C2  # Track C2 availability for all pages
+
+    @property
+    def has_C2(self):
+        """C2 availability, read off the current page's map set."""
+        return self.current_page is not None and self.current_page.has_C2
 
     @classmethod
     def from_data(cls, prefix, r=2, tot=None, differential_file=None, build_pairs=True):
@@ -1669,7 +1663,7 @@ class SpectralSequence:
         if tot is None:
             tot = float('inf')  # Load everything
 
-        page, has_C2 = load_spectral_sequence(prefix, r, tot, build_pairs=build_pairs)
+        page = load_spectral_sequence(prefix, r, tot, build_pairs=build_pairs)
 
         # Handle differentials
         if differential_file is not None:
@@ -1680,7 +1674,7 @@ class SpectralSequence:
                 page.load_d(differential_file)
 
         # Create spectral sequence container and add the page
-        ss = cls(initial_r=r, has_C2=has_C2)
+        ss = cls(initial_r=r)
         ss.add_page(r, page)
 
         return ss
@@ -1695,15 +1689,14 @@ class SpectralSequence:
         return self.pages.get(r)
 
     def compute(self):
-        """Compute differentials on current page, respecting C2 availability"""
+        """Compute differentials on the current page"""
         if self.current_page:
-            self.current_page.compute(has_C2=self.has_C2)
+            self.current_page.compute()
 
     def write_spheres(self, charts_dir=None):
-        """Write spheres chart for current page, respecting C2 availability"""
+        """Write spheres chart for the current page"""
         if self.current_page:
-            self.current_page.write_spheres(has_C2=self.has_C2,
-                                            charts_dir=charts_dir)
+            self.current_page.write_spheres(charts_dir=charts_dir)
 
     @property
     def current_page(self):
@@ -1982,7 +1975,7 @@ class SpectralSequence:
 
         # Step 1: Mathematical computation - turn the page
         print(f"Computing E_{self.current_r + 1} from E_{self.current_r}...")
-        next_page = current.next_page(has_C2=self.has_C2)
+        next_page = current.next_page()
 
         # Step 2: Build structural information needed for map computation
         next_page.build_pairs()
@@ -1992,12 +1985,7 @@ class SpectralSequence:
 
         # Step 4: Compute induced maps (conditionally for C2)
         print(f"Computing induced maps...")
-        map_names = ['E', 'H', 'P']
-        if self.has_C2:
-            map_names.append('C2')
-            map_names.extend(C2_PRODUCT_MAPS)
-
-        for map_name in map_names:
+        for map_name in standard_map_names(self.has_C2):
             next_page.maps[map_name].table = self.compute_induced_map(map_name, self.current_r)
             # The induced table can only be complete where the source page's
             # data was; carry the coverage bound forward so naturality on the
@@ -2019,7 +2007,7 @@ class SpectralSequence:
         if save:
             directory = f"data/E{self.current_r}"
             print(f"Saving to {directory}/...")
-            next_page.save_to_directory(directory, has_C2=self.has_C2)
+            next_page.save_to_directory(directory)
             # Compute names and store them in the next page's names trait
             next_page.names = self.compute_names(self.current_r - 1)
 

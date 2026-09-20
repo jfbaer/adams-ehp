@@ -557,6 +557,19 @@ STANDARD_MAPS = {
 # The four C2 filtration-1 product maps (h0/h1/h2/h3), registered alongside C2.
 C2_PRODUCT_MAPS = ['h0', 'h1', 'h2', 'h3']
 
+
+def standard_map_names(with_C2, with_hi=True):
+    """The standard map-name list: E/H/P, plus C2 (and, unless with_hi is
+    False, the hi product maps) when the C2 data is available. The hi maps
+    are excluded where only the EHP/C2 tables themselves are meant (their
+    tables are saved/charted separately)."""
+    names = ['E', 'H', 'P']
+    if with_C2:
+        names.append('C2')
+        if with_hi:
+            names.extend(C2_PRODUCT_MAPS)
+    return names
+
 # stem of each hi multiplier, shared by Map.source_degree and any callers.
 _HI_STEM = {'h0': 0, 'h1': 1, 'h2': 3, 'h3': 7}
 
@@ -1167,7 +1180,8 @@ def relations_complete_through(relations_file):
 
 
 def load_spectral_sequence(prefix, r, tot, build_pairs=True):
-    """Load a spectral sequence page from CSV files and return tuple (SpectralSequencePage, has_C2)"""
+    """Load a spectral sequence page from CSV files and return the
+    SpectralSequencePage (C2 availability is readable off page.has_C2)."""
     # Import here to avoid circular imports
     from ehp_adams import SpectralSequencePage
     from differentials import DifferentialsPage
@@ -1275,23 +1289,7 @@ def load_spectral_sequence(prefix, r, tot, build_pairs=True):
 
     # Initialize maps from STANDARD_MAPS (conditionally for C2)
     print("Initializing maps...")
-    map_names = ['E', 'H', 'P']
-    if has_C2:
-        map_names.append('C2')
-        map_names.extend(C2_PRODUCT_MAPS)
-
-    for map_name in map_names:
-        map_template = STANDARD_MAPS[map_name]
-        # The hi product maps rely on their n==0 domain restriction; E/H/P/C2
-        # keep the historical always-true default (their transforms already
-        # produce zero maps off their intended domains).
-        ss.maps[map_name] = Map(
-            map_template.name,
-            map_template.n,
-            map_template.s,
-            map_template.f,
-            domain_check=map_template.domain_check if map_name in C2_PRODUCT_MAPS else None,
-        )
+    ss.initialize_maps(with_C2=has_C2)
 
     # Prepare map files to load (conditionally for C2)
     map_files = {
@@ -1412,7 +1410,7 @@ def load_spectral_sequence(prefix, r, tot, build_pairs=True):
         ss.build_pairs()
 
     print(f"Loaded E_{r} page (C2 {'available' if has_C2 else 'not available'})")
-    return (ss, has_C2)
+    return ss
 
 
 
