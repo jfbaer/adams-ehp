@@ -1,8 +1,8 @@
 #!/usr/bin/env sage-python
 """
-Compute Adams differentials d2-d5 of the EHP spectral sequence from the
-lambda algebra E2 data (with C2 map data), and write chart CSVs (spheres
-plus the n=0 C2 column) for pages E2-E5.
+Compute Adams differentials d2 through d8 (default --stop-after 8) of the
+EHP spectral sequence from the lambda algebra E2 data (with C2 map data),
+and write chart CSVs (spheres plus the n=0 C2 column) for each page.
 
 Run from this directory with:  sage -python run.py [tot] [--data DIR]
 
@@ -22,16 +22,16 @@ Inputs:
               compute() on E3/E4
 
 Every page is computed fresh from the E2 data and the page turns: d2 first,
-then d3, d4, d5 as the page turns. d2 is written once under --data (as a plain
-output, never reloaded); d3-d5 are saved to data/E{r}/d{r}.
+then d3 through d8 as the page turns. d2 is written once under --data (as a
+plain output, never reloaded); d3-d8 are saved to data/E{r}/d{r}.
 
 Outputs:
   <DIR>/d2                - the d2 differential (JSON), written under --data
   data/E{r}/d{r}          - differential data with proof chains (JSON), plus
                             d{r}_unknown.csv with the tridegrees where d_r
-                            remains undetermined (d3-d5)
-  charts/E{r}_{tot}.csv   - chart data for pages E2-E5 (includes the n=0 C2 column)
-  data/E{r}/              - full page data for E3-E5
+                            remains undetermined (d3-d8)
+  charts/E{r}_{tot}.csv   - chart data for each page (includes the n=0 C2 column)
+  data/E{r}/              - full page data for E3-E8
 """
 
 import argparse
@@ -126,7 +126,7 @@ def stable_path(name):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="Compute Adams differentials d2-d5 of the EHP spectral sequence."
+        description="Compute Adams differentials d2-d8 of the EHP spectral sequence."
     )
     parser.add_argument(
         "tot", nargs="?", type=int, default=TOT,

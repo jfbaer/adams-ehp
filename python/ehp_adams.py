@@ -179,13 +179,6 @@ class SpectralSequencePage:
         for (n, s, f) in self.page.keys():
             if not map_obj.domain_check(n, s, f):
                 continue
-
-            try:
-                target = map_obj.target_degree(n, s, f)
-            except Exception:
-                continue
-
-            # Removed boundary check - compute induced maps for all elements
             domain.append((n, s, f))
 
         # Sort lexicographically by (n, s, f)
@@ -222,8 +215,6 @@ class SpectralSequencePage:
             # exists on the n=0 column. Enforce the map's actual domain.
             if not map_obj.domain_check(*source):
                 continue
-
-            # Removed boundary check - compute induced maps for all elements
             codomain.append((n, s, f))
 
         # Sort: reverse in n, normal in s and f
@@ -271,16 +262,9 @@ class SpectralSequencePage:
             self, multiplier_bidegrees=multiplier_bidegrees,
             map_names=map_names, max_stem=max_stem)
 
-    def build_pairs(self, force_include=None, debug_filters=False):
-        """Build multiplication pairs for Leibniz constraints.
-
-        Args:
-            force_include: List of (x_coords, y_coords) tuples to force include even if they fail filters
-            debug_filters: If True, print diagnostic info about filtered pairs
-        """
+    def build_pairs(self):
+        """Build multiplication pairs for Leibniz constraints."""
         self.pairs = {}
-        forced_pairs = set(force_include) if force_include else set()
-        filter_stats = {'max_s': 0, 'zero_elem': 0, 'no_y_minus_1': 0, 'polygon': 0, 'forced_in': 0}
 
         # Pre-index page by n-value for fast lookup
         by_n = {}
@@ -292,13 +276,11 @@ class SpectralSequencePage:
         # Iterate over x_coords in sorted order by (n, s, f)
         for x_n, x_s, x_f in sorted(self.page.keys()):
             if x_n > self.max_s:
-                filter_stats['max_s'] += 1
                 continue
 
             # Skip (n, 0, 0) elements - they multiply to zero with everything
             # and create massive numbers of useless pairs that slow down leibniz()
             if x_s == 0 and x_f == 0:
-                filter_stats['zero_elem'] += 1
                 continue
 
             x_coords = (x_n, x_s, x_f)
@@ -312,48 +294,19 @@ class SpectralSequencePage:
 
                     # Check that (y_n - 1, y_s, y_f) exists (needed for E-map in Leibniz)
                     if (y_n_actual - 1, y_s, y_f) not in self.page:
-                        if debug_filters and (x_coords, y_coords) in forced_pairs:
-                            print(f"  Note: ({x_coords}, {y_coords}) missing y-1={(y_n_actual-1, y_s, y_f)} but force-including")
-                        elif (x_coords, y_coords) not in forced_pairs:
-                            filter_stats['no_y_minus_1'] += 1
-                            continue
+                        continue
 
                     xy_coords = (x_n, x_s + y_s, x_f + y_f)
-                    sources = (
-                        x_coords,
-                        y_coords,
-                        xy_coords
-                    )
+                    sources = (x_coords, y_coords, xy_coords)
 
                     # Keep boundary check for Leibniz differential computation
-                    in_polygon = all(self.is_in_computed_polygon_source(*s) for s in sources)
-
-                    # Force-include specific pairs even if they fail polygon check
-                    if (x_coords, y_coords) in forced_pairs:
-                        if not in_polygon and debug_filters:
-                            failed = [s for s in sources if not self.is_in_computed_polygon_source(*s)]
-                            print(f"  Force-including ({x_coords}, {y_coords}) despite polygon filter")
-                            print(f"    Failed tridegrees: {failed}")
+                    if all(self.is_in_computed_polygon_source(*s) for s in sources):
                         bucket.append(y_coords)
-                        filter_stats['forced_in'] += 1
-                    elif in_polygon:
-                        bucket.append(y_coords)
-                    else:
-                        filter_stats['polygon'] += 1
 
             # Sort by (n, s, f) - lowest n, then lowest s, then lowest f
             bucket.sort()
             if bucket:
                 self.pairs[x_coords] = bucket
-
-        if debug_filters:
-            print(f"\nPair filtering statistics:")
-            print(f"  Filtered by max_s check: {filter_stats['max_s']}")
-            print(f"  Filtered by (n,0,0) check: {filter_stats['zero_elem']}")
-            print(f"  Filtered by missing (y-1): {filter_stats['no_y_minus_1']}")
-            print(f"  Filtered by polygon check: {filter_stats['polygon']}")
-            print(f"  Force-included: {filter_stats['forced_in']}")
-            print(f"  Total pairs: {sum(len(v) for v in self.pairs.values())}")
 
     def is_tridegree_unknown(self, n, s, f):
         """Return True if the uncertainty manager marks the tridegree (n, s, f) as unknown"""
@@ -507,9 +460,6 @@ class SpectralSequencePage:
             raise ValueError(f"Unknown map: {map_name}")
         return self.maps[map_name].matrix(n, s, f, self)
     
-    def is_in_computed_polygon(self, n, s, f):
-        return self.is_computable(n, s, f, check_polygon=True, check_uncertainty=False, source=False)
-
     def is_in_computed_polygon_source(self, n, s, f):
         return self.is_computable(n, s, f, check_polygon=True, check_uncertainty=False, source=True)
 
@@ -962,22 +912,12 @@ class SpectralSequencePage:
                 )
                 raise
 
-            old_dy = self.d[y_n, y_s, y_f].dimension()
+            # This constraint only touches d[x]; the y-side dims are passed
+            # equal so outcome_stable never reports a y change.
             new_dx = self.d[x_n, x_s, x_f].dimension()
-            new_dy = self.d[y_n, y_s, y_f].dimension()
-            self.outcome_stable(
-                'E',
-                x_n,
-                x_s,
-                x_f,
-                y_n,
-                y_s,
-                y_f,
-                old_dx,
-                new_dx,
-                old_dy,
-                new_dy,
-            )
+            dy = self.d[y_n, y_s, y_f].dimension()
+            self.outcome_stable('E', x_n, x_s, x_f, y_n, y_s, y_f,
+                                old_dx, new_dx, dy, dy)
             changed |= old_dx > new_dx
         return changed
 
@@ -1043,7 +983,7 @@ class SpectralSequencePage:
                     new_dxy = self.d[xy_n, xy_s, xy_f].dimension()
 
                     progress_made = old_dx > new_dx or old_dy > new_dy or old_dxy > new_dxy
-                    self.outcome(x_n, x_s, x_f, y_n, y_s, y_f, x_n, old_dx, new_dx, old_dy, new_dy, old_dxy, new_dxy)
+                    self.outcome(x_n, x_s, x_f, y_n, y_s, y_f, old_dx, new_dx, old_dy, new_dy, old_dxy, new_dxy)
                     changed |= progress_made
 
                     self.natural(x_n, x_s, x_f, 'E', locked=True)
@@ -1234,8 +1174,8 @@ class SpectralSequencePage:
             self.map_deduction_counts[map_name] += 1
         return self._report_outcome(header_msg, tridegree_updates, map_name)
 
-    def outcome(self, x_n, x_s, x_f, y_n, y_s, y_f, n, old_dx, new_dx, old_dy, new_dy, old_dxy, new_dxy):
-        xy_n, xy_s, xy_f = n, x_s + y_s, x_f + y_f
+    def outcome(self, x_n, x_s, x_f, y_n, y_s, y_f, old_dx, new_dx, old_dy, new_dy, old_dxy, new_dxy):
+        xy_n, xy_s, xy_f = x_n, x_s + y_s, x_f + y_f
         header_msg = f"From ({x_n},{x_s},{x_f}) o ({y_n},{y_s},{y_f}):                    "
         tridegree_updates = [
             (x_n, x_s, x_f, old_dx, new_dx, (x_n, x_s, x_f), (y_n, y_s, y_f)),
@@ -1350,11 +1290,8 @@ class SpectralSequencePage:
             progress |= self._natural_rev_sweep()
             progress |= self._natural_sweep()
             progress |= self.d_squared()
-            # Exit only when an entire outer pass changed nothing. (The old
-            # exit test dropped several progress signals -- the naturality
-            # fixpoint, the first d_squared, the mid sweeps -- and could
-            # declare a fixpoint early; --verify-converged in run.py detects
-            # and heals such an exit by re-running compute().)
+            # Exit only when an entire outer pass changed nothing;
+            # --verify-converged in run.py independently re-checks this.
             if not progress:
                 break
         # One desuspension pass as a final consistency check: unlike the
@@ -1390,11 +1327,10 @@ class SpectralSequencePage:
         Args:
             has_C2: Whether C2 map should be initialized (default: True)
         """
-        # Carry max_t forward unchanged. The usable region still shrinks by one
-        # total degree per page, but that loss is supplied entirely by the
-        # growing differential reach (d_r raises total degree by r-1, enforced
-        # by the target polygon check in is_computable). An additional -1 here
-        # double-counted it, shrinking the computable region by 2 per page.
+        # Carry max_t forward unchanged: the usable region already shrinks by
+        # one total degree per page through the growing differential reach
+        # (d_r raises total degree by r-1, enforced by the target polygon
+        # check in is_computable).
         new_ss = SpectralSequencePage(max_t=self.max_t)
 
         # Turn the page: compute homology H(E_r, d_r) = E_{r+1}
@@ -1418,15 +1354,10 @@ class SpectralSequencePage:
 
         return new_ss
 
-    def turn_page(self):
-        """Populate turned_page trait with output of turn_page_with_uncertainty"""
-        new_ss = SpectralSequencePage(max_t=self.max_t)  # max_t carried forward (see next_page)
-        self.turned_page = self.d.turn_page_with_uncertainty(self.page, new_ss)
-
     def lift(self, x):
         """Lift an element from next page basis back to current page"""
         if self.turned_page is None:
-            raise ValueError("Must call turn_page() before using lift()")
+            raise ValueError("Must call next_page() before using lift()")
         x_n, x_s, x_f = x.n, x.s, x.f
         if (x_n, x_s, x_f) not in self.turned_page:
             return self.zero(x_n, x_s, x_f)
@@ -1439,7 +1370,7 @@ class SpectralSequencePage:
     def quotient(self, x, target_n=None, target_s=None, target_f=None):
         """Apply quotient map to element to get element in next page"""
         if self.turned_page is None:
-            raise ValueError("Must call turn_page() before using quotient()")
+            raise ValueError("Must call next_page() before using quotient()")
         # Use target if provided, otherwise use x's coordinates
         target_n = target_n if target_n is not None else x.n
         target_s = target_s if target_s is not None else x.s
@@ -1455,7 +1386,7 @@ class SpectralSequencePage:
     def in_next_basis(self, x):
         """Reduce element against boundaries to express in next page basis"""
         if self.turned_page is None:
-            raise ValueError("Must call turn_page() before using in_next_basis()")
+            raise ValueError("Must call next_page() before using in_next_basis()")
         x_n, x_s, x_f = x.n, x.s, x.f
         if (x_n, x_s, x_f) not in self.turned_page:
             return x.vect
@@ -1523,10 +1454,7 @@ class SpectralSequencePage:
                     r = self.d.r
                     # A class whose d_r-target lies outside the computable
                     # window is still real, loaded data: emit it with empty
-                    # differential columns instead of skipping it (a
-                    # `continue` here silently deleted the top filtration
-                    # rows of every stem column near the total-degree
-                    # boundary, e.g. (50, 24..26) at tot=76).
+                    # differential columns rather than skipping the row.
                     target = None
                     drinfo = ""
                     drtarget = ""
@@ -1771,11 +1699,6 @@ class SpectralSequence:
         if self.current_page:
             self.current_page.compute(has_C2=self.has_C2)
 
-    def save_to_directory(self, directory):
-        """Save current page to directory, respecting C2 availability"""
-        if self.current_page:
-            self.current_page.save_to_directory(directory, has_C2=self.has_C2)
-
     def write_spheres(self, charts_dir=None):
         """Write spheres chart for current page, respecting C2 availability"""
         if self.current_page:
@@ -1807,7 +1730,7 @@ class SpectralSequence:
         if target_page is None:
             raise ValueError(f"No page found for r={r+1}")
         if not source_page.turned_page:
-            raise ValueError(f"Must call turn_page() on E_{r} before computing names")
+            raise ValueError(f"Must call next_page() on E_{r} before computing names")
 
         # Use the names from the source page
         current_names = source_page.names
