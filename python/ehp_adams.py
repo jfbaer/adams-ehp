@@ -440,18 +440,24 @@ class SpectralSequencePage:
         map, and with it the hi product maps, were initialized)."""
         return 'C2' in self.maps
 
+    # Maps whose declared STANDARD_MAPS domain restriction is enforced at
+    # runtime. E/H/P/C2 historically ran with an always-true domain; their
+    # data tables carry no off-domain rows (and the n=1 column is empty), so
+    # off-domain applications were vacuous zero-map constraints -- verified
+    # byte-identical on the tot=40 harness with the restrictions enforced.
+    HONOR_DOMAIN_CHECKS = ('h0', 'h1', 'h2', 'h3', 'C2', 'P', 'H', 'E')
+
     def initialize_maps(self, with_C2=True):
         """Initialize map objects from standard templates"""
         for map_name in standard_map_names(with_C2):
             map_template = STANDARD_MAPS[map_name]
-            # Only the hi product maps carry their domain restriction (n==0);
-            # E/H/P/C2 keep the historical always-true default.
             self.maps[map_name] = Map(
                 map_template.name,
                 map_template.n,
                 map_template.s,
                 map_template.f,
-                domain_check=map_template.domain_check if map_name in C2_PRODUCT_MAPS else None,
+                domain_check=(map_template.domain_check
+                              if map_name in self.HONOR_DOMAIN_CHECKS else None),
             )
 
     def map_matrix(self, map_name, n, s, f):
