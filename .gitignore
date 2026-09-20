@@ -59,6 +59,10 @@ python/data/E2/d2_unknown.csv
 python/debug_graphs/
 python/why_*.dot
 python/why_*.pdf
+# Generated why-graph browser content (not shipped — the tracked index.html
+# regenerates it locally via make_why_graphs.py); keep only index.html
+python/why_graphs/*
+!python/why_graphs/index.html
 python/*.log
 
 # Interactive chart generator outputs (charts/ source is tracked); the *.csv
@@ -76,6 +80,7 @@ charts/*.zip
 build/
 
 # Paper: the LaTeX source is tracked, but build artifacts are not
+paper/arxiv-submission.tar.gz
 paper/*.aux
 paper/*.bbl
 paper/*.bcf

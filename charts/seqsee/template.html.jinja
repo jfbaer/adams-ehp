@@ -817,7 +817,7 @@
         const current = parseCurrentLocation();
         const newR = current.r + delta;
 
-        if (newR <= 1 || newR > 5) return; // Don't go below r=2 or above r=5 (E2-E5 range)
+        if (newR <= 1 || newR > 8) return; // Don't go below r=2 or above r=8 (E2-E8 range)
 
         storeViewport(); // Store current viewport before navigating
         const newFilename = buildFilename(current.n, newR, current.mode);
@@ -849,7 +849,7 @@
           } else if (n2 < 0) n2 = null;
           if (n2 !== null) targets.add(buildFilename(n2, cur.r, cur.mode));
           const r2 = cur.r + d;
-          if (r2 >= 2 && r2 <= 5) targets.add(buildFilename(cur.n, r2, cur.mode));
+          if (r2 >= 2 && r2 <= 8) targets.add(buildFilename(cur.n, r2, cur.mode));
         });
         if (cur.family === 'S') {
           const suffix = cur.isDarkTheme ? '_dark' : '';

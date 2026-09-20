@@ -25,7 +25,7 @@ use serde::{Deserialize, Serialize};
 use crate::mon::{Idx, Monomial};
 use crate::poly::Poly;
 
-// FIELD ORDER FROZEN: bincode cache compat (v3 cache format).
+// FIELD ORDER FROZEN: bincode cache compat (the _v4 cache-file suffix must be bumped if this encoding changes).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PackedPoly {
     n_terms: u32,

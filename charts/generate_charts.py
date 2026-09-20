@@ -62,6 +62,21 @@ def get_max_stem(csv_path):
     return max_stem
 
 
+def get_max_filt(csv_path):
+    """Read a CSV and return the maximum value in the 'Adams filtration'
+    column (0 if none). Used to set a uniform y-axis height across spheres
+    without dropping any computed class."""
+    max_filt = 0
+    with open(csv_path, newline="") as f:
+        reader = csv.DictReader(f)
+        for row in reader:
+            try:
+                max_filt = max(max_filt, int(row["Adams filtration"]))
+            except (ValueError, KeyError):
+                continue
+    return max_filt
+
+
 def get_n_values_from_csv(csv_path):
     """Read a CSV and return the sorted set of distinct int values in the 'n' column,
     excluding any n greater than the maximum stem value."""
@@ -545,13 +560,14 @@ def main():
     output_dir = args.output_dir
     Path(output_dir).mkdir(exist_ok=True)
 
-    # Uniform filtration ceiling = tot - max_stem: the highest filtration the
-    # total-degree window supports at the boundary stem, applied to every
-    # column so both h0-towers and the boundary column end at the same height.
-    tot = max((int(re.match(r"E\d+_(\d+)\.csv$", os.path.basename(p)).group(1))
-               for p in page_csvs.values()), default=0)
-    filt_cap = (tot - args.max_stem) if (args.max_stem and args.max_stem > 0
-                                         and tot > 0) else None
+    # Uniform y-axis height = the largest Adams filtration actually present in
+    # the data. Every column ends at its own s+f <= tot boundary naturally (the
+    # CSV simply has no rows beyond it), so this sets a shared axis height
+    # WITHOUT dropping any computed class. (An earlier version capped at
+    # tot - max_stem, the boundary stem's height, which chopped every column
+    # down to the worst case and hid validly-computed high-filtration classes
+    # at low stems.)
+    filt_cap = max((get_max_filt(p) for p in page_csvs.values()), default=0) or None
 
     # Determine n-values per r-value from CSV data
     sphere_n_values = {r: get_n_values_from_csv(path)

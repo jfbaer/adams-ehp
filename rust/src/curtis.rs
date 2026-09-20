@@ -530,7 +530,7 @@ impl CurtisState {
     }
 
     /// The (n, initial, monomial) loops of one degree, restricted to lengths
-    /// >= `len_start` (1 for a normal step; old_cap+1 for a filtration
+    /// at least `len_start` (1 for a normal step; old_cap+1 for a filtration
     /// extension pass).
     fn run_degree_lens(&mut self, deg: i32, len_start: i32) -> crate::Result<()> {
         // Iterate through n from 0 to floor((deg + 4) / 3).
@@ -741,11 +741,8 @@ impl CurtisState {
         let (next_deg, dim_bound, max_filt, with_evens, tags_len, coc_len, mon_table): CheckpointAux =
             bincode::deserialize_from(std::io::BufReader::new(aux_file))?;
         let idx_file = std::fs::File::open(db_dir.join(format!("curtis_{stem}_deg{d}_v4.idx")))?;
-        let (tags_index, coc_index, pages): (
-            FxHashMap<Monomial, (crate::store::PolyRef, crate::store::PolyRef)>,
-            FxHashMap<Monomial, crate::store::PolyRef>,
-            E2,
-        ) = bincode::deserialize_from(std::io::BufReader::new(idx_file))?;
+        let (tags_index, coc_index, pages): crate::io::cache::DbIndex =
+            bincode::deserialize_from(std::io::BufReader::new(idx_file))?;
 
         let tags_path = db_dir.join(format!("tags_{stem}_v4.store"));
         let coc_path = db_dir.join(format!("cocycles_{stem}_v4.store"));

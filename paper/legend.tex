@@ -4,11 +4,15 @@
 %
 % The legend is split into four separate figures so that each panel can be
 % cross-referenced individually. Each carries an empty \caption{}, so amsart
-% prints just the small "Figure N." label with no descriptive text. The [H]
-% placement plus tightened float/caption spacing keeps all four on one page.
+% prints just the small "Figure N." label with no descriptive text. The legend
+% is \input between two \clearpage commands in lambda.tex, so it has a page to
+% itself; the [H] placement keeps the panels in order and the \vfill between
+% them spreads the four panels out to fill that page.
 
-\clearpage
 \begingroup
+% Scale 1 so the legend's nodes match the size of the ctpnodes in the
+% flow-chart examples (Figures 5-7), which are drawn unscaled.
+\newcommand{\legendscale}{1}%
 \setlength{\intextsep}{0.1cm}%
 \setlength{\textfloatsep}{0.1cm}%
 \setlength{\abovecaptionskip}{3pt}%
@@ -19,6 +23,7 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}[H]
 \centering
+\scalebox{\legendscale}{%
 \begin{tikzpicture}[>=latex, line join=bevel]
 \node (leafpanel) [panel] at (0,0) {
   \begin{tikzpicture}
@@ -38,15 +43,18 @@
     \node[description-small] at (0,-0.2) {Stable input};
   \end{tikzpicture}
 };
-\end{tikzpicture}
+\end{tikzpicture}}
 \caption{}\label{fig:legend-terminal}
 \end{figure}
+
+\vfill
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PANEL 2 — INTERNAL NODES
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}[H]
 \centering
+\scalebox{\legendscale}{%
 \begin{tikzpicture}[>=latex, line join=bevel]
 \node (innerpanel) [panel] at (0,0) {
   \begin{tikzpicture}
@@ -66,15 +74,18 @@
     \node[description-small] at (5,-0.2) {$\mathcal{D}_r^{n, s, f} = \textcolor{CtpPeach}{\mathbf{0}} + \textcolor{CtpGreen}{\{0\}}$};
   \end{tikzpicture}
 };
-\end{tikzpicture}
+\end{tikzpicture}}
 \caption{}\label{fig:legend-internal}
 \end{figure}
+
+\vfill
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PANEL 3 — ARROWS
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}[H]
 \centering
+\scalebox{\legendscale}{%
 \begin{tikzpicture}[>=latex, line join=bevel]
 \node (arrowpanel) [panel] at (0,0) {
   \begin{tikzpicture}
@@ -110,15 +121,18 @@
     \node[description-leibniz] at (4,-0.5) {$\mathcal{D}_r^{\mathrm{F}(n,s,f)} \update (\mathrm{F}^*)^{-1}\!\big(\mathrm{F}_*(\mathcal{D}_r^{n, s, f})\big)$};
   \end{tikzpicture}
 };
-\end{tikzpicture}
+\end{tikzpicture}}
 \caption{}\label{fig:legend-maps}
 \end{figure}
+
+\vfill
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 %% PANEL 4 — LEIBNIZ RULE
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \begin{figure}[H]
 \centering
+\scalebox{\legendscale}{%
 \begin{tikzpicture}[>=latex, line join=bevel]
 \node (leibnizpanel) [panel] at (0,0) {
   \begin{tikzpicture}
@@ -170,7 +184,7 @@
     \end{scope}
   \end{tikzpicture}
 };
-\end{tikzpicture}
+\end{tikzpicture}}
 \caption{}\label{fig:legend-products}
 \end{figure}
 

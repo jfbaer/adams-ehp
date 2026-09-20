@@ -63,33 +63,39 @@ With a Rust toolchain (`cargo`) and [SageMath](https://doc.sagemath.org/html/en/
 ```
 
 The first generates the E2 page and its product tables (Curtis
-algorithm); the second computes the d2–d5 differentials and chart CSVs
+algorithm); the second computes the d2–d8 differentials and chart CSVs
 (into `python/charts/`). The loader reads the generated table's actual
 coverage and lowers its bound to fit, so the two degrees need not be
 matched by hand (a `-d N` table supports propagation through total degree
-`N - 1`). Bound 50 takes a few minutes; the shipped dataset's full
+`N - 1`). Bound 50 takes about ten minutes (the sage stage dominates);
+the shipped dataset's full
 range is total degree 76, reproducible with `-d 77` / `run.py 76` (the
 rust and python stages each take several hours). The shipped data is
 never modified; the fresh E2 lands in `build/`, and the propagator caches
-d2 alongside it (under `--data`), writes its d3–d5 page data to
+d2 alongside it (under `--data`), writes its d3–d8 page data to
 `python/data/E{r}/`, and writes chart CSVs to `python/charts/`.
 
-To then browse your run as interactive charts:
+To then browse your run as interactive charts (needs
+[Poetry](https://python-poetry.org/) and Python 3.11+; see
+[`charts/`](charts/README.md)):
 
 ```bash
 ( cd charts && poetry install && poetry run python generate_charts.py --charts-dir ../python/charts )
 ```
 
 (add `--sidebyside` to also build the split-screen EHP map views; they are
-the slow part of a chart build)
+the slow part of a chart build. Chart pages are named per sphere and page
+only, and existing pages are kept as-is on re-runs — so if you also build
+the shipped dataset, give each build its own `--output-dir`.)
 
 ## Repository map
 
 | Directory | What it is |
 |---|---|
 | [`rust/`](rust/) | the unstable Adams E₂-page: Curtis algorithm, products, EHP maps, Mahowald's map to Λ(C2) |
-| [`python/`](python/) | the propagator: a SageMath engine computing d2–d5 with proof chains, plus the `why.py` proof-diagram tool |
+| [`python/`](python/) | the propagator: a SageMath engine computing d2–d8 with proof chains, plus the `why.py` proof-diagram tool |
 | [`python/stable/`](python/stable/) | the stable inputs: known Adams differentials for the sphere and the cofiber of 2 (Lin–Wang–Xu, Isaksen–Wang–Xu) |
+| [`data/`](data/) | the released dataset under the file names used in the preprint's Data statements (copies of `python/data/E2/`) |
 | [`charts/`](charts/) | the chart generator: turns propagator CSVs into the interactive HTML charts (bundled trimmed [SeqSee](https://github.com/JoeyBF/SeqSee)) |
 | [`paper/`](paper/) | the preprint: LaTeX source and [PDF](paper/lambda.pdf) |
 

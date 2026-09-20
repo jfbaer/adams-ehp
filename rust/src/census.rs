@@ -20,7 +20,7 @@ pub static TAG_SPECIAL: AtomicU64 = AtomicU64::new(0);
 pub static TAG_MISS: AtomicU64 = AtomicU64::new(0);
 
 pub fn enabled() -> bool {
-    std::env::var("LAMBDA_CENSUS").map_or(false, |v| v == "1")
+    std::env::var("LAMBDA_CENSUS").is_ok_and(|v| v == "1")
 }
 
 struct PolyStats {

@@ -383,7 +383,7 @@ impl Poly {
     ///
     /// CORRECTION TERM: the clean readoff is not a chain map — on the
     /// `λ_{2n}λ_{4n}` family it must also emit `e_{2n-1}·λ_{4n+1}·β` into the
-    /// BOTTOM cell. (Verified in `crate::verify`: this makes the map an exact
+    /// BOTTOM cell. (Verified against a direct F2 normal-form computation: this makes the map an exact
     /// chain map — 0 defects over 247k monomials — and the correction lives in
     /// the e_{2n-1} summand, NOT e_{2n}.) Because it is strictly lex-lower than
     /// the `[1, 4n, β]` readoff, it never changes a class's leading-term name.

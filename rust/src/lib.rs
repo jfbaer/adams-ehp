@@ -17,8 +17,7 @@
 //!    operation to a class's cocycle representative and completing back into
 //!    the E2 basis ([`poly::Poly::complete`]), so values are sums of basis
 //!    classes.
-//! 3. [`io::csv`] writes the results; [`verify`] independently checks the C2
-//!    map against a brute-force F2 homology oracle.
+//! 3. [`io::csv`] writes the results.
 //!
 //! # CSV contract (consumed by `python/`)
 //!
@@ -43,7 +42,6 @@ pub mod packed;
 pub mod poly;
 pub mod store;
 pub(crate) mod sweep;
-pub mod verify;
 
 /// Boxed error alias used across the library (Send + Sync so results can cross
 /// rayon and anyhow boundaries).

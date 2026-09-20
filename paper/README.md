@@ -14,7 +14,7 @@ latexmk -pdf lambda.tex
 
 `lambda.tex` pulls in `theme.tex` (color palette), `legend.tex` (the
 why-graph legend figure), `9_37_7_3.tex` (the worked proof-tree figure),
-`E5_bounds_true.tex` (the results tables), and `good.bib`.
+`E8_bounds_true.tex` (the results tables), and `good.bib`.
 
 ---
 

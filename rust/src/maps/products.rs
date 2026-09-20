@@ -293,9 +293,6 @@ pub fn mult_table(
     let mut pairs: Vec<(i32, i32)> = stem_filt_pairs.into_iter().collect();
     pairs.sort_by_key(|(s, f)| (s + f, -s));
 
-    // Collect all fundamental products first
-    let mut all_fundamental_results = crate::ProductTable::new();
-
     // Create the output CSV file with headers
     let file = std::fs::File::create(path)?;
     let mut wtr = csv::Writer::from_writer(file);
@@ -333,15 +330,6 @@ pub fn mult_table(
             filt
         );
         write_decompositions_csv_append(&suspension_results, names, path)?;
-
-        // Accumulate into all_fundamental_results (write-only: nothing in this
-        // function reads it back — all output goes through the CSV appends).
-        for (dim, dim_results) in results {
-            all_fundamental_results
-                .entry(dim)
-                .or_default()
-                .extend(dim_results);
-        }
     }
 
     Ok(())

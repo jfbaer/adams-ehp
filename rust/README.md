@@ -11,11 +11,10 @@ The Curtis algorithm reduces admissible monomials by tags; the map stage then
 emits the products, the E/H/P maps, and the C2 map as `E2_*.csv` and
 `E2_names.json`.
 
-## Build, test, run
+## Build and run
 
 ```bash
 cargo build --release
-cargo test --release
 cargo run --release -- generate -d 70          # full pipeline, CSVs to cwd
 cargo run --release -- curtis -d 70            # Curtis reduction only
 cargo run --release -- c2 -d 70                # C2 map + rank only (fast)
@@ -52,8 +51,10 @@ To regenerate only the Lambda(C2) data and copy the outputs into
 ```bash
 cargo run --release -- c2-all -d 75 -o out75
 cp out75/E2_C2.csv out75/E2_C2_products.csv ../python/data/E2/
-rm -rf ../python/data/E2/d2      # the cached d2 was computed from the old data
 ```
+
+(`run.py` recomputes d2 from these inputs every run, so there is no stale d2
+to clear after regenerating the C2 data.)
 
 ## Output contract
 
@@ -79,6 +80,10 @@ and `src/io/csv.rs`.
 s+f > N, for incrementally extending an existing table (`--mult-ceil` caps
 it); the default computes the full table.
 
+A run also leaves its Curtis working stores (`*_v4.store`) and `.done`
+progress sidecars in the out-dir — `--cache-dir` defaults to `--out-dir`;
+point it elsewhere to keep the CSV directory clean.
+
 ## Resource use
 
 Apple Silicon laptop, `curtis` subcommand:
@@ -87,7 +92,8 @@ Apple Silicon laptop, `curtis` subcommand:
 |---|---|---|
 | 60 | ~27 s | 450 MB |
 | 70 | ~3.2 min | 1.45 GB |
-| 79 | ~15 min | a few GB |
+| 76 | ~6 hours | a few GB |
+| 80 | ~16 hours | ~10 GB |
 
 Time and memory grow steeply with the bound. A degree-80 run wants tens of
 GB, so a high-memory machine helps, but nothing about the run is

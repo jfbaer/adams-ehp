@@ -151,6 +151,9 @@
 \usepackage{xspace}
 % In-place refinement of a space of possible differentials (algorithmic assignment)
 \newcommand{\update}{\mathrel{\gets}}
+% Common scale for the example flow charts (Figures 5-8), kept uniform so
+% their nodes all render at the same size
+\newcommand{\flowchartscale}{0.8}
 
 % ================================
 % Section styling
@@ -183,11 +186,11 @@ applying the unstable Leibniz rule and naturality with respect to maps in the EH
 
 \section{Introduction}
 \noindent The homotopy type of a cell complex is encoded in its attaching maps, which specify how each cell is glued to the lower-dimensional skeleton during inductive construction. Cellular approximation allows such maps to be decomposed into elements of homotopy groups of spheres, so the classification of cell complexes up to homotopy equivalence is governed by the structure of these groups.
-The explicit computation of unstable homotopy groups of spheres begins with Hopf, who constructed the first nontrivial elements via winding numbers and the Hopf invariant~\cite{Hopf1931}; Pontryagin, who introduced geometric methods based on framed cobordism and computed $\pi_{n+1}(S^n)$~\cite{Pontrjagin_1938}; G.~W. Whitehead, who determined $\pi_{n+2}(S^n)$~\cite{Whitehead_GW_1950}; and Serre, whose spectral sequence methods made systematic calculation possible~\cite{Serre1953}. Toda’s foundational work applied the EHP sequence and sophisticated bracket arguments, yielding tables of $\pi_{n+k}(S^n)$ for $k\leq 19$~\cite{Toda_1962}. These computations were pushed further by Mimura and collaborators, who extended the computations through roughly the $24$-stem~\cite{MimuraToda1963, Mimura1964, Mimura1965, MimuraMoriOda1975}. Oda then extended the $2$-primary computations through the 30-stem with partial results in the 31-stem and 32-stem using refinements of Toda’s methods~\cite{Oda1976, Oda1977}. The remaining ambiguities in the 31-stem and 32-stem were later resolved by Inoue--Mukai and Miyauchi--Mukai~\cite{InoueMukai2012, MiyauchiMukai2017}. In a different direction, work of Curtis and Mahowald from 1989 determines the unstable homotopy groups of $S^3$ through the 52-stem and remains the only published application of the unstable Adams spectral sequence to computing unstable stems~\cite{Curtis_Mahowald_1989}. 
+The explicit computation of unstable homotopy groups of spheres begins with Hopf's construction of the first nontrivial elements via the Hopf invariant~\cite{Hopf1931} and the low-stem computations of Pontryagin~\cite{Pontrjagin_1938} and G.~W. Whitehead~\cite{Whitehead_GW_1950}; Serre's spectral sequence methods made systematic calculation possible~\cite{Serre1953}. Toda’s foundational work applied the EHP sequence and bracket arguments, yielding tables of $\pi_{n+k}(S^n)$ for $k\leq 19$~\cite{Toda_1962}. Mimura and collaborators pushed these computations through roughly the $24$-stem~\cite{MimuraToda1963, Mimura1964, Mimura1965, MimuraMoriOda1975}. Oda extended the $2$-primary computations through the 30-stem with partial results in the 31- and 32-stems using refinements of Toda’s methods~\cite{Oda1976, Oda1977}. The remaining ambiguities were resolved by Inoue--Mukai and Miyauchi--Mukai~\cite{InoueMukai2012, MiyauchiMukai2017}. Separately, Curtis and Mahowald determined the unstable homotopy groups of $S^3$ through the 52-stem in the only published application of the unstable Adams spectral sequence to computing unstable stems~\cite{Curtis_Mahowald_1989}. 
 
 
 This paper consists of two distinct computations.
-The first is a modern reimplementation of Curtis' algorithm for computing the homology of the lambda algebra, which is the $E_2$-page of the unstable Adams spectral sequence. We compute the unstable Adams $E_2$-page for all spheres through total degree 80 as well as all values of the algebraic EHP maps (\Cref{prop:ehp}) and all unstable algebraic compositions on the Adams $E_2$-page. The second computation uses the algebraic structure of the unstable Adams $E_2$-page and input differentials from the stable Adams spectral sequence to propagate unstable Adams differentials using the unstable Leibniz rule and naturality of the EHP maps. This propagator tries all possible combinations of EHP maps and unstable compositions to constrain the possible values of an unstable Adams differential until only one possibility remains. The precise combination of EHP maps and unstable compositions used to compute a differential is recorded graphically using computer-generated flow charts. By resolving unstable Adams differentials and computing the unstable Adams $E_\infty$-page we prove the following main theorem. 
+The first is a modern reimplementation of Curtis' algorithm for computing the homology of the lambda algebra, which is the $E_2$-page of the unstable Adams spectral sequence. We compute the unstable Adams $E_2$-page for all spheres through total degree 76 as well as all values of the algebraic EHP maps (\Cref{prop:ehp}) and all unstable algebraic compositions on the Adams $E_2$-page. The second computation uses the algebraic structure of the unstable Adams $E_2$-page and input differentials from the stable Adams spectral sequence to propagate unstable Adams differentials using the unstable Leibniz rule and naturality of the EHP maps. This propagator tries all possible combinations of EHP maps and unstable compositions to constrain the possible values of an unstable Adams differential until only one remains. The precise combination of EHP maps and unstable compositions used to compute a differential is recorded in computer-generated flow charts. By resolving unstable Adams differentials and computing the $E_\infty$-page we prove the following main theorem. 
 
 \begin{theorem}
 \label{thm:main}
@@ -199,9 +202,9 @@ Upper and lower bounds on the orders of the $2$-primary homotopy groups $\pi_{n+
 \subsection{The lambda algebra}
 
 
-In \Cref{sec:lambda} we describe our computational approach to the structure of the unstable Adams $E_2$-page. We reimplement Curtis' lambda algebra algorithm from scratch. Our implementation contains nothing conceptually new and the theory underlying this algorithm is well exposited in the many sources we reference in \Cref{sec:lambda}. By writing our implementation in a fast modern language and optimizing the key inner loops, we compute the homology of the lambda algebra and all algebraic compositions and algebraic EHP maps through total degree 80. While this algorithm for computing algebraic EHP maps and algebraic compositions has existed for several decades, neither of these has been computed exhaustively in a significant range, let alone applied to the computation of unstable Adams differentials. The most conceptually original part of \Cref{sec:lambda} consists of our generalization and exhaustive computation of the map of $E_2$-pages used by Curtis and Mahowald to compute unstable Adams differentials for $S^3$ by comparison with the stable Adams spectral sequence for $\mathbb{S}/2$~\cite{Curtis_Mahowald_1989}. While Curtis and Mahowald use this map to compute unstable Adams differentials, they never compute its values explicitly and only indirectly deduce its values by using the fact that this map is an isomorphism in sufficiently high filtration relative to the stem. This map is essential to our results since without it there are many differentials for low-dimensional spheres like $S^3$ and $S^5$ that we are unable to compute using EHP naturality and the Leibniz rule alone.
+In \Cref{sec:lambda} we describe our computational approach to the structure of the unstable Adams $E_2$-page. We reimplement Curtis' lambda algebra algorithm from scratch. Our implementation contains nothing conceptually new and the theory underlying this algorithm is well exposited in the many sources we reference in \Cref{sec:lambda}. By writing our implementation in a fast modern language and optimizing the key inner loops, we compute the homology of the lambda algebra and all algebraic compositions and algebraic EHP maps through total degree 76. While this algorithm for computing algebraic EHP maps and algebraic compositions has existed for several decades, neither of these has been computed exhaustively in a significant range, let alone applied to the computation of unstable Adams differentials. The most conceptually original part of \Cref{sec:lambda} consists of our generalization and exhaustive computation of the map of $E_2$-pages used by Curtis and Mahowald to compute unstable Adams differentials for $S^3$ by comparison with the stable Adams spectral sequence for $\mathbb{S}/2$~\cite{Curtis_Mahowald_1989}. While Curtis and Mahowald use this map to compute unstable Adams differentials, they never compute its values explicitly and only indirectly deduce its values by using the fact that this map is an isomorphism in sufficiently high filtration relative to the stem. This map is essential to our results since without it there are many differentials for low-dimensional spheres like $S^3$ and $S^5$ that we are unable to compute using EHP naturality and the Leibniz rule alone.
 \begin{remark*}
-  By running our Curtis algorithm on the Wayne State University high-performance grid, we computed the homology of the lambda algebra additively in degrees $s + f < 90$. The database of cycle representatives for this computation exceeds 50~GB in size, so we did not attempt to compute algebraic compositions between total degrees 80 and 90.
+  By running our Curtis algorithm on the Wayne State University high-performance grid, we computed the homology of the lambda algebra additively in degrees $s + f < 90$. The database of cycle representatives for this computation exceeds 50~GB in size, so we did not attempt to compute algebraic compositions between total degrees 76 and 90.
 \end{remark*}
 \subsection{Unstable Adams differentials}
 In \Cref{sec:ehp} we describe our differential propagation algorithm, which uses the algebraic data from \Cref{sec:lambda}. Our algorithm systematically applies naturality of unstable Adams differentials with respect to EHP maps and the unstable Leibniz rule, which are stated precisely in \Cref{prop:ehp} and \Cref{prop:leibniz} below. Our approach to differential propagation is based on the approach in~\cite{Beauvais_Feisthauer_2022} to propagating stable Adams $d_2$-differentials using the Leibniz rule for the sphere spectrum. Our implementation starts with the space of all possible matrix representations of a $d_r$-differential considered as a map of $\mathbb{F}_2$-vector spaces. In order to apply naturality and the Leibniz rule, we rephrase \Cref{prop:ehp} and \Cref{prop:leibniz} as statements that certain diagrams have to commute. Our propagation algorithm then iteratively checks for matrices that fail to commute in the relevant diagrams, and removes these from our space of possible $d_r$-differential values. By repeating this process many times on all bidegrees for all spheres, we can narrow down the space of possible $d_r$-differentials until there is a unique matrix that respects all of the constraints imposed by \Cref{prop:ehp} and \Cref{prop:leibniz}. This process of iteratively applying constraints in order to deduce a unique $d_r$-differential value is recorded in the form of flow charts from which the reader may reconstruct the proof of any differential. 
@@ -273,19 +276,20 @@ which detects geometric compositions in $\pi_\ast(-)$ and respects an unstable L
 Filtering $\Lambda(n)$ by the subcomplexes $\Lambda(m)$ for $m \leq n$ yields a spectral sequence known as the \emph{algebraic EHP spectral sequence}~\cite{Ravenel_1986, Curtis_Goerss_Mahowald_Milgram_1987}, whose filtration quotients are identified with shifted copies of the $\Lambda(2m + 1)$ by the maps $\mathrm{H}$ of \Cref{prop:ehp}.
 The \textit{Curtis procedure} computes the homology of $\Lambda(n)$ by computing the differentials in this spectral sequence~\cite{Whitehead_1970,Curtis_1971}: each admissible monomial either survives as the leading term of a cycle representative of a homology class or is cancelled by a differential.
 The Curtis procedure has had numerous well-documented implementations~\cite{Hansen_1974,Tangora_1985,Curtis_Goerss_Mahowald_Milgram_1987,Wang_Xu_2016}. Our implementation is written in Rust (version 1.96)~\cite{ehpreprint_data}.
-We have computed the homology of $\Lambda(n)$ in all total degrees $s + f < 90$~\cite{ehpreprint_data}. The data generated by our implementation of the Curtis homology procedure consists of the following:
+We have computed the homology of $\Lambda(n)$ additively in all total degrees $s + f < 90$; the dataset released with this paper~\cite{ehpreprint_data} covers all total degrees $s + f \leq 76$. The data generated by our implementation of the Curtis homology procedure consists of the following:
 \begin{data}
 \label{data:table}
-The database files \texttt{cycles.db} and \texttt{tags.db} in~\cite{ehpreprint_data} contain
+The plain-text files \texttt{rank.csv} and \texttt{names.json} in the \texttt{data/} directory of~\cite{ehpreprint_data} contain
 \begin{enumerate}
-  \item An $\mathbb{F}_2$-linear basis of full cycle representatives for $H^{s, f}\Lambda(n)$ for all $s + f < 90$
-  \item A minimal set of differentials in the algebraic EHP spectral sequence
+  \item The dimension of $H^{s, f}\Lambda(n)$ for all $s + f \leq 76$
+  \item For each basis element, the lexicographically leading admissible monomial of a cycle representative
 \end{enumerate}
+The full cycle representatives, together with the minimal set of differentials in the algebraic EHP spectral sequence used to reduce them, are regenerated on demand by our released implementation; at the full range they are too large to ship.
 \end{data}
 \noindent To operate on a class in $H^{s, f}\Lambda(n)$ we first lift its cycle representative to $\Lambda(n)$ and then operate on it, in our case either by some concatenation product or by the $\mathrm{H}$ map in \Cref{prop:ehp}. We then take the resulting polynomial in $\Lambda(m)$ and systematically add boundaries until we have expressed it as a linear combination of cycle representatives in the homology of $\Lambda(m)$. This approach has been used by Tangora to compute some products and Massey products in the classical Adams $E_2$-page~\cite{Tangora_1993, Tangora_1994}. We use this method to compute the following:
 \begin{data}
   \label{data:ehp-comp}
-  The plain-text table files \texttt{E.csv}, \texttt{H.csv}, \texttt{P.csv}, and \texttt{compositions.csv} in~\cite{ehpreprint_data} contain a full description through total degree 80 of the values of the maps in \Cref{prop:ehp} and \Cref{prop:leibniz} on every $\mathbb{F}_2$-linear basis element from \Cref{data:table}.
+  The plain-text table files \texttt{E.csv}, \texttt{H.csv}, \texttt{P.csv}, and \texttt{compositions.csv} in the \texttt{data/} directory of~\cite{ehpreprint_data} contain a full description through total degree 76 of the values of the maps in \Cref{prop:ehp} and \Cref{prop:leibniz} on every $\mathbb{F}_2$-linear basis element from \Cref{data:table}.
 \end{data}
 
 
@@ -379,7 +383,7 @@ from~\cite[Definition~3.2]{Mahowald_1975}. Composing the map in \eqref{eq:firstm
 \end{proof}
 \begin{data}
   \label{data:C2-comp}
-  The plain-text table file \texttt{C2.csv} in~\cite{ehpreprint_data} describes all values of the maps from \Cref{thm:mah} on $E_2$-pages through total degree 80.
+  The plain-text table file \texttt{C2.csv} in the \texttt{data/} directory of~\cite{ehpreprint_data} describes all values of the maps from \Cref{thm:mah} on $E_2$-pages through total degree 76.
 \end{data}
 \noindent In practice, \Cref{thm:mah} and \Cref{data:C2-comp} give us a map of spectral sequences
 \begin{equation}
@@ -511,29 +515,14 @@ In this subsection, we sketch our strategy for exhaustively applying the natural
 \end{tikzcd}
 \end{center}
 
+% The legend occupies all of the following page by itself; the panels are
+% spread vertically with \vfill inside legend.tex.
+\clearpage
+\input{legend}
+\clearpage
 
 \noindent We can constrain the possible values of a differential on some unstable tridegree by iteratively applying \eqref{eq:nat-const} where $\mathrm{F}$ is the matrix form of the maps $\mathrm{E}$, $\mathrm{H}$, and $\mathrm{P}$ computed in \Cref{data:ehp-comp}. With no additional outside information, this procedure can only compute differentials that are zero. To compute nontrivial unstable Adams differentials,
 we assume knowledge of all differentials in the Adams spectral sequences for $\mathbb{S}$ and $\mathbb{S}/2$ through total degree 80~\cite{Isaksen_Wang_Xu_2023, Lin_Wang_Xu_2024, Lin_Wang_Xu_2025} and lift their differentials to the unstable Adams spectral sequence via the maps in \eqref{eq:stable}, the second of which is computed in \Cref{data:C2-comp}. We present these deductions as flow charts, whose legend is given in \Crefrange{fig:legend-terminal}{fig:legend-products}. The flow chart for any computed differential can be regenerated from the released data with the \texttt{why.py} script in~\cite{ehpreprint_data}.
-\input{legend}
-
-\newpage
-
-\noindent\emph{Reading a flow chart.} The root is the differential being proved
-and the terminal nodes are the inputs we assume: a stable sphere differential
-$\mathbb{S}(s,f)$, a differential on the $\mathbb{S}/2$ column $\mathrm{C2}(s,f)$, or a group on
-which $\mathbf{d}_r$ is already forced. Every edge is a single instance of
-naturality (\Cref{prop:ehp}) or the Leibniz rule (\Cref{prop:leibniz}), so
-following the labeled maps $\mathrm{E},\mathrm{H},\mathrm{P}$ from the terminal
-nodes up to the root replays exactly the chain of constraints that pins down the
-value at the root. A node's color records how determined its differential was
-when it was used---gray unconstrained, blue partially constrained, green once a
-unique nonzero value is forced, red once it is forced to vanish---and each
-refined node also points back to its own earlier, less-determined state (the
-adjacent gray or blue node), so the chart shows $\mathcal{D}_r$ shrinking in place.
-Because every step is valid and the terminal nodes are assumptions, the chart is
-a complete, edge-by-edge checkable proof of the differential at its root.
-
-
 
 \begin{algorithm}[htbp]
 \caption{How a differential's proof is recorded as a flow chart.
@@ -574,6 +563,26 @@ backward from the target differential to the assumed inputs.}
 \end{algorithmic}
 \end{algorithm}
 
+
+\noindent\emph{Reading a flow chart.} The root is the differential being proved
+and the terminal nodes are the inputs we assume: a stable sphere differential
+$\mathbb{S}(s,f)$, a differential on the $\mathbb{S}/2$ column $\mathrm{C2}(s,f)$, or a group on
+which $\mathbf{d}_r$ is already forced. Every edge is a single instance of
+naturality (\Cref{prop:ehp}) or the Leibniz rule (\Cref{prop:leibniz}), so
+following the labeled maps $\mathrm{E},\mathrm{H},\mathrm{P}$ from the terminal
+nodes up to the root replays exactly the chain of constraints that pins down the
+value at the root. A node's color records how determined its differential was
+when it was used---gray unconstrained, blue partially constrained, green once a
+unique nonzero value is forced, red once it is forced to vanish---and each
+refined node also points back to its own earlier, less-determined state (the
+adjacent gray or blue node), so the chart shows $\mathcal{D}_r$ shrinking in place.
+Because every step is valid and the terminal nodes are assumptions, the chart is
+a complete, edge-by-edge checkable proof of the differential at its root.
+
+
+
+
+
 The terminal nodes (\Cref{fig:legend-terminal}) mark the places where a proof begins. An
 orange node is the differential in some bidegree of a stable Adams spectral
 sequence, for either the sphere spectrum $\mathbb{S}$ or the mod-$2$ Moore
@@ -595,7 +604,6 @@ differential on $\mathcal{U}_r^{n,s,f}$; the right-hand diagram is the mirror
 image, refining $\mathcal{U}_r^{\mathrm{F}(n,s,f)}$ using $\mathcal{U}_r^{n,s,f}$. \Cref{fig:legend-products}
 shows the analogous refinements coming from the Leibniz rule for a product
 $x\cdot y$.
-\newpage
 \begin{example}
 \label{ex:simple}
 Among unstable Adams differentials that stabilize to zero, the one of lowest
@@ -639,6 +647,7 @@ stem occurs on $\mathcal{U}_2^{5,20,5}$. The commutativity of the following diag
 
 \begin{figure}[htbp]
 \centering
+   \scalebox{\flowchartscale}{%
    \begin{tikzpicture}[>=latex,line join=bevel]
     %%
       \node (n_5_20_5) at (0,0) [ctpnode,fill=CtpGreen] {$\mathbf{(5, 20, 5)}$};
@@ -655,7 +664,7 @@ stem occurs on $\mathcal{U}_2^{5,20,5}$. The commutativity of the following diag
     {$\mathbf{H}$} (n_5_18_5);
       \draw [CtpText, ->, very thick] (n_5_18_5) to[out=270,in=90] (n_Stable_5_18_5);
     %
-    \end{tikzpicture}
+    \end{tikzpicture}}
 \caption{Flow chart for $\mathcal{D}_2^{5, 20, 5}$.}
 \label{fig:flowchart1}
 \end{figure}
@@ -669,6 +678,7 @@ There is a nontrivial differential on $\mathcal{U}_2^{4, 20, 6}$ that can be com
 
 \begin{figure}[htbp]
 \centering
+   \scalebox{\flowchartscale}{%
    \begin{tikzpicture}[>=latex,line join=bevel]
     %%
       \node (n_4_20_6_66318) at (0,0) [ctpnode,fill=CtpGreen] {$\mathbf{(4, 20, 6)}$};
@@ -693,7 +703,7 @@ There is a nontrivial differential on $\mathcal{U}_2^{4, 20, 6}$ that can be com
       \draw [CtpText, very thick] (n_4_20_6_17990) to[out=270,in=90] (n_4_20_6_16743);
       \draw [CtpText, ->, very thick] (n_4_20_6_16743) to[out=270,in=90] (n_Stable_4_20_6_16743);
     %
-    \end{tikzpicture}
+    \end{tikzpicture}}
 \caption{Flow chart for $\mathcal{D}_2^{4, 20, 6}$.}
 \label{fig:flowchart2}
 \end{figure}
@@ -780,7 +790,7 @@ L_x : \mathcal{U}_r^{n + s, s', f'} \to \mathcal{U}_r^{n, s + s', f + f'} \qquad
   \mathcal{D}_r^{n,s,f} \update (R_y)_*^{-1}\!\bigl(R_{\mathrm{E}y}^*(\mathcal{D}_r^{n, s + s', f + f'})\bigr)
 \end{equation*}
 These updates back-propagate information from the product tridegree into its factors; forward propagation into the product tridegree is already handled by the full Leibniz update above.
-The algebraic compositions computed in \Cref{data:ehp-comp} provide a full description of the maps $M, \mathrm{E}$, $L_x$, $R_y$, and $R_{\mathrm{E}y}$ through total degree 80.
+The algebraic compositions computed in \Cref{data:ehp-comp} provide a full description of the maps $M, \mathrm{E}$, $L_x$, $R_y$, and $R_{\mathrm{E}y}$ through total degree 76.
 
 \begin{remark*}
   It is possible to write down commutative diagrams based on the full Leibniz rule that isolate the differentials on $x$ or $\mathrm{E}y$ without assuming that either factor tridegree consists of cycles; the analogous diagrams for the stable Leibniz rule are found in \cite{Beauvais_Feisthauer_2022}. Our implementation applies these constraints when neither partial rule is available, but the linear algebra involved in writing them down explicitly is more complicated, and we omit the formulas for brevity.
@@ -800,6 +810,7 @@ The algebraic compositions computed in \Cref{data:ehp-comp} provide a full descr
   together with the stable input differential $d_3(\Delta h_2^2) = h_1 d_0^2$, where $\Delta h_2^2 = [\lambda_{12}\lambda_4\lambda_5\lambda_3^3]$ and $h_1 d_0^2 = [\lambda_7\lambda_6\lambda_2\lambda_3\lambda_4^2\lambda_1^3]$.
 \begin{figure}[htbp]
 \centering
+\scalebox{\flowchartscale}{%
 \begin{tikzpicture}[>=latex,line join=bevel]
 %%
   \node (n_9_45_11_20632) at (0,0) [ctpnode,fill=CtpGreen] {$\mathbf{(9, 45, 11)}$};
@@ -813,7 +824,7 @@ The algebraic compositions computed in \Cref{data:ehp-comp} provide a full descr
   \draw [CtpText, ->, very thick] (n_24_30_6_18201) to[out=270,in=90] (n_Stable_24_30_6_18201);
   \draw [CtpText, very thick] (n_9_45_11_20632) to[out=270,in=90] (n_9_45_11_18201);
 %
-\end{tikzpicture}
+\end{tikzpicture}}
 \caption{Flow chart for $\mathcal{D}_3^{9, 45, 11}$.}
 \end{figure}
 
@@ -835,7 +846,7 @@ The algebraic compositions computed in \Cref{data:ehp-comp} provide a full descr
   {\tikzset{every picture/.append style={execute at end picture={%
     \path let \p1=(current bounding box.west), \p2=(current bounding box.east)
       in (-\x1,\y1) (-\x2,\y2);}}}%
-  \scalebox{0.88}{\input{9_37_7_3.tex}}}
+  \scalebox{\flowchartscale}{\input{9_37_7_3.tex}}}
   \caption{Flow chart for $\mathcal{D}_3^{9, 37, 7}$ combining EHP and Leibniz rule.}
   \label{fig:flowchart3}
 \end{figure}
@@ -860,9 +871,9 @@ If the $d_r$-differential on some tridegree is not fully determined, then we can
 \end{enumerate}
 This solver is applied at the end of the computation on each page and to tridegrees which were skipped by the main computation due to an uncertain differential value on an earlier page.
 \subsection{Differentials by contradiction}
-A handful of differentials can be resolved via proof by contradiction. In future work we will systematically apply this approach throughout all tridegrees. In this project we only compute 15 differentials this way. These particular differentials were chosen because leaving them unresolved makes our Adams charts much harder to read. The proofs are all similar and are easy to check by hand.
+A handful of differentials can be resolved via proof by contradiction. In future work we will systematically apply this approach throughout all tridegrees. In this project we only compute 17 differentials this way. These particular differentials were chosen because leaving them unresolved makes our Adams charts much harder to read. The proofs are all similar and are easy to check by hand.
 
-% table data source: python/stable/Unstable3.txt (distinct tridegrees; some carry more than one resolved matrix entry)
+% table data source: python/stable/Contradiction3.txt (distinct tridegrees; some carry more than one resolved matrix entry)
 \begin{table}[H]
 \centering
 \caption{Tridegrees $(n, s, f)$ with $d_3$-differentials resolved by proof by contradiction.}
@@ -870,12 +881,13 @@ A handful of differentials can be resolved via proof by contradiction. In future
 \begin{tabular}{ccccc}
 $(5, 47, 10)$ & $(6, 34, 10)$ & $(6, 37, 10)$ & $(6, 42, 14)$ & $(6, 43, 10)$ \\
 $(6, 45, 14)$ & $(6, 48, 7)$ & $(7, 47, 16)$ & $(10, 38, 10)$ & $(10, 41, 10)$ \\
-$(10, 44, 10)$ & $(10, 46, 14)$ & $(14, 36, 7)$ & $(14, 42, 7)$ & $(14, 47, 11)$ \\
+$(10, 46, 14)$ & $(10, 47, 10)$ & $(10, 49, 14)$ & $(11, 51, 10)$ & $(13, 51, 9)$ \\
+$(14, 36, 7)$ & $(14, 47, 11)$ \\
 \end{tabular}
 \end{table}
 
 \begin{example}
-  There is a possible $d_3$-differential on the unique generator of $x \in \mathcal{U}_3^{6, 37, 10}.$ If this differential were non-zero then $x$ survives to $\mathcal{U}_4^{6, 37, 10}$ where we would have a $d_4$-differential $d_4(H(x)) = H(y)$ on $\mathcal{U}_4^{11, 32, 9}$ where $y$ is the unique generator of $\mathcal{U}_4^{6, 36, 14}.$ Naturality of $H$ would then imply that $d_4(x) = y$ but this is impossible since $y \ast h_1$ is not a boundary for degree reasons so $y$ can not be a boundary. Therefore our initial assumption that the $d_3$-differential on $\mathcal{U}_3^{6, 37, 19}$ is trivial must be false so $d_3(x)$ is equal to the unique generator of $\mathcal{U}_3^{6, 36, 13}.$
+  There is a possible $d_3$-differential on the unique generator of $x \in \mathcal{U}_3^{6, 37, 10}.$ If this differential were non-zero then $x$ survives to $\mathcal{U}_4^{6, 37, 10}$ where we would have a $d_4$-differential $d_4(H(x)) = H(y)$ on $\mathcal{U}_4^{11, 32, 9}$ where $y$ is the unique generator of $\mathcal{U}_4^{6, 36, 14}.$ Naturality of $H$ would then imply that $d_4(x) = y$ but this is impossible since $y \ast h_1$ is not a boundary for degree reasons so $y$ can not be a boundary. Therefore our initial assumption that the $d_3$-differential on $\mathcal{U}_3^{6, 37, 10}$ is trivial must be false so $d_3(x)$ is equal to the unique generator of $\mathcal{U}_3^{6, 36, 13}.$
 \end{example}
 
 
@@ -886,12 +898,6 @@ Clicking a differential in our interactive Adams charts opens the flow chart of 
 \subsection{Higher differentials}
 The unstable Adams charts in \cite{ehpreprint_data} present the results of our computation through the $E_5$-page. In our range of interest, there may be nontrivial $d_r$-differentials for $r > 5.$ In practice, the few possibilities for such differentials all target $v_1$-periodic elements in the unstable Adams spectral sequence. The behavior of the unstable Adams spectral sequence in this $v_1$-periodic region was studied in \cite{Davis_Mahowald_1990}, though we have not verified all of the details of their arguments.
 In forthcoming joint work with Balderrama and Isaksen, we study the $2$-primary EHP spectral sequence from the perspective of $v_1$-periodic elements~\cite{BBI_kervaire}. Both of these perspectives rule out the possibility of long differentials hitting $v_1$-periodic elements in the first 50 stems.
-% In \Cref{tab:lowest_unknown} we provide, for each sphere, the first stem in which there is a possible unknown Adams differential.
-
-% Lowest s-value with Unknown Differential for each n
-% ======================================================================
-% Tables 1 and 2 side-by-side
-% ======================================================================
 \newpage
 
 \subsection{Unstable Adams charts}
@@ -964,7 +970,7 @@ In forthcoming joint work with Balderrama and Isaksen, we study the $2$-primary 
 \label{app:bounds}
 \noindent \Crefrange{tab:bounds-true-2-14}{tab:bounds-true-39-50} record the bounds on the orders of the $2$-primary unstable homotopy groups of spheres proven by our computation, and are read as follows. The entry in column $n$ and row $s$ bounds the order of the $2$-primary component of $\pi_{n+s}(S^n)$, recorded through its base-$2$ logarithm: a single entry $e$ marks a homotopy group with no remaining unknown differentials, whose $2$-primary component has order exactly $2^e$. When a homotopy group still admits unknown differentials we can only bracket this order, and the entry is a range $e/\ell$ printed upper bound first: the $2$-primary component of $\pi_{n+s}(S^n)$ then has order $2^m$ for some $\ell \leq m \leq e$, so its order lies between the lower bound $2^\ell$ and the upper bound $2^e$. An entry of $\infty$ marks a homotopy group containing a $\mathbb{Z}$ summand. The {\color{CtpPink}pink staircase boundary} traces the metastable range: the entries lying on or to the right of it, up to the stable line, are in the metastable range $s \leq 3n - 4$, while those to its left are purely unstable. Finally, in the stable range $n \geq s + 2$ every entry in row $s$ records the order of the stable $s$-stem, so rather than reiterate it we print it once, at $n = s + 2$, and draw the repetitions as a vertical line running down each column.
 
-\input{E5_bounds_true}
+\input{E8_bounds_true}
 \clearpage
 \printbibliography
 \end{document}

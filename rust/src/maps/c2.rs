@@ -14,8 +14,8 @@
 //!   - `compute_c2_products`: filtration-1 products on the Λ(C2) homology;
 //!   - `compute_all`: both of the above plus the rank and names of the Λ(C2)
 //!     homology (the n = 0 column), written as CSV/JSON.
-//! The map semantics are verified independently by `crate::verify` (F2 NF
-//! oracle).
+//!
+//! The map semantics were validated against a direct F2 normal-form computation.
 
 use std::collections::HashSet;
 use std::io::Write as _;
@@ -43,9 +43,9 @@ const REDUCTION_STEP_LIMIT: u32 = 1_000_000;
 /// materialized), products landing at total degree `N - 1` are therefore
 /// fully supported, so the cap is `N - MARGIN` with margin 1. (The margin
 /// was 3 historically, from an unmeasured "safe margin" guess; validated
-/// margin-3 vs margin-1 at d=40 — identical rows on the overlap — plus the
-/// verify-c2 oracle. A product that does run off the end of the tags warns
-/// loudly rather than corrupting silently.)
+/// margin-3 vs margin-1 at d=40 — identical rows on the overlap. A product
+/// that does run off the end of the tags warns loudly rather than corrupting
+/// silently.)
 const PRODUCT_TAG_MARGIN: i32 = 1;
 
 /// The filtration-1 generators of the sphere acting on Λ(C2): the Hopf
@@ -210,68 +210,13 @@ pub fn compute_c2_e2_degree(
     }
 }
 
-/// Older single-basis-element variant of the C2 map (leading-term readoff with
-/// tag-based fallback). Kept as a cross-check for `c2_complete_sum` inside
-/// `crate::verify`; the pipeline uses the sum-producing version.
-pub(crate) fn complete_in_c2(
-    el: &Monomial,
-    dim: i32,
-    s: i32,
-    f: i32,
-    tags: &Tags,
-    cocycles: &Cocycles,
-    pages: &E2,
-) -> Option<Monomial> {
-    let trunk = el.tail();
-    let prefix = el[0] as i32;
-
-    // Only handle elements with initial dim-1 or dim-2
-    if prefix != dim - 1 && prefix != dim - 2 {
-        return None;
-    }
-
-    // First try direct mapping to target space
-    let target_prefix = if prefix == dim - 1 { TOP } else { BOT };
-    let target = pages.basis(tri(0, s - (dim - 2), f - 1));
-    // If the basis is empty, return [0]
-    if target.is_empty() {
-        return Some(Monomial::with_cell(BOT, &[]));
-    }
-    let candidate = Monomial::with_cell(target_prefix, trunk);
-    if target.contains(&candidate) {
-        return Some(candidate);
-    }
-
-    // For dim-2 elements, direct mapping is the only option
-    if prefix == dim - 2 {
-        return None;
-    }
-
-    // For dim-1 elements, try tag-based resolution
-    if let Some(tag_poly) = tags.get_tag(trunk) {
-        if let Some(h0_result) = tag_poly.prepend(vec![0]).complete(
-            pages.max_dimension(),
-            tags,
-            cocycles,
-            pages,
-        ) {
-            if let Some(first_result) = h0_result.first() {
-                return Some(first_result.prepended(BOT));
-            }
-        }
-    }
-
-    None
-}
-
 /// Primitive of a boundary `b` by RAW tag reduction: find γ with dγ = b by
 /// repeatedly cancelling the leading term of `b` with its tag's differential and
 /// accumulating the tags. Unlike the basis-gated completion, this works at
 /// bidegrees that have no survivors (exactly where the λ₀-threading lands).
 /// Returns None if `b` is not reducible (i.e. not a boundary) — should not
 /// happen for the λ₀·top we feed it.
-/// (`pub(crate)` so the verification module can build witness representatives.)
-pub(crate) fn primitive_by_tags(mut b: Poly, tags: &Tags, ctx: &Monomial) -> Option<Poly> {
+fn primitive_by_tags(mut b: Poly, tags: &Tags, ctx: &Monomial) -> Option<Poly> {
     let mut gamma = Poly::new();
     let mut guard = 0u32;
     while let Some(lead) = b.lead_mon().cloned() {
@@ -520,7 +465,7 @@ pub fn c2_product(
 }
 
 /// Coordinates in the n = 0 column for a `[cell, β]` C2 name (None if it is not
-/// a registered basis element — the `--verify-c2` oracle flags any drops).
+/// a registered basis element).
 fn c2_name_to_coords(name: &Monomial, pages: &E2) -> Option<ClassId> {
     let stem = name.stem();
     let filt = name.len() as i32 - 1;
@@ -607,7 +552,9 @@ pub fn process_odd_spheres_degree(
     // SUM of C2 basis names, then convert each name to target coordinates.
     let parallel_results: Vec<_> = odd_sphere_data
         .par_iter()
-        .map(|(dim, s, f, i, el)| c2_image_of(*dim, *s, *f, *i, el, tags, cocycles, pages))
+        .map(|(dim, s, f, i, el)| {
+            c2_image_of(ClassId::new(*dim, *s, *f, *i), el, tags, cocycles, pages)
+        })
         .collect();
 
     // Insert results into the results HashMap
@@ -655,33 +602,28 @@ fn odd_sphere_sources(
 /// coordinates. `vec![ClassId::ZERO]` marks "zero / could not complete" for
 /// the downstream solver (omitted from the CSV, treated as unknown).
 fn c2_image_of(
-    dim: i32,
-    s: i32,
-    f: i32,
-    i: i32,
+    id: ClassId,
     el: &Monomial,
     tags: &Tags,
     cocycles: &Cocycles,
     pages: &E2,
 ) -> (ClassId, Vec<ClassId>) {
-    let element_coords = ClassId::new(dim, s, f, i);
-
     // full cocycle representative of the class named `el`
     let Some(rep) = cocycles.get(el) else {
-        return (element_coords, vec![ClassId::ZERO]);
+        return (id, vec![ClassId::ZERO]);
     };
     let rep = &rep.unpack();
 
     // each name [e, β] -> its coordinates in the n=0 C2 column
-    let coords: Vec<ClassId> = c2_complete_sum(rep, dim, tags, cocycles, pages, el)
+    let coords: Vec<ClassId> = c2_complete_sum(rep, id.grade.n, tags, cocycles, pages, el)
         .iter()
         .filter_map(|name| c2_name_to_coords(name, pages))
         .collect();
 
     if coords.is_empty() {
-        (element_coords, vec![ClassId::ZERO])
+        (id, vec![ClassId::ZERO])
     } else {
-        (element_coords, coords)
+        (id, coords)
     }
 }
 
@@ -764,7 +706,8 @@ pub fn process_odd_spheres_csv_incremental(
     sources
         .par_iter()
         .try_for_each(|(dim, s, f, i, el)| -> crate::Result<()> {
-            let (coords, image) = c2_image_of(*dim, *s, *f, *i, el, tags, cocycles, pages);
+            let (coords, image) =
+                c2_image_of(ClassId::new(*dim, *s, *f, *i), el, tags, cocycles, pages);
             let element = pages.name_from_coords(coords);
             // ZERO (zero / could-not-complete) images are OMITTED from the CSV
             // — the solver must treat them as unknown, not an explicit zero —
@@ -1019,12 +962,25 @@ fn log_filt_clamp(max_filt: Option<i32>) {
     }
 }
 
+/// Options for [`compute_all`]: what to write and how the run is parameterized.
+pub struct ComputeAllOpts {
+    /// Compute Mahowald's odd-spheres→Λ(C2) map (the expensive pass) and write
+    /// `E2_C2.csv`; when false, only products/rank/names are written.
+    pub include_map: bool,
+    /// Total-degree filtration cap (`None` = full range).
+    pub max_filt: Option<i32>,
+    /// Which source classes to include.
+    pub filter: SourceFilter,
+    /// Resume from a partially-written run (skip already-emitted classes).
+    pub resume: bool,
+}
+
 /// The full Λ(C2) pipeline: build the n = 0 column, then write
-///   - `E2_C2.csv`          — Mahowald's map (odd spheres → Λ(C2)); only when
-///                            `include_map` is set (it is the expensive pass);
-///   - `E2_C2_products.csv`  — filtration-1 products (factor1, generator, result);
-///   - `E2_C2_rank.csv`      — rank of the Λ(C2) homology (n = 0 column);
-///   - `E2_C2_names.json`    — names → `[cell, β]` word for the n = 0 basis.
+/// - `E2_C2.csv`          — Mahowald's map (odd spheres → Λ(C2)); only when
+///   `include_map` is set (it is the expensive pass);
+/// - `E2_C2_products.csv` — filtration-1 products (factor1, generator, result);
+/// - `E2_C2_rank.csv`     — rank of the Λ(C2) homology (n = 0 column);
+/// - `E2_C2_names.json`   — names → `[cell, β]` word for the n = 0 basis.
 ///
 /// With `include_map = false` this skips the odd-spheres→C2 map entirely and
 /// writes only the products, rank, and names — the map is a separate pass that
@@ -1035,11 +991,14 @@ pub fn compute_all(
     pages: &mut E2,
     out_dir: &Path,
     degree: i32,
-    include_map: bool,
-    max_filt: Option<i32>,
-    filter: SourceFilter,
-    resume: bool,
+    opts: ComputeAllOpts,
 ) -> crate::Result<()> {
+    let ComputeAllOpts {
+        include_map,
+        max_filt,
+        filter,
+        resume,
+    } = opts;
     log_filt_clamp(max_filt);
     // 1. Build the Λ(C2) column (ker(h0) ⊕ coker(h0)) — needed by everything below.
     let max_dim = pages.max_dimension();

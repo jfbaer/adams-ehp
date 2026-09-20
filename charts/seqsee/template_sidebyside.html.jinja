@@ -918,7 +918,7 @@
         const loc = parseSideBySideLocation();
         if (!loc) return;
         const newR = loc.r + delta;
-        if (newR < 2 || newR > 5) return;
+        if (newR < 2 || newR > 8) return;
         storeViewport();
         const suffix = loc.isDark ? '_dark' : '';
         const target = `S${loc.n}_E${newR}_${MAP_KEY}sbs${suffix}.html`;

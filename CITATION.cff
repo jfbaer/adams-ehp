@@ -6,6 +6,8 @@ authors:
     given-names: "Jake Francis"
 repository-code: "https://github.com/jfbaer/adams-ehp"
 license: Apache-2.0
+doi: 10.5281/zenodo.22820890
+version: 1.0.0
 preferred-citation:
   type: article
   title: "Automated proofs of unstable Adams differentials"

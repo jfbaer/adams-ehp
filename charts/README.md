@@ -2,7 +2,7 @@
 
 The generator behind the hosted charts at
 [jfbaer.github.io/adams-ehp](https://jfbaer.github.io/adams-ehp/): every
-sphere, pages E2–E5, with pan/zoom, keyboard navigation, and split-screen
+sphere, pages E2–E8, with pan/zoom, keyboard navigation, and split-screen
 views of the EHP maps. The chart conventions are described in the
 [preprint](../paper/lambda.pdf), Section 4.5, *Unstable Adams charts*.
 
@@ -73,6 +73,11 @@ incoming half-lines. Point `--charts-dir ../python/charts` at a fresh
 propagator run instead of the shipped data. Existing output files are
 detected and skipped, so re-runs only fill in what's missing; relative paths
 are resolved relative to this directory.
+
+Page names (`S{n}_E{r}.html`) do not encode which dataset they came from,
+and skipped means kept-as-is — so building two different datasets into the
+same `--output-dir` silently mixes them. Use a distinct `--output-dir` per
+dataset, or delete the output directory when switching.
 
 ## Proof diagrams
 

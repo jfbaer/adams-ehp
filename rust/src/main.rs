@@ -17,11 +17,10 @@ use lambda_e2::io::csv::{
 };
 use lambda_e2::maps::c2::{
     compute_all, compute_c2_e2, compute_c2_images, compute_c2_products, write_c2_names_json,
-    write_c2_rank_csv, SourceFilter,
+    write_c2_rank_csv, ComputeAllOpts, SourceFilter,
 };
 use lambda_e2::maps::hopf_p::{compute_e, compute_hopf, compute_p};
 use lambda_e2::maps::products::mult_table;
-use lambda_e2::verify;
 
 /// Compute the E2 page of lambda-algebra spectral sequences (Curtis algorithm)
 /// and operations on it: products, Hopf H, suspension E, Whitehead P, and
@@ -67,10 +66,6 @@ enum Cmd {
     /// recomputing at the same degree/--max-filt reproduces the same basis
     /// the dead run's CSVs were named against
     C2Names,
-    /// Internal cross-check of the C2 map against a direct F2-homology
-    /// computation; no CSV output (hidden from help; kept for development)
-    #[command(hide = true)]
-    VerifyC2,
 }
 
 #[derive(Args)]
@@ -143,34 +138,8 @@ struct Opts {
     quiet: bool,
 }
 
-/// Rewrite the pre-CLI invocation forms so existing scripts keep working:
-///   `lambda_e2 --c2-only [N]`   -> `lambda_e2 c2 [-d N]`
-///   `lambda_e2 --verify-c2 [N]` -> `lambda_e2 verify-c2 [-d N]`
-///   `lambda_e2 N`               -> `lambda_e2 generate -d N`
-fn shim_legacy_args(mut argv: Vec<String>) -> Vec<String> {
-    fn rewrite_flag(argv: &mut Vec<String>, sub: &str) {
-        argv[1] = sub.to_string();
-        if argv.len() > 2 && argv[2].parse::<i32>().is_ok() {
-            argv.insert(2, "-d".to_string());
-        }
-    }
-    let first = argv.get(1).cloned();
-    match first.as_deref() {
-        Some("--c2-only") => rewrite_flag(&mut argv, "c2"),
-        Some("--verify-c2") => rewrite_flag(&mut argv, "verify-c2"),
-        Some(s) if s.parse::<i32>().is_ok() => {
-            let deg = s.to_string();
-            argv[1] = "generate".to_string();
-            argv.insert(2, "-d".to_string());
-            argv.insert(3, deg);
-        }
-        _ => {}
-    }
-    argv
-}
-
 fn main() -> lambda_e2::Result<()> {
-    let cli = Cli::parse_from(shim_legacy_args(std::env::args().collect()));
+    let cli = Cli::parse();
 
     // Progress goes to stderr via the `log` facade; RUST_LOG overrides -v/-q.
     let level = if cli.opts.quiet {
@@ -230,11 +199,6 @@ fn main() -> lambda_e2::Result<()> {
                 cocycles.index.len(),
                 pages.0.len()
             );
-        }
-
-        Cmd::VerifyC2 => {
-            let deg = cli.opts.degree.unwrap_or(40);
-            verify::verify_c2(deg, max_filt)?;
         }
 
         Cmd::Products => {
@@ -329,10 +293,12 @@ fn main() -> lambda_e2::Result<()> {
                 &mut pages,
                 &out_dir,
                 deg,
-                true,
-                max_filt,
-                src_filter,
-                cli.opts.resume,
+                ComputeAllOpts {
+                    include_map: true,
+                    max_filt,
+                    filter: src_filter,
+                    resume: cli.opts.resume,
+                },
             )?;
             log::info!("[phase] c2 all: {:.2}s", t1.elapsed().as_secs_f64());
         }
@@ -352,10 +318,12 @@ fn main() -> lambda_e2::Result<()> {
                 &mut pages,
                 &out_dir,
                 deg,
-                false,
-                max_filt,
-                src_filter,
-                cli.opts.resume,
+                ComputeAllOpts {
+                    include_map: false,
+                    max_filt,
+                    filter: src_filter,
+                    resume: cli.opts.resume,
+                },
             )?;
             log::info!("[phase] c2 products: {:.2}s", t1.elapsed().as_secs_f64());
         }
