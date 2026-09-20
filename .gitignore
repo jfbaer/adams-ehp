@@ -109,6 +109,5 @@ python/test_*.py
 # Audit working brief (not for publication)
 AUDIT.md
 
-# Untracked build/data artifacts (not for the tracked tree)
-/data/
+# Untracked build artifacts (not for the tracked tree)
 paper/make_arxiv.sh
