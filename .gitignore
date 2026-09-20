@@ -105,3 +105,10 @@ paper/.claude/
 paper/.DS_Store
 # development test suites stay in the private tree
 python/test_*.py
+
+# Audit working brief (not for publication)
+AUDIT.md
+
+# Untracked build/data artifacts (not for the tracked tree)
+/data/
+paper/make_arxiv.sh
