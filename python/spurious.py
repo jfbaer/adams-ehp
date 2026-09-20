@@ -166,8 +166,9 @@ def resolve_spurious_uncertainties(ss, multiplier_bidegrees=None,
             # tridegree; with trusted premises that is the safe trust
             # direction (trusted fact into an already-unreliable region),
             # so it is allowed into uncertain_plus targets.
+            img_trusted = not uncertain_plus(img_td)
             if (allow_nb
-                    and not uncertain_plus(img_td)
+                    and img_trusted
                     and not uncertain_plus(src_td)
                     and ss.is_in_computed_polygon_source(*src_td)
                     and certain_nb(img)):

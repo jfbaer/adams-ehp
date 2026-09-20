@@ -65,6 +65,10 @@ data without copying.
   to every sphere in the stable range (n > s+1)
 - `c2_diffs.csv`: entry-level Adams d_r for the cofiber of 2, applied
   to the n=0 (Lambda(C2)) column
+- `Contradiction3.txt` (d3, proof by contradiction — the preprint's §4
+  table) and `Spurious4.txt` (d4, easy spurious differentials the resolver
+  cannot yet derive), imposed before `compute()` on E3/E4; see
+  [`stable/README.md`](stable/README.md)
 
 The input CSV files are loaded at the beginning of the computation on each
 page. Everything else is derived: stabilization and the C2 map data let
@@ -95,14 +99,19 @@ Every deduced differential carries a proof chain (the *why graphs* of the
 sage -python why.py 9 37 7 -r 3     # proof of d3 at (n, s, f) = (9, 37, 7)
 ```
 
-(This reads the `data/E{r}/d{r}` caches a completed `run.py` leaves behind —
-they are not shipped, so run the pipeline first.)
+(This reads the `data/E{r}/d{r}` files a completed `run.py` leaves behind —
+they are not shipped, so run the pipeline first. d2 is the exception: it
+lands under `--data`, so to render a d2 proof from a `--data my/E2` run, pass
+`-d my/E2/d2`.)
 
 This writes `why_9_37_7.dot` and, if graphviz is installed, renders it to
 PDF. Nodes are tridegrees; terminal (orange) nodes are known stable or
 Lambda(C2) differentials; edges are labeled by the map used (E/H/P), and
-Leibniz steps branch to the two factors and their product. The proof of d3 at (9, 37, 7) runs fourteen deductions deep before
-it terminates in the stable inputs:
+Leibniz steps branch to the two factors and their product. In the full
+`run.py 76` computation, the proof of d3 at (9, 37, 7) runs fourteen
+deductions deep before it terminates in the stable inputs (a
+reduced-range run can find a different, often shorter, chain for the
+same differential):
 
 <p align="center">
   <picture>

@@ -8,6 +8,27 @@ its proof chain, in entries from these tables.
 |---|---|---|
 | `stable_sphere_diffs.csv` | stable Adams d_r for the sphere, r = 2..5 | every sphere in the stable range (n > s + 1) |
 | `c2_diffs.csv` | Adams d_r for the cofiber of 2 (S/2), r = 2..5 | the n = 0 column (Lambda(C2), the target of Mahowald's map) |
+| `Contradiction3.txt` | hand-proved d3 entries, proof by contradiction (see below) | specific spheres, imposed before `compute()` on E3 |
+| `Spurious4.txt` | hand-proved d4 entries, easy spurious differentials (see below) | specific spheres, imposed before `compute()` on E4 |
+
+## The hand lists
+
+`Contradiction3.txt` holds the d3 differentials resolved by
+proof-by-contradiction in §4 of the [preprint](../../paper/lambda.pdf)
+(*Differentials by contradiction*, whose table lists exactly these
+tridegrees); the proofs are short and hand-checkable, in the style of the
+worked example there.
+
+`Spurious4.txt` holds d4 differentials that are "spurious" in the sense of
+`spurious.py` (the automatic resolver) but that it cannot yet derive: the
+resolver settles spurious *zero* differentials automatically, but not
+nonzero ones, nor cases blocked by the `uncertain_plus` gate (e.g. a
+determined differential that fails to de-suspend down the sphere tower
+because a neighbouring earlier-page differential is still open). Each entry's
+justification is recorded in the file.
+
+Both are plain-text `n s f row col value` lists (`#` comments allowed),
+loaded by `run.py` before `compute()` on the matching page.
 
 ## Provenance
 

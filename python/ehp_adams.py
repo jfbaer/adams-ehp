@@ -97,23 +97,25 @@ class SpectralSequencePage:
             return
         max_n = 0
         max_s = 0
-        max_f = 0
         max_t = 0
 
         for (n, s, f), dim in self.dimension.items():
             if dim > 0:
                 max_n = max(max_n, n)
                 max_s = max(max_s, s)
-                max_f = max(max_f, f)
                 max_t = max(max_t, s + f)
         if self.max_n is None:
             self.max_n = max_n - 2
         if self.max_s is None:
             self.max_s = max_s - 2
-        if self.max_f is None:
-            self.max_f = max_f - 2
         if self.max_t is None:
             self.max_t = max_t - 2
+        # max_f is the highest Adams filtration inside the total-degree window
+        # s + f <= max_t, with no safety margin: the f <= max_f bound in
+        # is_computable must not exclude a class the window itself contains.
+        if self.max_f is None:
+            self.max_f = max((f for (n, s, f), dim in self.dimension.items()
+                              if dim > 0 and s + f <= self.max_t), default=0)
 
         print(f"Computed max values: max_n={self.max_n}, max_s={self.max_s}, max_f={self.max_f}, max_t={self.max_t}")
 
@@ -352,70 +354,6 @@ class SpectralSequencePage:
             print(f"  Filtered by polygon check: {filter_stats['polygon']}")
             print(f"  Force-included: {filter_stats['forced_in']}")
             print(f"  Total pairs: {sum(len(v) for v in self.pairs.values())}")
-
-    def build_pairs_low_y(self, max_y_s):
-        """Build filtered pairs with only low y_s values for faster Leibniz computation.
-
-        This creates self.pairs_low_y containing only pairs where y_s <= max_y_s.
-        Useful for focusing Leibniz constraints on low-dimensional parts of the
-        spectral sequence while keeping the full pairs structure intact.
-
-        Args:
-            max_y_s: Maximum s-value for y-tridegrees to include
-        """
-        self.pairs_low_y = {}
-
-        # Pre-index page by n-value for fast lookup
-        by_n = {}
-        for n, s, f in self.page:
-            if n not in by_n:
-                by_n[n] = []
-            by_n[n].append((n, s, f))
-
-        # Iterate over x_coords in sorted order by (n, s, f)
-        for x_n, x_s, x_f in sorted(self.page.keys()):
-            if x_n > self.max_s:
-                continue
-
-            # Skip (n, 0, 0) elements - they multiply to zero with everything
-            if x_s == 0 and x_f == 0:
-                continue
-
-            x_coords = (x_n, x_s, x_f)
-            y_n = x_n + x_s
-            bucket = []
-
-            # Only iterate over tridegrees that actually exist with the correct n-value
-            if y_n in by_n:
-                for y_coords in by_n[y_n]:
-                    y_n_actual, y_s, y_f = y_coords
-
-                    # Filter by max_y_s
-                    if y_s > max_y_s:
-                        continue
-
-                    # Check that (y_n - 1, y_s, y_f) exists (needed for E-map in Leibniz)
-                    if (y_n_actual - 1, y_s, y_f) not in self.page:
-                        continue
-
-                    xy_coords = (x_n, x_s + y_s, x_f + y_f)
-                    sources = (
-                        x_coords,
-                        y_coords,
-                        xy_coords
-                    )
-
-                    # Keep boundary check for Leibniz differential computation
-                    if all(self.is_in_computed_polygon_source(*s) for s in sources):
-                        bucket.append(y_coords)
-
-            # Sort by (n, s, f) - lowest n, then lowest s, then lowest f
-            bucket.sort()
-            if bucket:
-                self.pairs_low_y[x_coords] = bucket
-
-        print(f"Built pairs_low_y with max_y_s={max_y_s}: {len(self.pairs_low_y)} x-tridegrees")
-
 
     def is_tridegree_unknown(self, n, s, f):
         """Return True if the uncertainty manager marks the tridegree (n, s, f) as unknown"""
@@ -1175,37 +1113,36 @@ class SpectralSequencePage:
         if not all(self.is_in_computed_polygon_source(*td) for td in relevant_tridegrees):
             return
 
-        if not self.d[y_n, y_s, y_f].is_forced:
-            try:
-                e_matrix = self.map_matrix('E', y_n - 1, y_s, y_f)
-                self.d[y_n, y_s, y_f] &= e_matrix // (
-                    e_matrix * self.L_matrix(x, y_n, y_s, y_f) * self.d[xy_n, xy_s, xy_f]
-                ) // self.L_matrix(x, y_n, y_s - 1, y_f + r)
-            except Exception as e:
-                self._constraint_failure(
-                    f"leibniz_x at d[{y_n},{y_s},{y_f}]: cycle x={x} at ({x_n},{x_s},{x_f})",
-                    e,
-                    [(y_n, y_s, y_f), (xy_n, xy_s, xy_f)],
-                )
-                raise
-        if not self.d[xy_n, xy_s, xy_f].is_forced:
-            try:
-                e_matrix = self.map_matrix('E', y_n - 1, y_s, y_f)
-                L_matrix_1 = self.L_matrix(x, y_n, y_s, y_f)
-                numerator = e_matrix * L_matrix_1
-                dy = self.d[y_n, y_s, y_f]
-                L_matrix_2 = self.L_matrix(x, y_n, y_s - 1, y_f + r)
-                denominator = e_matrix * dy * L_matrix_2
-                quotient = numerator // denominator
-                self.d[xy_n, xy_s, xy_f] &= quotient
+        if (self.d[y_n, y_s, y_f].is_forced
+                and self.d[xy_n, xy_s, xy_f].is_forced):
+            return
 
-            except Exception as e:
-                self._constraint_failure(
-                    f"leibniz_x at d[{xy_n},{xy_s},{xy_f}]: x={x} at ({x_n},{x_s},{x_f}), y at ({y_n},{y_s},{y_f})",
-                    e,
-                    [(y_n, y_s, y_f), (xy_n, xy_s, xy_f)],
+        # Both branches solve the same commutative relation
+        #   e_matrix . d[y] . L_source = e_matrix . L_target . d[xy]
+        # for whichever side is not yet forced; the second branch reads d[y]
+        # after the first may have shrunk it.
+        try:
+            e_matrix = self.map_matrix('E', y_n - 1, y_s, y_f)
+            L_target = self.L_matrix(x, y_n, y_s, y_f)
+            L_source = self.L_matrix(x, y_n, y_s - 1, y_f + r)
+
+            if not self.d[y_n, y_s, y_f].is_forced:
+                self.d[y_n, y_s, y_f] &= e_matrix // (
+                    e_matrix * L_target * self.d[xy_n, xy_s, xy_f]
+                ) // L_source
+
+            if not self.d[xy_n, xy_s, xy_f].is_forced:
+                self.d[xy_n, xy_s, xy_f] &= (e_matrix * L_target) // (
+                    e_matrix * self.d[y_n, y_s, y_f] * L_source
                 )
-                raise
+        except Exception as e:
+            self._constraint_failure(
+                f"leibniz_x: cycle x={x} at ({x_n},{x_s},{x_f}), y at ({y_n},{y_s},{y_f})",
+                e,
+                [(y_n, y_s, y_f), (y_n, y_s - 1, y_f + r),
+                 (xy_n, xy_s, xy_f), (xy_n, xy_s - 1, xy_f + r)],
+            )
+            raise
 
     def leibniz_y(self, y, x_n, x_s, x_f):
         """Apply the Leibniz rule with a fixed cycle y (so the d(y) term vanishes): constrain the differentials at (x_n, x_s, x_f) and at the product tridegree via right-multiplication by y and its suspension y.E()"""
@@ -1337,25 +1274,45 @@ class SpectralSequencePage:
 
         return active_pairs
 
+    def _natural_sweep(self):
+        """One forward-naturality pass over every map's domain; True if any
+        differential space shrank."""
+        changed = False
+        for map_name in self.maps.keys():
+            for (n, s, f) in self.map_domain(map_name):
+                changed |= self.natural(n, s, f, map_name, locked=True)
+        return changed
+
+    def _natural_rev_sweep(self):
+        """One reverse-naturality pass over every map's codomain; True if any
+        differential space shrank."""
+        changed = False
+        for map_name in self.maps.keys():
+            for (n, s, f) in self.map_codomain(map_name):
+                changed |= self.natural_rev(n, s, f, map_name, locked=True)
+        return changed
+
     def compute(self, has_C2=True, use_active_pairs=True):
         """Compute differentials using constraints.
+
+        Iterates naturality, C2 naturality, d^2 = 0, and Leibniz passes until
+        a full outer pass makes no change anywhere (a true fixpoint).
 
         Args:
             has_C2: Whether to apply C2 map constraints
             use_active_pairs: If True, only process Leibniz pairs where at least
                             one differential is not forced (significant speedup!)
         """
-        # Apply the authoritative stable/C2 inputs (Stable{r}.txt, C2{r}.txt)
-        # FIRST, before any naturality runs. Otherwise forward C2-naturality can
-        # pin an n=0 column class (or a stable sphere) to a provisional zero from
-        # not-yet-known sphere differentials; once forced, check_stable's
-        # dimension()==1 guard can never apply the true value from the input file.
+        # Impose the authoritative known-differential inputs (the entry-level
+        # CSVs stable/stable_sphere_diffs.csv and stable/c2_diffs.csv; see
+        # stable/README.md) FIRST, so every deduction below starts from the
+        # full input data. check_stable() reads no in-page state, so this
+        # single call pins everything the inputs cover; repeating it inside
+        # the loop below would be a no-op.
         self.d.check_stable()
-        self.desuspend()
         if has_C2 and 'C2' in self.maps:
             self.C2()
         loop_count = 0
-        leibniz_changed = False
 
         # Get active pairs once at the start if using optimization
         if use_active_pairs:
@@ -1368,65 +1325,45 @@ class SpectralSequencePage:
 
         while True:
             loop_count += 1
+            progress = False
             ehp_loop_count = 0
             while True:
                 ehp_loop_count += 1
-                iteration = 1
-                maps_changed = False
-                for map_name in self.maps.keys():
-                    for (n, s, f) in self.map_domain(map_name):
-                        changed = self.natural(n, s, f, map_name, locked=True)
-                        maps_changed |= changed
-                rev_changed = False
-                for map_name in self.maps.keys():
-                    for (n, s, f) in self.map_codomain(map_name):
-                        changed = self.natural_rev(n, s, f, map_name, locked=True)
-                        rev_changed |= changed
+                maps_changed = self._natural_sweep()
+                rev_changed = self._natural_rev_sweep()
                 print(f"  EHP iteration {ehp_loop_count}: maps_changed={maps_changed}, rev_changed={rev_changed}")
                 if not maps_changed and not rev_changed:
                     break
-                iteration += 1
-            stab_change = self.d.check_stable()
-            print(f"  Stability check: {stab_change}")
+                progress = True
+            # Reverse C2 naturality (n=0 column -> odd spheres) cannot run in
+            # the generic sweeps above (the C2 map has no source_degree), so
+            # apply it here. With complete input CSVs it is a no-op after the
+            # initial call, but n=0 tridegrees beyond the inputs' coverage
+            # (r >= 6 past total degree HIGH_R_TRIVIAL_TOT) can still shrink
+            # mid-page and feed the odd spheres.
             if has_C2 and 'C2' in self.maps:
-                self.C2()
-            self.desuspend()
-            d_change = self.d_squared()
-            for map_name in self.maps.keys():
-                for (n, s, f) in self.map_codomain(map_name):
-                    changed = self.natural_rev(n, s, f, map_name, locked=True)
-                    rev_changed |= changed
-            maps_changed = False
-            for map_name in self.maps.keys():
-                for (n, s, f) in self.map_domain(map_name):
-                    changed = self.natural(n, s, f, map_name, locked=True)
-                    maps_changed |= changed
-
-            # Use active pairs if optimization enabled. Capture whether Leibniz
-            # made progress: the outer loop must not terminate while Leibniz is
-            # still forcing new differentials (its return was previously discarded,
-            # so leibniz_changed stayed False and the fixpoint test at the bottom
-            # of the loop could stop before a Leibniz cascade finished).
-            leibniz_changed = self.leibniz(pairs_to_use=active_pairs)
-
-            rev_changed = False
-            for map_name in self.maps.keys():
-                for (n, s, f) in self.map_codomain(map_name):
-                    changed = self.natural_rev(n, s, f, map_name, locked=True)
-                    rev_changed |= changed
-            maps_changed = False
-            for map_name in self.maps.keys():
-                for (n, s, f) in self.map_domain(map_name):
-                    changed = self.natural(n, s, f, map_name, locked=True)
-                    maps_changed |= changed
-            stab_change = self.d.check_stable()
-            print(f"  Stability check: {stab_change}")
-            if has_C2 and 'C2' in self.maps:
-                self.C2()
-            self.desuspend()
-            d_change = self.d_squared()
-            if iteration == 1 and not d_change and not stab_change and not leibniz_changed:
+                progress |= self.C2()
+            progress |= self.d_squared()
+            progress |= self._natural_rev_sweep()
+            progress |= self._natural_sweep()
+            progress |= self.leibniz(pairs_to_use=active_pairs)
+            progress |= self._natural_rev_sweep()
+            progress |= self._natural_sweep()
+            progress |= self.d_squared()
+            # Exit only when an entire outer pass changed nothing. (The old
+            # exit test dropped several progress signals -- the naturality
+            # fixpoint, the first d_squared, the mid sweeps -- and could
+            # declare a fixpoint early; --verify-converged in run.py detects
+            # and heals such an exit by re-running compute().)
+            if not progress:
                 break
+        # One desuspension pass as a final consistency check: unlike the
+        # locked natural_rev sweeps, desuspend() re-applies the E-map square
+        # at already-forced sources, so two inconsistent forced differentials
+        # raise a contradiction instead of being silently skipped. On a
+        # converged page it deduces nothing new (it is the same constraint
+        # as natural_rev on the E map).
+        self.desuspend()
         print(f"compute() finished after {loop_count} main iterations")
         if self.map_deduction_counts:
             summary = ", ".join(
@@ -1435,11 +1372,6 @@ class SpectralSequencePage:
             print(f"  naturality deductions by map: {summary}")
         else:
             print("  naturality deductions by map: none")
-        if 'h0' in self.maps and \
-                not any(m in self.map_deduction_counts for m in C2_PRODUCT_MAPS):
-            print("  (h0-h3 contributed nothing: every n=0 tridegree they could "
-                  "reach was already forced, or lies beyond the products data "
-                  "coverage / loaded range)")
 
     def next_page(self, has_C2=True):
         """
@@ -2039,14 +1971,14 @@ class SpectralSequence:
                                     Element(xy_n, xy_s, xy_f, xy_reduced, spectral_sequence=source_page)
                                 )
                                 local_products[x, y] = xy
-                            except Exception as e:
-                                print(f"Problem computing product:")
-                                print(f"  x = {x} at ({x_n}, {x_s}, {x_f})")
-                                print(f"  y = {y} at ({y_n}, {y_s}, {y_f})")
-                                print(f"  xy should be at ({xy_n}, {xy_s}, {xy_f})")
-                                print(f"  xy_preimage = {xy_preimage}")
-                                print(f"  xy_reduced = {xy_reduced}")
-                                print(f"  Exception: {e}")
+                            except Exception:
+                                # The quotient can't be formed because the target
+                                # tridegree has unresolved differentials, so its
+                                # next-page basis is only partially determined:
+                                # the product landing there can't be computed
+                                # exactly, so leave it absent. (Expected; same
+                                # handling as compute_induced_hi_products.)
+                                continue
 
         return local_products
 

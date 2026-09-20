@@ -654,6 +654,7 @@ class DifferentialsPage(key_defaultdict):
 
         # Load differential data for each key that exists in the file
         truncated = 0
+        skipped_smaller = 0
         for key in obj:
             if key == "r":
                 continue
@@ -664,9 +665,7 @@ class DifferentialsPage(key_defaultdict):
             tgt = self.dimension_dict[n, s - 1, f + self.r]
             if (entry.nrows, entry.ncols) != (src, tgt):
                 if src > entry.nrows or tgt > entry.ncols:
-                    print(f"  warning: skipping saved d{self.r}{bidegree}: saved "
-                          f"shape {entry.nrows}x{entry.ncols} is smaller than "
-                          f"this session's {src}x{tgt}")
+                    skipped_smaller += 1  # cache has less data here than this run
                     continue
                 entry = entry.restricted_to(src, tgt)
                 truncated += 1
@@ -684,6 +683,9 @@ class DifferentialsPage(key_defaultdict):
         if truncated:
             print(f"  reshaped {truncated} loaded differentials to this "
                   f"session's dimensions (cache computed at a larger range)")
+        if skipped_smaller:
+            print(f"  skipped {skipped_smaller} saved d{self.r} entries with "
+                  f"less data than this session (cache from a smaller range)")
         return truncated
 
     # Entry-level known-differential CSVs (stable/, provenance documented in
@@ -761,7 +763,7 @@ class DifferentialsPage(key_defaultdict):
 
         `entries` is an iterable of (n, s, f, row, col, value); each is applied
         via `_impose_entry` (row = target index, col = source index). Used for
-        the hand-written Unstable{r}/Spurious{r} lists; `label` records which
+        the hand-written Contradiction3/Spurious4 lists; `label` records which
         list the entries came from in the proof reasons. Entries whose tridegree
         is absent from this page, or whose row/col exceed its dimensions, are
         skipped with a warning — a drifted basis on a turned page must never
@@ -796,6 +798,12 @@ class DifferentialsPage(key_defaultdict):
                 entries = c2_table.get((s, f))
             else:
                 continue
+            if not entries and self.r >= 6 and s + f <= self.HIGH_R_TRIVIAL_TOT:
+                diff = self[n, s, f]
+                if diff.nrows and diff.ncols and not diff.is_forced:
+                    entries = [(ti, si, 0)
+                               for si in range(diff.nrows)
+                               for ti in range(diff.ncols)]
             if not entries:
                 continue
             for (target_idx, source_idx, value) in entries:
@@ -819,10 +827,10 @@ class DifferentialsPage(key_defaultdict):
         from the entry-level CSVs in stable/ (see stable/README.md for
         format and provenance); returns True if any differential was set."""
         stable_csv, c2_csv = self._known_diff_entries() or ({}, {})
-        csv_changed = False
-        if stable_csv or c2_csv:
-            csv_changed = self._check_stable_csv(stable_csv, c2_csv)
-        return csv_changed
+        return self._check_stable_csv(stable_csv, c2_csv)
+
+    # d_r vanishes for r >= 6 through this total degree (stable range and C2).
+    HIGH_R_TRIVIAL_TOT = 72
 
     def ratio_solved(self):
         """
