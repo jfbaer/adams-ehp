@@ -359,13 +359,20 @@ class Map:
     """A map between spectral sequence pages with degree shift; `table`
     caches images keyed by source Element"""
 
-    def __init__(self, name, n_transform, s_transform, f_transform, table=None, domain_check=None):
+    def __init__(self, name, n_transform, s_transform, f_transform, table=None,
+                 domain_check=None, source_transforms=None):
         self.name = name
         self.n = n_transform  # Function: (n,s,f) → n_output
         self.s = s_transform  # Function: (n,s,f) → s_output
         self.f = f_transform  # Function: (n,s,f) → f_output
         self.table = table or {}
         self.domain_check = domain_check or (lambda n,s,f: True)
+        # Inverse degree transforms (n_inv, s_inv, f_inv), each mapping a
+        # TARGET tridegree back to the source, for maps whose degree shift is
+        # invertible. None marks a non-invertible shift (C2: every odd n >= 3
+        # sphere lands on the n=0 column), for which source_degree raises and
+        # reverse naturality must be indexed from the domain instead.
+        self.source_transforms = source_transforms
         # Highest source total degree (s+f) through which the table is known
         # to be COMPLETE (absent entry = zero image). None = complete
         # everywhere. The C2 map and hi product tables come from data files
@@ -384,27 +391,14 @@ class Map:
         return (self.n(n, s, f), self.s(n, s, f), self.f(n, s, f))
     
     def source_degree(self, target_n, target_s, target_f):
-        """Get source tridegree that would map to the given target tridegree"""
-        if self.name == "E":
-            # E: n' = n+1, s' = s, f' = f
-            return (target_n - 1, target_s, target_f)
-        elif self.name == "H":
-            # H: n' = 2n-1, s' = s-n+1, f' = f-1
-            n = (target_n + 1) // 2
-            s = target_s + n - 1
-            f = target_f + 1
-            return (n, s, f)
-        elif self.name == "P":
-            # P: n' = (n-1)//2, s' = s+(n-1)//2-1, f' = f+2
-            n = 2 * target_n + 1
-            s = target_s - target_n + 1
-            f = target_f - 2
-            return (n, s, f)
-        elif self.name in _HI_STEM:
-            # hi multiplication: n unchanged, s' = s - stem, f' = f - 1.
-            return (target_n, target_s - _HI_STEM[self.name], target_f - 1)
-        else:
-            raise ValueError(f"source_degree not implemented for {self.name} map")
+        """Get the source tridegree that would map to the given target
+        tridegree. Only defined when the degree shift is invertible."""
+        if self.source_transforms is None:
+            raise ValueError(f"{self.name}: degree map is not invertible")
+        ni, si, fi = self.source_transforms
+        return (ni(target_n, target_s, target_f),
+                si(target_n, target_s, target_f),
+                fi(target_n, target_s, target_f))
     
     def apply(self, element):
         """Apply this map to an element"""
@@ -512,26 +506,37 @@ class Map:
         )
 
 
-# Standard map definitions
+# Standard map definitions. source_transforms invert the degree shift
+# (mapping a TARGET tridegree back to its source); C2 has none because its
+# shift is not invertible (every odd n >= 3 sphere lands on the n=0 column).
 STANDARD_MAPS = {
-    'E': Map("E", 
+    'E': Map("E",
              n_transform=lambda n,s,f: n+1,
-             s_transform=lambda n,s,f: s, 
+             s_transform=lambda n,s,f: s,
              f_transform=lambda n,s,f: f,
-             domain_check=lambda n,s,f: n >= 2),
-             
+             domain_check=lambda n,s,f: n >= 2,
+             source_transforms=(lambda n,s,f: n-1,
+                                lambda n,s,f: s,
+                                lambda n,s,f: f)),
+
     'H': Map("H",
              n_transform=lambda n,s,f: 2*n-1,
              s_transform=lambda n,s,f: s-n+1,
              f_transform=lambda n,s,f: f-1,
-             domain_check=lambda n,s,f: n >= 2),
-             
+             domain_check=lambda n,s,f: n >= 2,
+             source_transforms=(lambda n,s,f: (n+1)//2,
+                                lambda n,s,f: s + (n+1)//2 - 1,
+                                lambda n,s,f: f+1)),
+
     'P': Map("P",
              n_transform=lambda n,s,f: (n-1)//2,
              s_transform=lambda n,s,f: s+(n-1)//2-1,
              f_transform=lambda n,s,f: f+2,
-             domain_check=lambda n,s,f: n >= 5 and n % 2 == 1),
-             
+             domain_check=lambda n,s,f: n >= 5 and n % 2 == 1,
+             source_transforms=(lambda n,s,f: 2*n+1,
+                                lambda n,s,f: s-n+1,
+                                lambda n,s,f: f-2)),
+
     'C2': Map("C2",
               n_transform=lambda n,s,f: 0 if n % 2 == 1 else n,
               s_transform=lambda n,s,f: s-(n-2) if n % 2 == 1 else s,
@@ -545,13 +550,21 @@ STANDARD_MAPS = {
     # lets natural/natural_rev resolve column differentials in both directions.
     # Their tables are loaded from E2_C2_products.csv.
     'h0': Map("h0", n_transform=lambda n,s,f: n, s_transform=lambda n,s,f: s,
-              f_transform=lambda n,s,f: f+1, domain_check=lambda n,s,f: n == 0),
+              f_transform=lambda n,s,f: f+1, domain_check=lambda n,s,f: n == 0,
+              source_transforms=(lambda n,s,f: n, lambda n,s,f: s,
+                                 lambda n,s,f: f-1)),
     'h1': Map("h1", n_transform=lambda n,s,f: n, s_transform=lambda n,s,f: s+1,
-              f_transform=lambda n,s,f: f+1, domain_check=lambda n,s,f: n == 0),
+              f_transform=lambda n,s,f: f+1, domain_check=lambda n,s,f: n == 0,
+              source_transforms=(lambda n,s,f: n, lambda n,s,f: s-1,
+                                 lambda n,s,f: f-1)),
     'h2': Map("h2", n_transform=lambda n,s,f: n, s_transform=lambda n,s,f: s+3,
-              f_transform=lambda n,s,f: f+1, domain_check=lambda n,s,f: n == 0),
+              f_transform=lambda n,s,f: f+1, domain_check=lambda n,s,f: n == 0,
+              source_transforms=(lambda n,s,f: n, lambda n,s,f: s-3,
+                                 lambda n,s,f: f-1)),
     'h3': Map("h3", n_transform=lambda n,s,f: n, s_transform=lambda n,s,f: s+7,
-              f_transform=lambda n,s,f: f+1, domain_check=lambda n,s,f: n == 0),
+              f_transform=lambda n,s,f: f+1, domain_check=lambda n,s,f: n == 0,
+              source_transforms=(lambda n,s,f: n, lambda n,s,f: s-7,
+                                 lambda n,s,f: f-1)),
 }
 
 # The four C2 filtration-1 product maps (h0/h1/h2/h3), registered alongside C2.
@@ -570,7 +583,7 @@ def standard_map_names(with_C2, with_hi=True):
             names.extend(C2_PRODUCT_MAPS)
     return names
 
-# stem of each hi multiplier, shared by Map.source_degree and any callers.
+# stem of each hi multiplier.
 _HI_STEM = {'h0': 0, 'h1': 1, 'h2': 3, 'h3': 7}
 
 

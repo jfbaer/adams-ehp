@@ -197,13 +197,14 @@ class SpectralSequencePage:
             return []
 
         map_obj = self.maps[map_name]
+        if map_obj.source_transforms is None:
+            # Non-invertible degree shift (C2): no codomain indexing; reverse
+            # naturality runs source-indexed via _natural_rev_source_sweep.
+            return []
         codomain = []
 
         for (n, s, f) in self.page.keys():
-            try:
-                source = map_obj.source_degree(n, s, f)
-            except Exception:
-                continue
+            source = map_obj.source_degree(n, s, f)
 
             # Verify that the computed source actually maps to this target
             # (source_degree is only an approximation for some maps)
@@ -458,6 +459,7 @@ class SpectralSequencePage:
                 map_template.f,
                 domain_check=(map_template.domain_check
                               if map_name in self.HONOR_DOMAIN_CHECKS else None),
+                source_transforms=map_template.source_transforms,
             )
 
     def map_matrix(self, map_name, n, s, f):
@@ -641,7 +643,6 @@ class SpectralSequencePage:
 
     def natural_rev(self, y_n, y_s, y_f, map_name, locked=True):
         """Apply naturality constraint in reverse direction (from codomain to domain)"""
-        r = self.d.r
         map_obj = self.maps[map_name]
         x_n, x_s, x_f = map_obj.source_degree(y_n, y_s, y_f)
 
@@ -649,6 +650,36 @@ class SpectralSequencePage:
         # inverse alone cannot see restrictions like the hi maps' n == 0).
         if not map_obj.domain_check(x_n, x_s, x_f):
             return False
+
+        return self._reverse_naturality_at(map_name, x_n, x_s, x_f,
+                                           y_n, y_s, y_f, locked=locked)
+
+    def _natural_rev_source_sweep(self, map_name, extra_guard=None,
+                                  soft_structural=False):
+        """Reverse naturality indexed from the map's DOMAIN, for maps whose
+        degree shift is not invertible and so cannot be swept from the
+        codomain (C2: every odd n >= 3 sphere lands on the n=0 column).
+        extra_guard(x_n, x_s, x_f, y_n, y_s, y_f) may veto individual sites;
+        returns True if any differential space shrank."""
+        changed = False
+        map_obj = self.maps[map_name]
+        for x_n, x_s, x_f in self.map_domain(map_name):
+            y_n, y_s, y_f = map_obj.target_degree(x_n, x_s, x_f)
+            if extra_guard and not extra_guard(x_n, x_s, x_f, y_n, y_s, y_f):
+                continue
+            changed |= self._reverse_naturality_at(
+                map_name, x_n, x_s, x_f, y_n, y_s, y_f,
+                soft_structural=soft_structural)
+        return changed
+
+    def _reverse_naturality_at(self, map_name, x_n, x_s, x_f, y_n, y_s, y_f,
+                               locked=True, soft_structural=False):
+        """Core of reverse naturality: constrain d at the map's source x
+        against d at its target y through the naturality square. With
+        soft_structural, non-contradiction failures (shape mismatches at
+        data boundaries) warn and skip instead of aborting."""
+        r = self.d.r
+        map_obj = self.maps[map_name]
 
         # Skip if locked and already forced
         if locked and self.d[x_n, x_s, x_f].is_forced:
@@ -672,13 +703,30 @@ class SpectralSequencePage:
             map_matrix_x = self.map_matrix(map_name, x_n, x_s, x_f)
             map_matrix_source = self.map_matrix(map_name, x_n, x_s - 1, x_f + r)
             self.d[x_n, x_s, x_f] &= (map_matrix_x * self.d[y_n, y_s, y_f]) // map_matrix_source
-        except (ArithmeticError, AttributeError) as e:
+        except ContradictionError as e:
+            # A genuine inconsistency must never be skipped silently: report
+            # the full deduction trace and stop.
             self._constraint_failure(
                 f"natural_rev({map_name}) at source ({x_n},{x_s},{x_f}), target ({y_n},{y_s},{y_f})",
                 e,
                 [(x_n, x_s, x_f), (y_n, y_s, y_f),
                  self.d_target(x_n, x_s, x_f), self.d_target(y_n, y_s, y_f)],
             )
+            raise
+        except Exception as e:
+            if soft_structural:
+                # Structural failures (dimension mismatches at data
+                # boundaries) stay non-fatal but are not silent.
+                print(f"\n  warning: {map_name} reverse naturality skipped at "
+                      f"({x_n},{x_s},{x_f}): {type(e).__name__}: {e}")
+                return False
+            if isinstance(e, (ArithmeticError, AttributeError)):
+                self._constraint_failure(
+                    f"natural_rev({map_name}) at source ({x_n},{x_s},{x_f}), target ({y_n},{y_s},{y_f})",
+                    e,
+                    [(x_n, x_s, x_f), (y_n, y_s, y_f),
+                     self.d_target(x_n, x_s, x_f), self.d_target(y_n, y_s, y_f)],
+                )
             raise
 
         new_dx = self.d[x_n, x_s, x_f].dimension()
@@ -743,69 +791,18 @@ class SpectralSequencePage:
 
         return changed
 
-    def C2(self):
-        """Apply C2 map naturality constraints over the C2 map's domain and codomain"""
-        changed = False
-        for x_n, x_s, x_f in self.map_domain('C2'):
-            changed |= self._c2_naturality_at(x_n, x_s, x_f)
-        for x_n, x_s, x_f in self.map_codomain('C2'):
-            changed |= self._c2_naturality_at(x_n, x_s, x_f)
-        return changed
-
-    def _c2_naturality_at(self, x_n, x_s, x_f):
-        """Apply C2 naturality to the single odd-n sphere class (x_n, x_s, x_f),
-        constraining its d_r against the n=0 column target. Returns True if the
-        differential space actually shrank. (Shared by the domain and codomain
-        passes of C2().)"""
+    def _c2_reverse_guard(self, x_n, x_s, x_f, y_n, y_s, y_f):
+        """Extra C2-only bound for the reverse sweep: both the sphere source
+        and the n=0 column target must lie inside the C2 data's complete band
+        (total degree <= MAX_TOTAL_DEGREE_THRESHOLD). Note complete_through
+        (checked by _map_data_ok) bounds the C2 TABLE's source coverage,
+        while this also bounds the column target's d-target total degree --
+        related but not interchangeable quantities."""
         r = self.d.r
-        if x_n % 2 != 1:
-            return False
-        target_s = x_s - (x_n - 2)
-        target_f = x_f - 1
-        if (target_s - 1 + target_f + r > MAX_TOTAL_DEGREE_THRESHOLD
+        if (y_s - 1 + y_f + r > MAX_TOTAL_DEGREE_THRESHOLD
                 or x_s + x_f > MAX_TOTAL_DEGREE_THRESHOLD):
             return False
-        if target_s < 0 or target_f < 0:
-            return False
-        relevant_tridegrees = [
-            (x_n, x_s, x_f),
-            (x_n, x_s - 1, x_f + r),
-            (0, target_s, target_f),
-            (0, target_s - 1, target_f + r)
-        ]
-        if not self._tridegrees_ok(relevant_tridegrees):
-            return False
-        if not self._map_data_ok(self.maps['C2'], x_n, x_s, x_f):
-            return False
-        if self.d[x_n, x_s, x_f].is_forced:
-            return False
-        old_dx = self.d[x_n, x_s, x_f].dimension()
-        try:
-            map_matrix_x = self.map_matrix('C2', x_n, x_s, x_f)
-            map_matrix_source = self.map_matrix('C2', x_n, x_s - 1, x_f + r)
-            self.d[x_n, x_s, x_f] &= map_matrix_x * self.d[0, target_s, target_f] // map_matrix_source
-        except ContradictionError as e:
-            # A genuine inconsistency must never be skipped silently: report the
-            # full deduction trace and stop.
-            self._constraint_failure(
-                f"C2 naturality at sphere ({x_n},{x_s},{x_f}), "
-                f"column target (0,{target_s},{target_f})",
-                e,
-                [(x_n, x_s, x_f), (x_n, x_s - 1, x_f + r),
-                 (0, target_s, target_f), (0, target_s - 1, target_f + r)],
-            )
-            raise
-        except Exception as e:
-            # Structural failures (dimension mismatches at data boundaries) stay
-            # non-fatal but are no longer silent.
-            print(f"\n  warning: C2 naturality skipped at ({x_n},{x_s},{x_f}): "
-                  f"{type(e).__name__}: {e}")
-            return False
-        new_dx = self.d[x_n, x_s, x_f].dimension()
-        if old_dx > new_dx:
-            self.outcome_map('C2', x_n, x_s, x_f, 0, target_s, target_f, old_dx, new_dx, 0, 0)
-            return True
-        return False
+        return y_s >= 0 and y_f >= 0
 
     def d_squared(self):
         """Check d² = 0 constraints for all tridegrees with elements"""
@@ -874,11 +871,7 @@ class SpectralSequencePage:
         r = self.d.r
         changed = False
         for y_n, y_s, y_f in self.map_codomain('E'):
-            try:
-                x_n, x_s, x_f = self.maps['E'].source_degree(y_n, y_s, y_f)
-            except (ValueError, KeyError, ArithmeticError) as e:
-                # Skip if source degree calculation fails (e.g., inverse not defined)
-                continue
+            x_n, x_s, x_f = self.maps['E'].source_degree(y_n, y_s, y_f)
             relevant_tridegrees = [
                 (y_n, y_s - 1, y_f + r),
                 (y_n, y_s, y_f),
@@ -1255,7 +1248,8 @@ class SpectralSequencePage:
         # the loop below would be a no-op.
         self.d.check_stable()
         if self.has_C2:
-            self.C2()
+            self._natural_rev_source_sweep(
+                'C2', extra_guard=self._c2_reverse_guard, soft_structural=True)
         loop_count = 0
 
         # Get active pairs once at the start if using optimization
@@ -1279,14 +1273,17 @@ class SpectralSequencePage:
                 if not maps_changed and not rev_changed:
                     break
                 progress = True
-            # Reverse C2 naturality (n=0 column -> odd spheres) cannot run in
-            # the generic sweeps above (the C2 map has no source_degree), so
-            # apply it here. With complete input CSVs it is a no-op after the
-            # initial call, but n=0 tridegrees beyond the inputs' coverage
-            # (r >= 6 past total degree HIGH_R_TRIVIAL_TOT) can still shrink
-            # mid-page and feed the odd spheres.
+            # Reverse C2 naturality (n=0 column -> odd spheres): C2's degree
+            # shift is not invertible, so this runs source-indexed instead of
+            # inside the codomain-indexed generic sweep above. With complete
+            # input CSVs it is a no-op after the initial call, but n=0
+            # tridegrees beyond the inputs' coverage (r >= 6 past total
+            # degree HIGH_R_TRIVIAL_TOT) can still shrink mid-page and feed
+            # the odd spheres.
             if self.has_C2:
-                progress |= self.C2()
+                progress |= self._natural_rev_source_sweep(
+                    'C2', extra_guard=self._c2_reverse_guard,
+                    soft_structural=True)
             progress |= self.d_squared()
             progress |= self._natural_rev_sweep()
             progress |= self._natural_sweep()
