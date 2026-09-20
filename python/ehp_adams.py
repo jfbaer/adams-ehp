@@ -1384,6 +1384,133 @@ class SpectralSequencePage:
             return x.vect
         return reduce_against(x.vect, self.turned_page[x_n, x_s, x_f].B)
 
+    def _chart_hi_multipliers(self, col):
+        """The single basis element at each hi multiplier bidegree
+        (col, stem, 1) of chart column col = n + s, aligned with
+        C2_PRODUCT_MAPS; None where the bidegree is empty. The [0]
+        resolutions treat each bidegree as one-dimensional; a dim >= 2
+        bidegree would silently drop products from the chart -- vacuous on
+        the shipped range (verified), asserted against future extensions."""
+        multipliers = []
+        for stem in HI_STEMS:
+            if self.has_elements(col, stem, 1):
+                if len(self.page[col, stem, 1]) > 1:
+                    raise AssertionError(
+                        f"write_spheres: hi multiplier bidegree "
+                        f"({col}, {stem}, 1) has dimension >= 2; the "
+                        f"single-element resolution would drop products")
+                multipliers.append(self.page[col, stem, 1][0])
+            else:
+                multipliers.append(None)
+        return multipliers
+
+    def _reduced_residue(self, target):
+        """Reduce the coset offset modulo the (echelon) uncertainty
+        generators: the result names only the determined components (the
+        ambiguous ones are reported in nulldif)."""
+        residue = target["offset"].vect
+        for gen in target["uncertainty"]:
+            pivot = gen.vect.support()[0]
+            if residue[pivot] != 0:
+                residue = residue + gen.vect
+        return residue
+
+    def _chart_dr_cells(self, element, n, s, f):
+        """The (target, drinfo, drtarget) values for one chart row. A class
+        whose d_r-target lies outside the computable window is still real,
+        loaded data: emitted with empty differential columns rather than
+        skipped."""
+        r = self.d.r
+        target = None
+        drinfo = ""
+        drtarget = ""
+        if self.is_computable(n, s - 1, f + r, check_uncertainty=False, source=False):
+            try:
+                target = self.d(element)
+                # The differential is definitely nonzero iff its coset offset
+                # + <uncertainty> does not contain 0 -- i.e. the offset is
+                # not in the uncertainty span. That is a basis-independent
+                # fact even when the exact target is ambiguous, so it must be
+                # reported; drtarget names only the determined components.
+                residue = self._reduced_residue(target)
+                if not residue.is_zero():
+                    drinfo = str(r)
+                    residue_elt = Element(
+                        n, s - 1, f + r, residue,
+                        spectral_sequence=element.spectral_sequence,
+                    )
+                    drtarget = ";".join([str(b) for b in residue_elt.decompose()])
+            except (KeyError, ValueError, AttributeError):
+                # Differential computation failed or element not decomposable
+                target = None
+                drinfo = ""
+                drtarget = ""
+        return target, drinfo, drtarget
+
+    def _chart_hi_cells(self, element, multipliers, row):
+        """Sphere hi-product columns for one row: element * hi for each of
+        the resolved multipliers (aligned with C2_PRODUCT_MAPS)."""
+        for hname, h in zip(C2_PRODUCT_MAPS, multipliers):
+            if h is None:
+                continue
+            try:
+                product = element * h
+                if hasattr(product, 'decompose'):
+                    row[f"{hname}target"] = ";".join(
+                        [str(b) for b in product.decompose()])
+            except (ValueError, AttributeError, KeyError):
+                # Product computation failed or not decomposable
+                pass
+
+    def _h0_tower_extension(self, row, n, s, f, names_dict):
+        """BANDAID (lexical, not algebraic): extend an established lambda_0
+        tower to its top. h0 = lambda_0 climbs the tower (lambda_0^f ->
+        lambda_0^{f+1}, and the even stem-(n-1) tower likewise), but the top
+        products fall outside the computed relations/multiply window, so the
+        column loses its last edge. A tower class' name is a leading index
+        followed by all zeros; if the class one filtration up is that name
+        with one more trailing zero, draw the structural h0 edge to it."""
+        if row["h0target"]:
+            return
+        tokens = row["label"].split()
+        if tokens and all(t == "0" for t in tokens[1:]):
+            up = (n, s, f + 1)
+            if self.has_elements(*up) and self.dimension[up] == 1:
+                up_el = self.page[up][0]
+                up_name = names_dict.get(str(up_el), str(up_el))
+                if up_name.split() == tokens + ["0"]:
+                    row["h0target"] = f"{n}_{s}_{f + 1}"
+
+    def _chart_c2_hi_cells(self, element, row):
+        """n=0 column hi-product columns, read from the hi map tables
+        (E2_C2_products.csv on E2, induced on later pages) rather than the
+        sphere multiplication table the hi cells consult. Deliberately
+        .table.get and NOT .apply: a missing entry stays blank (zero product
+        and beyond-data-coverage alike), where apply would fabricate and
+        cache a false zero image."""
+        for hname in C2_PRODUCT_MAPS:
+            try:
+                image = self.maps[hname].table.get(element)
+                if image is not None and hasattr(image, 'decompose'):
+                    row[f"{hname}target"] = ";".join(
+                        [str(b) for b in image.decompose()])
+            except (ValueError, AttributeError, KeyError):
+                pass
+
+    def _chart_map_cells(self, element, row):
+        """E/H/P/C2 map-image columns for one row."""
+        for map_name in standard_map_names(self.has_C2, with_hi=False):
+            if map_name in self.maps and hasattr(self.maps[map_name], 'table'):
+                try:
+                    image = self.maps[map_name].apply(element)
+                    if image != self.zero(image.n, image.s, image.f) and hasattr(image, 'decompose'):
+                        row[map_name] = ";".join([str(b) for b in image.decompose()])
+                    else:
+                        row[map_name] = ""
+                except (ValueError, AttributeError, KeyError):
+                    # Map application failed or image not decomposable
+                    row[map_name] = ""
+
     def write_spheres(self, charts_dir=None):
         """Write the chart CSV {charts_dir}/E{r}_{max_t}.csv: one row per basis
         element in every charted column (spheres, plus the n=0 Lambda(C2)
@@ -1412,29 +1539,7 @@ class SpectralSequencePage:
                     continue
                 if (n, s, f) not in self.page:
                     continue
-                h0 = None
-                h1 = None
-                h2 = None
-                h3 = None
-                # The [0] resolutions below treat each hi multiplier bidegree
-                # as one-dimensional; a dim >= 2 bidegree would silently drop
-                # products from the chart. Vacuous on the shipped range
-                # (verified), asserted here against future extensions.
-                for hi_stem in HI_STEMS:
-                    if (self.has_elements(n + s, hi_stem, 1)
-                            and len(self.page[n + s, hi_stem, 1]) > 1):
-                        raise AssertionError(
-                            f"write_spheres: hi multiplier bidegree "
-                            f"({n + s}, {hi_stem}, 1) has dimension >= 2; "
-                            f"the single-element resolution would drop products")
-                if self.has_elements(n + s, 0, 1):
-                    h0 = self.page[n + s, 0, 1][0]
-                if self.has_elements(n + s, 1, 1):
-                    h1 = self.page[n + s, 1, 1][0]
-                if self.has_elements(n + s, 3, 1):
-                    h2 = self.page[n + s, 3, 1][0]
-                if self.has_elements(n + s, 7, 1):
-                    h3 = self.page[n + s, 7, 1][0]
+                multipliers = self._chart_hi_multipliers(n + s)
                 adams_elements = self.page[n, s, f]
                 if hasattr(adams_elements, 'basis'):
                     element_list = adams_elements.basis
@@ -1443,41 +1548,7 @@ class SpectralSequencePage:
                 else:
                     element_list = [adams_elements]
                 for element in element_list:
-                    r = self.d.r
-                    # A class whose d_r-target lies outside the computable
-                    # window is still real, loaded data: emit it with empty
-                    # differential columns rather than skipping the row.
-                    target = None
-                    drinfo = ""
-                    drtarget = ""
-                    if self.is_computable(n, s - 1, f + r, check_uncertainty=False, source=False):
-                        try:
-                            target = self.d(element)
-                            # The differential is definitely nonzero iff its coset
-                            # offset + <uncertainty> does not contain 0 -- i.e. the
-                            # offset is not in the uncertainty span. That is a
-                            # basis-independent fact even when the exact target is
-                            # ambiguous, so it must be reported. Reduce the offset
-                            # modulo the (echelon) uncertainty generators: drtarget
-                            # then names only the determined components, while the
-                            # ambiguous ones are reported in nulldif below.
-                            residue = target["offset"].vect
-                            for gen in target["uncertainty"]:
-                                pivot = gen.vect.support()[0]
-                                if residue[pivot] != 0:
-                                    residue = residue + gen.vect
-                            if not residue.is_zero():
-                                drinfo = str(self.d.r)
-                                residue_elt = Element(
-                                    n, s - 1, f + r, residue,
-                                    spectral_sequence=element.spectral_sequence,
-                                )
-                                drtarget = ";".join([str(b) for b in residue_elt.decompose()])
-                        except (KeyError, ValueError, AttributeError):
-                            # Differential computation failed or element not decomposable
-                            target = None
-                            drinfo = ""
-                            drtarget = ""
+                    target, drinfo, drtarget = self._chart_dr_cells(element, n, s, f)
                     shift = 0
                     try:
                         if hasattr(adams_elements, 'basis'):
@@ -1522,81 +1593,14 @@ class SpectralSequencePage:
                         "nulldif": nulldif,
                         "XX": "XX",
                     }
-                    if h0 is not None:
-                        try:
-                            product = element * h0
-                            if hasattr(product, 'decompose'):
-                                row["h0target"] = ";".join([str(b) for b in product.decompose()])
-                        except (ValueError, AttributeError, KeyError):
-                            # Product computation failed or not decomposable
-                            pass
-                    if not row["h0target"]:
-                        # Extend an established lambda_0-tower to its top. h0 = lambda_0
-                        # climbs the tower (lambda_0^f -> lambda_0^{f+1}, and the even
-                        # stem-(n-1) tower likewise), but the top products fall outside
-                        # the computed relations/multiply window, so the column loses its
-                        # last edge. A tower class' name is a leading index followed by
-                        # all zeros; if the class one filtration up is that name with one
-                        # more trailing zero, draw the structural h0 edge to it.
-                        tokens = row["label"].split()
-                        if tokens and all(t == "0" for t in tokens[1:]):
-                            up = (n, s, f + 1)
-                            if self.has_elements(*up) and self.dimension[up] == 1:
-                                up_el = self.page[up][0]
-                                up_name = names_dict.get(str(up_el), str(up_el))
-                                if up_name.split() == tokens + ["0"]:
-                                    row["h0target"] = f"{n}_{s}_{f + 1}"
-                    if h1 is not None:
-                        try:
-                            product = element * h1
-                            if hasattr(product, 'decompose'):
-                                row["h1target"] = ";".join([str(b) for b in product.decompose()])
-                        except (ValueError, AttributeError, KeyError):
-                            # Product computation failed or not decomposable
-                            pass
-                    if h2 is not None:
-                        try:
-                            product = element * h2
-                            if hasattr(product, 'decompose'):
-                                row["h2target"] = ";".join([str(b) for b in product.decompose()])
-                        except (ValueError, AttributeError, KeyError):
-                            # Product computation failed or not decomposable
-                            pass
-                    if h3 is not None:
-                        try:
-                            product = element * h3
-                            if hasattr(product, 'decompose'):
-                                row["h3target"] = ";".join([str(b) for b in product.decompose()])
-                        except (ValueError, AttributeError, KeyError):
-                            # Product computation failed or not decomposable
-                            pass
+                    self._chart_hi_cells(element, multipliers, row)
+                    self._h0_tower_extension(row, n, s, f, names_dict)
                     if n == 0 and 'h0' in self.maps:
                         # The n=0 column's hi products live in the hi map
-                        # tables (E2_C2_products.csv on E2, induced on later
-                        # pages), not in the sphere multiplication table the
-                        # blocks above consult -- without this the C2 chart
-                        # would show no hi lines at all. A missing entry stays
-                        # blank: zero product and beyond-data-coverage alike.
-                        for hname in C2_PRODUCT_MAPS:
-                            try:
-                                image = self.maps[hname].table.get(element)
-                                if image is not None and hasattr(image, 'decompose'):
-                                    row[f"{hname}target"] = ";".join(
-                                        [str(b) for b in image.decompose()])
-                            except (ValueError, AttributeError, KeyError):
-                                pass
-                    # Output the E/H/P/C2 map images
-                    for map_name in standard_map_names(self.has_C2, with_hi=False):
-                        if map_name in self.maps and hasattr(self.maps[map_name], 'table'):
-                            try:
-                                image = self.maps[map_name].apply(element)
-                                if image != self.zero(image.n, image.s, image.f) and hasattr(image, 'decompose'):
-                                    row[map_name] = ";".join([str(b) for b in image.decompose()])
-                                else:
-                                    row[map_name] = ""
-                            except (ValueError, AttributeError, KeyError):
-                                # Map application failed or image not decomposable
-                                row[map_name] = ""
+                        # tables -- without this the C2 chart would show no
+                        # hi lines at all.
+                        self._chart_c2_hi_cells(element, row)
+                    self._chart_map_cells(element, row)
                     writer.writerow(row)
 
 
