@@ -1794,9 +1794,9 @@ class SpectralSequence:
         # Iterate through the domain of the map
         for x_n, x_s, x_f in source_page.map_domain(map_name):
             target_n, target_s, target_f = map_obj.target_degree(x_n, x_s, x_f)
-            target_bidegree = (target_n, target_s, target_f)
+            target_tridegree = (target_n, target_s, target_f)
 
-            if target_bidegree not in target_page.page:
+            if target_tridegree not in target_page.page:
                 continue
             if (x_n, x_s, x_f) not in target_page.page:
                 continue
@@ -1826,7 +1826,7 @@ class SpectralSequence:
                 # Reduce against boundaries in target page
                 map_reduced = reduce_against(
                     map_preimage_vect,
-                    source_page.turned_page[target_bidegree].B
+                    source_page.turned_page[target_tridegree].B
                 )
 
                 # Check that result is a cycle (d(result) = 0)
@@ -1838,8 +1838,8 @@ class SpectralSequence:
                     # Differential computation failed, skip this element
                     continue
 
-                # Check if target_bidegree has elements
-                if target_bidegree not in target_page.page or target_page.dimension[target_bidegree] == 0:
+                # Check if target_tridegree has elements
+                if target_tridegree not in target_page.page or target_page.dimension[target_tridegree] == 0:
                     continue
                 elif not map_reduced.is_zero():
                     local_map[x] = source_page.quotient(
