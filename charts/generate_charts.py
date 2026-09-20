@@ -30,7 +30,7 @@ import argparse
 from pathlib import Path
 
 
-def find_page_csvs(charts_dir="charts"):
+def find_page_csvs(charts_dir="data"):
     """
     Scan charts_dir for the per-page chart CSVs E{r}_{N}.csv (write_spheres()
     output). Suffixed variants like E{r}_{N}_unknown.csv carry an extra
@@ -144,9 +144,7 @@ def run_poetry_command(cmd, description):
         print(f"    ERROR: {result.stderr}")
         return False
 
-    if "JSON data successfully" in result.stdout or "Generated" in result.stdout:
-        print(f"    OK")
-
+    print("    OK")
     return True
 
 
@@ -177,10 +175,6 @@ def generate_chart(csv_file, n, r, output_dir, generate_light, generate_dark, ma
     json_file = f"{output_dir}/S{n}_E{r}.json"
     html_light_file = f"{output_dir}/S{n}_E{r}.html"
     html_dark_file = f"{output_dir}/S{n}_E{r}_dark.html"
-
-    files_to_check = expected_chart_files(output_dir, n, r, generate_light, generate_dark)
-    if all(os.path.exists(f) for f in files_to_check):
-        return len(files_to_check)  # all exist, skip
 
     count = 0
     label = f"S{n} E{r}"
@@ -542,7 +536,7 @@ def main():
     )
     parser.add_argument(
         "--sidebyside", action="store_true",
-        help="also generate the E-map side-by-side comparison charts "
+        help="also generate the map side-by-side comparison views (E/H/P/C2) "
              "(off by default; these are the slow, bulky part of a run)",
     )
     args = parser.parse_args()
@@ -563,10 +557,7 @@ def main():
     # Uniform y-axis height = the largest Adams filtration actually present in
     # the data. Every column ends at its own s+f <= tot boundary naturally (the
     # CSV simply has no rows beyond it), so this sets a shared axis height
-    # WITHOUT dropping any computed class. (An earlier version capped at
-    # tot - max_stem, the boundary stem's height, which chopped every column
-    # down to the worst case and hid validly-computed high-filtration classes
-    # at low stems.)
+    # WITHOUT dropping any computed class.
     filt_cap = max((get_max_filt(p) for p in page_csvs.values()), default=0) or None
 
     # Determine n-values per r-value from CSV data

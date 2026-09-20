@@ -65,7 +65,7 @@ poetry run python generate_charts.py --charts-dir data \
 | `--charts-dir` | where the `E{r}_{N}.csv` files live |
 | `--output-dir` | where to write the charts |
 | `--mode` | `light` \| `dark` \| `both` |
-| `--max-stem` | clip charts at this stem (0 = full width); also sets the uniform filtration ceiling to `N − max_stem` (26 at the defaults) |
+| `--max-stem` | clip charts at this stem (0 = full width); the uniform y-axis height is the largest Adams filtration present in the data |
 
 Those are the defaults (`--sidebyside` is the one opt-in; the Pages workflow
 passes it). Differentials arriving from just past the stem clip are drawn as

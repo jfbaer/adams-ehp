@@ -251,16 +251,6 @@ def extract_edge_attributes(row, edge_type, nodes):
 
 
 
-def label_from_node_name(node_name):
-    """Apply substitutions to a node name to generate a label, wrapped in dollar signs for Latex."""
-    label = node_name
-    for pattern, replacement in substitutions:
-        label = pattern.sub(replacement, label)
-    if label:
-        label = f"${label}$"
-    return label
-
-
 def deduplicate_name(name):
     """Deduplicate names by removing all variations of 'again'. We also return whether the name was
     a duplicate."""
@@ -698,85 +688,6 @@ def process_csv(input_file, output_file, view_mode="sphere", filter_value=None, 
         if not quiet:
             print("Validation error:", e)
         raise e
-
-
-def process_csv_to_dict(input_file, view_mode="sphere", filter_value=None, highlight_mode=None, source_csv=None, map_column=None, max_stem=None, max_filt=None):
-    """
-    Process CSV to JSON data structure without writing to file.
-    Useful for batch processing and multi-chart generation.
-    """
-    schema = load_schema()
-    json_data = _build_chart_json(
-        input_file, view_mode, filter_value, highlight_mode, source_csv, map_column, max_stem, max_filt
-    )
-
-    # Validation
-    try:
-        validate(instance=json_data, schema=schema)
-        return json_data
-    except Exception as e:
-        print(f"Validation error: {e}")
-        raise e
-
-
-def batch_process_csv(input_file, output_dir, view_modes=None, filter_ranges=None, quiet=False):
-    """
-    Batch process a single CSV file into multiple JSON outputs.
-    
-    Args:
-        input_file: Path to CSV file
-        output_dir: Directory to write JSON files 
-        view_modes: List of view modes ["sphere", "stem"] (default: ["sphere"])
-        filter_ranges: Dict with ranges for each view mode (default: sphere=2-72, stem=0-10)
-        quiet: If True, suppress progress output
-    
-    Returns:
-        List of generated file paths
-    """
-    if view_modes is None:
-        view_modes = ["sphere"]
-    
-    if filter_ranges is None:
-        filter_ranges = {
-            "sphere": range(2, 73),  # S2 through S72
-            "stem": range(0, 11)     # stem 0 through 10
-        }
-    
-    output_dir = Path(output_dir)
-    output_dir.mkdir(exist_ok=True)
-    
-    input_path = Path(input_file)
-    # Extract E number from filename (e.g., E2.csv -> 2)
-    er_num = int(input_path.stem[1:]) if input_path.stem.startswith('E') and input_path.stem[1:].isdigit() else 2
-    
-    generated_files = []
-    
-    for view_mode in view_modes:
-        if view_mode not in filter_ranges:
-            continue
-            
-        for filter_value in filter_ranges[view_mode]:
-            if view_mode == "sphere":
-                output_file = output_dir / f"S{filter_value}_E{er_num}.json"
-            else:
-                output_file = output_dir / f"S{filter_value}_E{er_num}_{view_mode}.json"
-            
-            try:
-                process_csv(
-                    input_file=str(input_file),
-                    output_file=str(output_file),
-                    view_mode=view_mode,
-                    filter_value=filter_value,
-                    quiet=quiet
-                )
-                generated_files.append(str(output_file))
-                if not quiet:
-                    print(f"  Generated {output_file.name}")
-            except Exception as e:
-                if not quiet:
-                    print(f"  Failed to generate {output_file.name}: {e}")
-    
-    return generated_files
 
 
 def main():
