@@ -90,6 +90,8 @@ class SpectralSequencePage:
         # compute(); reported in the end-of-compute summary so it is visible
         # whether e.g. the h0-h3 filtration-1 Leibniz rule ever fired.
         self.map_deduction_counts = defaultdict(int)
+        # Same tally for non-map constraint rules (d^2).
+        self.rule_deduction_counts = defaultdict(int)
 
     def compute_max_values(self):
         """Infer max_n/max_s/max_f/max_t from the dimension table (with a safety margin of 2), filling in only the values not already set"""
@@ -646,22 +648,15 @@ class SpectralSequencePage:
         if locked and self.d[x_n, x_s, x_f].is_forced:
             return False
 
-        # Check if any relevant tridegrees are uncertain_plus or outside computed polygon
         relevant_tridegrees = [
             (x_n, x_s, x_f),
             self.d_target(x_n, x_s, x_f),
             (y_n, y_s, y_f),
             self.d_target(y_n, y_s, y_f)
         ]
-        if any(self.degree_is_uncertain_plus(*td) for td in relevant_tridegrees):
+        if not self._tridegrees_ok(relevant_tridegrees):
             return False
-        if not all(self.is_in_computed_polygon_source(*td) for td in relevant_tridegrees):
-            return False
-        # Both map matrices below (at x and at its d-target) must come from
-        # complete table data; beyond the data file's coverage a missing entry
-        # would be read as a false zero map, producing bogus constraints.
-        if not (map_obj.data_complete(x_n, x_s, x_f)
-                and map_obj.data_complete(x_n, x_s - 1, x_f + r)):
+        if not self._map_data_ok(map_obj, x_n, x_s, x_f):
             return False
 
         old_dx = self.d[x_n, x_s, x_f].dimension()
@@ -694,28 +689,27 @@ class SpectralSequencePage:
         """Apply naturality constraint in forward direction (from domain to codomain)"""
         r = self.d.r
         map_obj = self.maps[map_name]
+
+        # The source must lie in the map's domain (mirrors natural_rev; for
+        # E/H/P/C2 this is currently always true, see initialize_maps).
+        if not map_obj.domain_check(x_n, x_s, x_f):
+            return False
+
         y_n, y_s, y_f = map_obj.target_degree(x_n, x_s, x_f)
 
         # Skip if locked and already forced
         if locked and self.d[y_n, y_s, y_f].is_forced:
             return False
 
-        # Check if any relevant tridegrees are uncertain_plus or outside computed polygon
         relevant_tridegrees = [
             (x_n, x_s, x_f),
             self.d_target(x_n, x_s, x_f),
             (y_n, y_s, y_f),
             self.d_target(y_n, y_s, y_f)
         ]
-        if any(self.degree_is_uncertain_plus(*td) for td in relevant_tridegrees):
+        if not self._tridegrees_ok(relevant_tridegrees):
             return False
-        if not all(self.is_in_computed_polygon_source(*td) for td in relevant_tridegrees):
-            return False
-        # Both map matrices below (at x and at its d-target) must come from
-        # complete table data; beyond the data file's coverage a missing entry
-        # would be read as a false zero map, producing bogus constraints.
-        if not (map_obj.data_complete(x_n, x_s, x_f)
-                and map_obj.data_complete(x_n, x_s - 1, x_f + r)):
+        if not self._map_data_ok(map_obj, x_n, x_s, x_f):
             return False
 
         old_dy = self.d[y_n, y_s, y_f].dimension()
@@ -767,16 +761,15 @@ class SpectralSequencePage:
             return False
         if target_s < 0 or target_f < 0:
             return False
-        relevant_bidegrees = [
+        relevant_tridegrees = [
             (x_n, x_s, x_f),
             (x_n, x_s - 1, x_f + r),
             (0, target_s, target_f),
             (0, target_s - 1, target_f + r)
         ]
-        if not self._validate_tridegrees(relevant_bidegrees):
+        if not self._tridegrees_ok(relevant_tridegrees):
             return False
-        if not (self.maps['C2'].data_complete(x_n, x_s, x_f)
-                and self.maps['C2'].data_complete(x_n, x_s - 1, x_f + r)):
+        if not self._map_data_ok(self.maps['C2'], x_n, x_s, x_f):
             return False
         if self.d[x_n, x_s, x_f].is_forced:
             return False
@@ -880,13 +873,15 @@ class SpectralSequencePage:
             except (ValueError, KeyError, ArithmeticError) as e:
                 # Skip if source degree calculation fails (e.g., inverse not defined)
                 continue
-            relevant_bidegrees = [
+            relevant_tridegrees = [
                 (y_n, y_s - 1, y_f + r),
                 (y_n, y_s, y_f),
                 (x_n, x_s - 1, x_f + r),
                 (x_n, x_s, x_f),
             ]
-            if not self._validate_tridegrees(relevant_bidegrees):
+            if not self._tridegrees_ok(relevant_tridegrees):
+                continue
+            if not self._map_data_ok(self.maps['E'], x_n, x_s, x_f):
                 continue
             old_dx = self.d[x_n, x_s, x_f].dimension()
 
@@ -938,7 +933,6 @@ class SpectralSequencePage:
                 # Display current tridegrees being processed (updates in place)
                 print(f"\r  Computing Leibniz: x=({x_n},{x_s},{x_f}) \u00d7 y=({y_n},{y_s},{y_f}) \u2192 xy=({xy_n},{xy_s},{xy_f})    ", end='', flush=True)
 
-                # Check if any relevant tridegrees are uncertain_plus
                 relevant_tridegrees = [
                     (x_n, x_s, x_f),
                     self.d_target(x_n, x_s, x_f),
@@ -949,9 +943,7 @@ class SpectralSequencePage:
                     (xy_n, xy_s, xy_f),
                     self.d_target(xy_n, xy_s, xy_f)
                 ]
-                if any(self.degree_is_uncertain_plus(*td) for td in relevant_tridegrees):
-                    continue
-                if not all(self.is_in_computed_polygon_source(*td) for td in relevant_tridegrees):
+                if not self._tridegrees_ok(relevant_tridegrees):
                     continue
 
                 is_worth_it = not all([
@@ -1037,7 +1029,6 @@ class SpectralSequencePage:
         x_n, x_s, x_f = x.n, x.s, x.f
         xy_n, xy_s, xy_f = x_n, x_s + y_s, x_f + y_f
 
-        # Check if any relevant tridegrees are uncertain_plus or outside computed polygon
         relevant_tridegrees = [
             (y_n, y_s, y_f),
             (y_n, y_s - 1, y_f + r),
@@ -1045,9 +1036,7 @@ class SpectralSequencePage:
             (xy_n, xy_s, xy_f),
             (xy_n, xy_s - 1, xy_f + r)
         ]
-        if any(self.degree_is_uncertain_plus(*td) for td in relevant_tridegrees):
-            return
-        if not all(self.is_in_computed_polygon_source(*td) for td in relevant_tridegrees):
+        if not self._tridegrees_ok(relevant_tridegrees):
             return
 
         if (self.d[y_n, y_s, y_f].is_forced
@@ -1087,16 +1076,13 @@ class SpectralSequencePage:
         y_n, y_s, y_f = y.n + 1, y.s, y.f
         xy_n, xy_s, xy_f = x_n, x_s + y_s, x_f + y_f
 
-        # Check if any relevant tridegrees are uncertain_plus or outside computed polygon
         relevant_tridegrees = [
             (x_n, x_s, x_f),
             (x_n, x_s - 1, x_f + r),
             (xy_n, xy_s, xy_f),
             (xy_n, xy_s - 1, xy_f + r)
         ]
-        if any(self.degree_is_uncertain_plus(*td) for td in relevant_tridegrees):
-            return
-        if not all(self.is_in_computed_polygon_source(*td) for td in relevant_tridegrees):
+        if not self._tridegrees_ok(relevant_tridegrees):
             return
 
         try:
@@ -1118,68 +1104,84 @@ class SpectralSequencePage:
             raise
 
 
-    def _report_outcome(self, header_msg, tridegree_updates, reason_param):
-        r = self.d.r
-        any_progress = any(old_dw > new_dw for _, _, _, old_dw, new_dw, _, _ in tridegree_updates)
-        if not any_progress:
-            return False
-        print(header_msg)
-        affected_tridegrees = []
-        for w_n, w_s, w_f, old_dw, new_dw, (x_n, x_s, x_f), (y_n, y_s, y_f) in tridegree_updates:
-            if old_dw > new_dw:
-                print(f"    dim d[{w_n},{w_s},{w_f}]: {old_dw} => {new_dw}")
-                if new_dw == 0:
-                    diff = self.d[w_n, w_s, w_f].as_matrix(
-                        self.d[w_n, w_s, w_f].v
-                    )
-                    print(
-                        f"    new differential{'s' if self.dimension[w_n, w_s, w_f] > 1 else ''} found!"
-                    )
-                    # Check if (w_n, w_s, w_f) has elements before iterating
-                    if (w_n, w_s, w_f) in self.page:
-                        for z in self.page[w_n, w_s, w_f]:
-                            dz = Element(w_n, w_s - 1, w_f + r, z.vect * diff, spectral_sequence=self)
-                            print(f"        d({z}) = {dz}")
-                self.d.counter += 1
-                self.d[w_n, w_s, w_f].add_reason(
-                    self.d.counter, x_n, x_s, x_f, y_n, y_s, y_f, reason_param
-                )
-        return any(new_dw != 0 for _, _, _, _, new_dw, _, _ in tridegree_updates)
-
-    def _validate_tridegrees(self, tridegrees, check_polygon=True, check_uncertainty=True, source=True):
+    def _tridegrees_ok(self, tridegrees, *, polygon=True, uncertainty=True, source=True):
+        """Shared guard: every tridegree lies in the computed polygon and is
+        free of uncertain-plus contamination. Used by the constraint methods
+        (natural, natural_rev, C2 naturality, desuspend, leibniz family).
+        d_squared intentionally differs: it checks raw membership in
+        self.uncertain and skips zero differentials instead."""
         return all(
-            self.is_computable(*td, check_polygon=check_polygon,
-                              check_uncertainty=check_uncertainty, source=source)
+            self.is_computable(*td, check_polygon=polygon,
+                               check_uncertainty=uncertainty, source=source)
             for td in tridegrees
         )
 
+    def _map_data_ok(self, map_obj, x_n, x_s, x_f):
+        """The map matrices at x and at its d-target must come from complete
+        table data; beyond the data file's coverage a missing entry would be
+        read as a false zero map, producing bogus constraints."""
+        r = self.d.r
+        return (map_obj.data_complete(x_n, x_s, x_f)
+                and map_obj.data_complete(x_n, x_s - 1, x_f + r))
+
+    def _record_deduction(self, w_nsf, x_nsf, y_nsf, label):
+        """Record the proof reason for a shrink at tridegree w (state
+        mutation only; call exactly once per actual shrink)."""
+        self.d.counter += 1
+        self.d[w_nsf].add_reason(self.d.counter, *x_nsf, *y_nsf, label)
+
+    def _print_deduction(self, w_nsf, old_dim, new_dim):
+        """Console report of one dimension drop, listing the newly forced
+        differentials when the constraint space becomes a point."""
+        w_n, w_s, w_f = w_nsf
+        r = self.d.r
+        print(f"    dim d[{w_n},{w_s},{w_f}]: {old_dim} => {new_dim}")
+        if new_dim == 0:
+            diff = self.d[w_nsf].as_matrix(self.d[w_nsf].v)
+            print(f"    new differential{'s' if self.dimension[w_nsf] > 1 else ''} found!")
+            if w_nsf in self.page:
+                for z in self.page[w_nsf]:
+                    dz = Element(w_n, w_s - 1, w_f + r, z.vect * diff,
+                                 spectral_sequence=self)
+                    print(f"        d({z}) = {dz}")
+
+    def _outcome(self, header, updates, x_nsf, y_nsf, label):
+        """Print and record every actual shrink in `updates`
+        ([(w_nsf, old_dim, new_dim)]); the provenance pair (x_nsf, y_nsf)
+        and the proof label go into each recorded reason."""
+        if not any(old > new for _, old, new in updates):
+            return
+        print(header)
+        for w_nsf, old, new in updates:
+            if old > new:
+                self._print_deduction(w_nsf, old, new)
+                self._record_deduction(w_nsf, x_nsf, y_nsf, label)
+
     def outcome_stable(self, map_name, x_n, x_s, x_f, y_n, y_s, y_f, old_dx, new_dx, old_dy, new_dy):
-        header_msg = f"From {map_name}({x_n},{x_s},{x_f}):                    "
-        tridegree_updates = [
-            (x_n, x_s, x_f, old_dx, new_dx, (x_n, x_s, x_f), (y_n, y_s, y_f)),
-            (y_n, y_s, y_f, old_dy, new_dy, (x_n, x_s, x_f), (y_n, y_s, y_f)),
-        ]
-        return self._report_outcome(header_msg, tridegree_updates, "stable")
+        self._outcome(
+            f"From {map_name}({x_n},{x_s},{x_f}):                    ",
+            [((x_n, x_s, x_f), old_dx, new_dx), ((y_n, y_s, y_f), old_dy, new_dy)],
+            (x_n, x_s, x_f), (y_n, y_s, y_f), "stable")
 
     def outcome_map(self, map_name, x_n, x_s, x_f, y_n, y_s, y_f, old_dx, new_dx, old_dy, new_dy):
-        header_msg = f"From {map_name}({x_n},{x_s},{x_f}):                    "
-        tridegree_updates = [
-            (x_n, x_s, x_f, old_dx, new_dx, (x_n, x_s, x_f), (y_n, y_s, y_f)),
-            (y_n, y_s, y_f, old_dy, new_dy, (x_n, x_s, x_f), (y_n, y_s, y_f)),
-        ]
         if old_dx > new_dx or old_dy > new_dy:
-            self.map_deduction_counts[map_name] += 1
-        return self._report_outcome(header_msg, tridegree_updates, map_name)
+            # Real maps land in the naturality summary; constraint rules
+            # like d^2 are tallied separately.
+            counts = (self.map_deduction_counts if map_name in self.maps
+                      else self.rule_deduction_counts)
+            counts[map_name] += 1
+        self._outcome(
+            f"From {map_name}({x_n},{x_s},{x_f}):                    ",
+            [((x_n, x_s, x_f), old_dx, new_dx), ((y_n, y_s, y_f), old_dy, new_dy)],
+            (x_n, x_s, x_f), (y_n, y_s, y_f), map_name)
 
     def outcome(self, x_n, x_s, x_f, y_n, y_s, y_f, old_dx, new_dx, old_dy, new_dy, old_dxy, new_dxy):
-        xy_n, xy_s, xy_f = x_n, x_s + y_s, x_f + y_f
-        header_msg = f"From ({x_n},{x_s},{x_f}) o ({y_n},{y_s},{y_f}):                    "
-        tridegree_updates = [
-            (x_n, x_s, x_f, old_dx, new_dx, (x_n, x_s, x_f), (y_n, y_s, y_f)),
-            (y_n, y_s, y_f, old_dy, new_dy, (x_n, x_s, x_f), (y_n, y_s, y_f)),
-            (xy_n, xy_s, xy_f, old_dxy, new_dxy, (x_n, x_s, x_f), (y_n, y_s, y_f)),
-        ]
-        return self._report_outcome(header_msg, tridegree_updates, "")
+        xy_nsf = (x_n, x_s + y_s, x_f + y_f)
+        self._outcome(
+            f"From ({x_n},{x_s},{x_f}) o ({y_n},{y_s},{y_f}):                    ",
+            [((x_n, x_s, x_f), old_dx, new_dx), ((y_n, y_s, y_f), old_dy, new_dy),
+             (xy_nsf, old_dxy, new_dxy)],
+            (x_n, x_s, x_f), (y_n, y_s, y_f), "")
 
     def get_active_pairs(self):
         """Get only pairs where at least one of (x, y, xy) is not forced.
@@ -1305,6 +1307,11 @@ class SpectralSequencePage:
             print(f"  naturality deductions by map: {summary}")
         else:
             print("  naturality deductions by map: none")
+        if self.rule_deduction_counts:
+            summary = ", ".join(
+                f"{name}: {count}"
+                for name, count in sorted(self.rule_deduction_counts.items()))
+            print(f"  rule deductions: {summary}")
 
     def next_page(self):
         """
