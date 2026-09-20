@@ -450,29 +450,6 @@ class Map:
         self.table[element] = res
         return res
     
-    def load_from_csv(self, csv_file, spectral_sequence):
-        """Load map data from CSV file"""
-        try:
-            with open(csv_file, "r") as map_file:
-                map_reader = csv.DictReader(map_file)
-                for line in map_reader:
-                    # Parse element from bidegrees (similar to load_spectral_sequence)
-                    element = Element.from_str_page(line["element"], spectral_sequence.page, spectral_sequence)
-
-                    # Handle "0" specially - create zero at correct target tridegree
-                    if line["image"].strip() == "0":
-                        target_n, target_s, target_f = self.target_degree(
-                            element.n, element.s, element.f
-                        )
-                        image = spectral_sequence.zero(target_n, target_s, target_f)
-                    else:
-                        image = Element.from_str(line["image"], spectral_sequence)
-
-                    self.table[element] = image
-        except FileNotFoundError:
-            # If CSV file doesn't exist, just continue with empty table
-            pass
-    
     def matrix(self, n, s, f, spectral_sequence):
         """Generate matrix representation for this map at given source degree"""
         # Check if map is defined on this tridegree

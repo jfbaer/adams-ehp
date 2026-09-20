@@ -1265,10 +1265,14 @@ class SpectralSequencePage:
 
         # Get active pairs once at the start if using optimization
         if use_active_pairs:
+            # Computed once: the active set only loses relevance as
+            # differentials get forced, so a stale entry costs a re-check,
+            # never a missed deduction.
             active_pairs = self.get_active_pairs()
             total_pairs = sum(len(self.pairs[x]) for x in self.pairs)
             active_count = sum(len(active_pairs[x]) for x in active_pairs)
-            print(f"Active pairs optimization: {active_count}/{total_pairs} pairs active ({100*active_count/total_pairs:.1f}%)")
+            pct = 100 * active_count / total_pairs if total_pairs else 0.0
+            print(f"Active pairs optimization: {active_count}/{total_pairs} pairs active ({pct:.1f}%)")
         else:
             active_pairs = None
 
