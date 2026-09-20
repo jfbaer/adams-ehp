@@ -857,9 +857,8 @@ The algebraic compositions computed in \Cref{data:ehp-comp} provide a full descr
 \section{Results}
 \label{sec:results}
 
-\noindent 
-The algebraic data generated in \Cref{sec:lambda} and the differential propagation algorithm described in \Cref{sec:ehp} allow us to determine all differentials in the unstable Adams spectral sequence for most spheres of dimension at most 50 and in most stems up to 50. We have partial results in some cases. Our results are visualized in Adams charts displaying the
-spectral sequences for spheres $S^n$ with $2 \leq n \leq 50$. These charts display proven differentials as well as the remaining possible unknown differentials on each page. The unstable Adams spectral sequence gives us an upper and lower bound on the order of each $2$-primary unstable stem. These upper and lower bounds are tabulated in \Cref{app:bounds}. A guide to reading our Adams charts is given in \Cref{app:charts}, and the legend for the flow charts we use to present differential proofs is given in \Crefrange{fig:legend-terminal}{fig:legend-products}.
+\noindent
+This section presents our results: unstable Adams charts for the spheres $S^n$ with $2 \leq n \leq 50$, displaying proven differentials as well as the remaining possible unknown differentials on each page, and the resulting upper and lower bounds on the orders of the $2$-primary unstable homotopy groups, tabulated in \Cref{app:bounds}. A guide to reading our Adams charts is given in \Cref{app:charts}, and the legend for the flow charts we use to present differential proofs is given in \Crefrange{fig:legend-terminal}{fig:legend-products}.
 
 
 
@@ -887,7 +886,7 @@ $(14, 36, 7)$ & $(14, 47, 11)$ \\
 \end{table}
 
 \begin{example}
-  There is a possible $d_3$-differential on the unique generator of $x \in \mathcal{U}_3^{6, 37, 10}.$ If this differential were non-zero then $x$ survives to $\mathcal{U}_4^{6, 37, 10}$ where we would have a $d_4$-differential $d_4(H(x)) = H(y)$ on $\mathcal{U}_4^{11, 32, 9}$ where $y$ is the unique generator of $\mathcal{U}_4^{6, 36, 14}.$ Naturality of $H$ would then imply that $d_4(x) = y$ but this is impossible since $y \ast h_1$ is not a boundary for degree reasons so $y$ can not be a boundary. Therefore our initial assumption that the $d_3$-differential on $\mathcal{U}_3^{6, 37, 10}$ is trivial must be false so $d_3(x)$ is equal to the unique generator of $\mathcal{U}_3^{6, 36, 13}.$
+  There is a possible $d_3$-differential on the unique generator $x$ of $\mathcal{U}_3^{6, 37, 10}.$ If this differential were zero then $x$ would survive to $\mathcal{U}_4^{6, 37, 10}$ where we would have a $d_4$-differential $d_4(H(x)) = H(y)$ on $\mathcal{U}_4^{11, 32, 9}$ where $y$ is the unique generator of $\mathcal{U}_4^{6, 36, 14}.$ Naturality of $H$ would then imply that $d_4(x) = y$ but this is impossible since $y \circ h_1$ is not a boundary for degree reasons so $y$ can not be a boundary. Therefore our initial assumption that the $d_3$-differential on $\mathcal{U}_3^{6, 37, 10}$ is trivial must be false so $d_3(x)$ is equal to the unique generator of $\mathcal{U}_3^{6, 36, 13}.$
 \end{example}
 
 
@@ -896,7 +895,7 @@ $(14, 36, 7)$ & $(14, 47, 11)$ \\
 Clicking a differential in our interactive Adams charts opens the flow chart of its proof. Zero differentials are not drawn in the charts, but their flow charts can be queried directly with the \texttt{why.py} script in~\cite{ehpreprint_data}.
 
 \subsection{Higher differentials}
-The unstable Adams charts in \cite{ehpreprint_data} present the results of our computation through the $E_5$-page. In our range of interest, there may be nontrivial $d_r$-differentials for $r > 5.$ In practice, the few possibilities for such differentials all target $v_1$-periodic elements in the unstable Adams spectral sequence. The behavior of the unstable Adams spectral sequence in this $v_1$-periodic region was studied in \cite{Davis_Mahowald_1990}, though we have not verified all of the details of their arguments.
+The unstable Adams charts in \cite{ehpreprint_data} present the results of our computation through the $E_8$-page. In our range of interest, there may be nontrivial $d_r$-differentials for $r > 8.$ In practice, the few possibilities for such differentials all target $v_1$-periodic elements in the unstable Adams spectral sequence. The behavior of the unstable Adams spectral sequence in this $v_1$-periodic region was studied in \cite{Davis_Mahowald_1990}, though we have not verified all of the details of their arguments.
 In forthcoming joint work with Balderrama and Isaksen, we study the $2$-primary EHP spectral sequence from the perspective of $v_1$-periodic elements~\cite{BBI_kervaire}. Both of these perspectives rule out the possibility of long differentials hitting $v_1$-periodic elements in the first 50 stems.
 \newpage
 
@@ -936,7 +935,7 @@ In forthcoming joint work with Balderrama and Isaksen, we study the $2$-primary 
 \end{figure}
 
 \medskip
-\noindent Solid negative-slope lines correspond to unstable Adams differentials, with $d_2$, $d_3$, $d_4$, and $d_5$ drawn in {\color{CtpTeal}teal}, {\color{CtpRed}red}, {\color{CtpGreen}green}, and {\color{CtpBlue}navy}, respectively. Dashed negative-slope lines of the same colors indicate possible values of a $d_r$-differential that our algorithm was able neither to prove nor to disprove. If a basis element on the $E_r$-page supports neither a solid line nor a dashed line, then the $d_r$-differential on that element is proved to be zero.
+\noindent Solid negative-slope lines correspond to unstable Adams differentials, with $d_2$, $d_3$, $d_4$, $d_5$, $d_6$, $d_7$, and $d_8$ drawn in {\color{CtpTeal}teal}, {\color{CtpRed}red}, {\color{CtpGreen}green}, {\color{CtpBlue}navy}, {\color{CtpYellow}yellow}, {\color{CtpPeach}peach}, and {\color{CtpMauve}mauve}, respectively. Dashed negative-slope lines of the same colors indicate possible values of a $d_r$-differential that our algorithm was able neither to prove nor to disprove. If a basis element on the $E_r$-page supports neither a solid line nor a dashed line, then the $d_r$-differential on that element is proved to be zero.
 
 \medskip
 \noindent Our graphical calculus does leave some room for ambiguity. For example, the display in \Cref{fig:chart-ambiguity} could indicate that either $d_r(x) \in \{0, y + z\}$ or $d_r(x) \in \{y, z\}$. There are other possibilities as well. In such cases the raw CSV data records the possible values of each differential unambiguously.
