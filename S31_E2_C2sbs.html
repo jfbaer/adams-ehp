@@ -1485,8 +1485,10 @@ circle {
 <line x1="1200.0" y1="240.0" x2="1200.0" y2="300.0" class="defaultEdge " data-source="31_20_4" data-target="31_20_5"></line>
 <line x1="1200.0" y1="240.0" x2="1260.0" y2="300.0" class="defaultEdge " data-source="31_20_4" data-target="31_21_5"></line>
 <line x1="1200.0" y1="240.0" x2="1380.0" y2="300.0" class="defaultEdge " data-source="31_20_4" data-target="31_23_5"></line>
+<line x1="0.0" y1="1500.0" x2="0.0" y2="1560.0" class="defaultEdge " data-source="31_0_25" data-target="31_0_26"></line>
 <line x1="1200.0" y1="300.0" x2="1200.0" y2="360.0" class="defaultEdge " data-source="31_20_5" data-target="31_20_6"></line>
 <line x1="1200.0" y1="300.0" x2="1380.0" y2="360.0" class="defaultEdge " data-source="31_20_5" data-target="31_23_6"></line>
+<line x1="0.0" y1="1560.0" x2="0.0" y2="1620.0" class="defaultEdge " data-source="31_0_26" data-target="31_0_27"></line>
 <line x1="1020.0" y1="540.0" x2="1080.0" y2="600.0" class="defaultEdge " data-source="31_17_9" data-target="31_18_10"></line>
 <line x1="1380.0" y1="240.0" x2="1440.0" y2="300.0" class="defaultEdge " data-source="31_23_4" data-target="31_24_5"></line>
 <line x1="1080.0" y1="600.0" x2="1140.0" y2="660.0" class="defaultEdge " data-source="31_18_10" data-target="31_19_11"></line>
@@ -2424,6 +2426,7 @@ circle {
 <circle id="31_20_6" class="defaultNode " cx="1200.0" cy="360.0"  data-label="2 4 5 3 3 3"></circle>
 <circle id="31_21_5" class="defaultNode " cx="1260.0" cy="300.0"  data-label="3 5 7 3 3"></circle>
 <circle id="31_22_4" class="defaultNode " cx="1320.0" cy="240.0"  data-label="3 5 7 7"></circle>
+<circle id="31_0_27" class="defaultNode " cx="0.0" cy="1620.0"  data-label="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"></circle>
 <circle id="31_23_4" class="defaultNode " cx="1380.0" cy="240.0"  data-label="4 5 7 7"></circle>
 <circle id="31_18_10" class="defaultNode " cx="1080.0" cy="600.0"  data-label="1 2 4 1 1 2 4 1 1 1"></circle>
 <circle id="31_19_9" class="defaultNode " cx="1140.0" cy="540.0"  data-label="4 4 1 1 2 4 1 1 1"></circle>
@@ -3443,7 +3446,7 @@ circle {
 <line x1="3000.0" y1="1500.0" x2="3000.0" y2="1560.0" class="defaultEdge " data-source="0_50_25" data-target="0_50_26"></line>
 </g>
 <g id="nodes-group-right">
-<circle id="0_0_0" class="defaultNode " cx="0.0" cy="0.0"  data-label=""></circle>
+<circle id="0_0_0" class="defaultNode " cx="0.0" cy="0.0"  data-label="0"></circle>
 <circle id="0_1_1" class="defaultNode " cx="60.0" cy="60.0"  data-label="0 1"></circle>
 <circle id="0_2_1" class="defaultNode " cx="120.0" cy="60.0"  data-label="1 1"></circle>
 <circle id="0_2_2" class="defaultNode " cx="120.0" cy="120.0"  data-label="0 1 1"></circle>
@@ -4395,7 +4398,7 @@ circle {
         const loc = parseSideBySideLocation();
         if (!loc) return;
         const newR = loc.r + delta;
-        if (newR < 2 || newR > 5) return;
+        if (newR < 2 || newR > 8) return;
         storeViewport();
         const suffix = loc.isDark ? '_dark' : '';
         const target = `S${loc.n}_E${newR}_${MAP_KEY}sbs${suffix}.html`;

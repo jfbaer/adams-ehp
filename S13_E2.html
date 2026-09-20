@@ -907,7 +907,7 @@ circle {
           <rect
             id="grid-background"
             width="3120.0px"
-            height="1680.0px"
+            height="1740.0px"
             fill="url(#grid)"
           />
         </g>
@@ -1006,11 +1006,13 @@ circle {
 <line x1="1203.0" y1="240.0" x2="1203.0" y2="300.0" class="defaultEdge " data-source="13_20_4_1" data-target="13_20_5_1"></line>
 <line x1="1203.0" y1="240.0" x2="1263.0" y2="300.0" class="defaultEdge " data-source="13_20_4_1" data-target="13_21_5_1"></line>
 <line x1="1203.0" y1="240.0" x2="1380.0" y2="300.0" class="defaultEdge " data-source="13_20_4_1" data-target="13_23_5"></line>
+<line x1="0.0" y1="1500.0" x2="0.0" y2="1560.0" class="defaultEdge " data-source="13_0_25" data-target="13_0_26"></line>
 <line x1="1197.0" y1="300.0" x2="1260.0" y2="360.0" class="defaultEdge " data-source="13_20_5_0" data-target="13_21_6"></line>
 <line x1="1203.0" y1="300.0" x2="1203.0" y2="360.0" class="defaultEdge " data-source="13_20_5_1" data-target="13_20_6_1"></line>
 <line x1="1203.0" y1="300.0" x2="1380.0" y2="360.0" class="defaultEdge " data-source="13_20_5_1" data-target="13_23_6"></line>
 <line x1="1260.0" y1="240.0" x2="1257.0" y2="300.0" class="defaultEdge " data-source="13_21_4" data-target="13_21_5_0"></line>
 <line x1="1260.0" y1="240.0" x2="1437.0" y2="300.0" class="defaultEdge " data-source="13_21_4" data-target="13_24_5_0"></line>
+<line x1="0.0" y1="1560.0" x2="0.0" y2="1620.0" class="defaultEdge " data-source="13_0_26" data-target="13_0_27"></line>
 <line x1="1020.0" y1="540.0" x2="1080.0" y2="600.0" class="defaultEdge " data-source="13_17_9" data-target="13_18_10"></line>
 <line x1="1197.0" y1="360.0" x2="1260.0" y2="420.0" class="defaultEdge " data-source="13_20_6_0" data-target="13_21_7"></line>
 <line x1="1257.0" y1="300.0" x2="1260.0" y2="360.0" class="defaultEdge " data-source="13_21_5_0" data-target="13_21_6"></line>
@@ -1614,6 +1616,7 @@ circle {
 <circle id="13_22_4_0" class="defaultNode " cx="1317.0" cy="240.0"  data-label="8 6 5 3"></circle>
 <circle id="13_22_4_1" class="defaultNode " cx="1323.0" cy="240.0"  data-label="3 5 7 7"></circle>
 <circle id="13_23_3" class="defaultNode " cx="1380.0" cy="180.0"  data-label="9 7 7"></circle>
+<circle id="13_0_27" class="defaultNode " cx="0.0" cy="1620.0"  data-label="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0"></circle>
 <circle id="13_21_6" class="defaultNode " cx="1260.0" cy="360.0"  data-label="6 2 4 3 3 3"></circle>
 <circle id="13_22_5" class="defaultNode " cx="1320.0" cy="300.0"  data-label="5 8 3 3 3"></circle>
 <circle id="13_23_4" class="defaultNode " cx="1380.0" cy="240.0"  data-label="4 5 7 7"></circle>
@@ -2698,7 +2701,7 @@ circle {
         const current = parseCurrentLocation();
         const newR = current.r + delta;
 
-        if (newR <= 1 || newR > 5) return; // Don't go below r=2 or above r=5 (E2-E5 range)
+        if (newR <= 1 || newR > 8) return; // Don't go below r=2 or above r=8 (E2-E8 range)
 
         storeViewport(); // Store current viewport before navigating
         const newFilename = buildFilename(current.n, newR, current.mode);
@@ -2730,7 +2733,7 @@ circle {
           } else if (n2 < 0) n2 = null;
           if (n2 !== null) targets.add(buildFilename(n2, cur.r, cur.mode));
           const r2 = cur.r + d;
-          if (r2 >= 2 && r2 <= 5) targets.add(buildFilename(cur.n, r2, cur.mode));
+          if (r2 >= 2 && r2 <= 8) targets.add(buildFilename(cur.n, r2, cur.mode));
         });
         if (cur.family === 'S') {
           const suffix = cur.isDarkTheme ? '_dark' : '';
