@@ -52,6 +52,7 @@ from lib import (
     Element,
     TurnedBidegree,
     AffineMatrixSubspace,
+    C2_DATA_COMPLETE_TOT,
     ContradictionError,
     key_defaultdict,
     create_differential_coset,
@@ -830,7 +831,7 @@ class DifferentialsPage(key_defaultdict):
         return self._check_stable_csv(stable_csv, c2_csv)
 
     # d_r vanishes for r >= 6 through this total degree (stable range and C2).
-    HIGH_R_TRIVIAL_TOT = 72
+    HIGH_R_TRIVIAL_TOT = C2_DATA_COMPLETE_TOT
 
     def ratio_solved(self):
         """

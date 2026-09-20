@@ -67,8 +67,7 @@ import spurious  # the spurious-uncertainty resolver (see spurious.py)
 # the differential target stay within this total degree (s+f). This keeps C2
 # deductions safely inside the range where the n=0 Lambda(C2) column and the
 # stable input files are complete; past it they would rest on partial data.
-# Set to the total degree through which the C2 map data is complete.
-MAX_TOTAL_DEGREE_THRESHOLD = 72
+MAX_TOTAL_DEGREE_THRESHOLD = C2_DATA_COMPLETE_TOT
 
 # Sphere charts omit rows above this n. It sits far above any n the loader
 # admits (n <= 2*tot), so it only guards against pathological entries.
@@ -247,7 +246,7 @@ class SpectralSequencePage:
     # (stem, filtration) of the filtration-1 multipliers h0-h3, resolved per
     # class at (n, s, f) as the tridegree (n + s, stem, filtration) -- the
     # same convention as compute_induced_hi_products and the chart writer.
-    HI_MULTIPLIER_BIDEGREES = [(0, 1), (1, 1), (3, 1), (7, 1)]
+    HI_MULTIPLIER_BIDEGREES = [(stem, 1) for stem in HI_STEMS]
 
     # Hand-picked multiplier set for resolve_spurious_uncertainties: stable
     # bidegrees that each contain a single basis element, h0-h3 plus the
@@ -1421,7 +1420,7 @@ class SpectralSequencePage:
                 # as one-dimensional; a dim >= 2 bidegree would silently drop
                 # products from the chart. Vacuous on the shipped range
                 # (verified), asserted here against future extensions.
-                for hi_stem in (0, 1, 3, 7):
+                for hi_stem in HI_STEMS:
                     if (self.has_elements(n + s, hi_stem, 1)
                             and len(self.page[n + s, hi_stem, 1]) > 1):
                         raise AssertionError(

@@ -506,6 +506,32 @@ class Map:
         )
 
 
+# stem of each hi multiplier: the single source for every place the h0-h3
+# degree shifts appear (map templates, chart columns, multiplier bidegrees).
+_HI_STEM = {'h0': 0, 'h1': 1, 'h2': 3, 'h3': 7}
+HI_STEMS = tuple(_HI_STEM.values())
+
+# The C2 data files (rust run) stop at this total degree; beyond it the n=0
+# column is not covered by input data. Shared by ehp_adams's C2 reverse-sweep
+# band (MAX_TOTAL_DEGREE_THRESHOLD) and differentials' r>=6 zero-fill bound
+# (HIGH_R_TRIVIAL_TOT). Note the runtime Map.complete_through (the coverage
+# actually observed while loading) is a related but distinct quantity.
+C2_DATA_COMPLETE_TOT = 72
+
+
+def _make_hi_map(name, stem):
+    """Multiplication by the filtration-1 permanent cycle hi on the n=0
+    Lambda(C2) column: stem +stem, filtration +1."""
+    return Map(name,
+               n_transform=lambda n, s, f: n,
+               s_transform=lambda n, s, f, stem=stem: s + stem,
+               f_transform=lambda n, s, f: f + 1,
+               domain_check=lambda n, s, f: n == 0,
+               source_transforms=(lambda n, s, f: n,
+                                  lambda n, s, f, stem=stem: s - stem,
+                                  lambda n, s, f: f - 1))
+
+
 # Standard map definitions. source_transforms invert the degree shift
 # (mapping a TARGET tridegree back to its source); C2 has none because its
 # shift is not invertible (every odd n >= 3 sphere lands on the n=0 column).
@@ -544,31 +570,16 @@ STANDARD_MAPS = {
               domain_check=lambda n,s,f: n >= 3 and n % 2 == 1),
 
     # Multiplication by the filtration-1 permanent cycles h0, h1, h2, h3 on the
-    # n=0 Lambda(C2) column (stems 0, 1, 3, 7; each raises f by 1). Since the hi
-    # never support differentials, d_r commutes with hi-multiplication (the
-    # filtration-1 Leibniz rule d(x*hi) = d(x)*hi), so registering them as maps
-    # lets natural/natural_rev resolve column differentials in both directions.
-    # Their tables are loaded from E2_C2_products.csv.
-    'h0': Map("h0", n_transform=lambda n,s,f: n, s_transform=lambda n,s,f: s,
-              f_transform=lambda n,s,f: f+1, domain_check=lambda n,s,f: n == 0,
-              source_transforms=(lambda n,s,f: n, lambda n,s,f: s,
-                                 lambda n,s,f: f-1)),
-    'h1': Map("h1", n_transform=lambda n,s,f: n, s_transform=lambda n,s,f: s+1,
-              f_transform=lambda n,s,f: f+1, domain_check=lambda n,s,f: n == 0,
-              source_transforms=(lambda n,s,f: n, lambda n,s,f: s-1,
-                                 lambda n,s,f: f-1)),
-    'h2': Map("h2", n_transform=lambda n,s,f: n, s_transform=lambda n,s,f: s+3,
-              f_transform=lambda n,s,f: f+1, domain_check=lambda n,s,f: n == 0,
-              source_transforms=(lambda n,s,f: n, lambda n,s,f: s-3,
-                                 lambda n,s,f: f-1)),
-    'h3': Map("h3", n_transform=lambda n,s,f: n, s_transform=lambda n,s,f: s+7,
-              f_transform=lambda n,s,f: f+1, domain_check=lambda n,s,f: n == 0,
-              source_transforms=(lambda n,s,f: n, lambda n,s,f: s-7,
-                                 lambda n,s,f: f-1)),
+    # n=0 Lambda(C2) column. Since the hi never support differentials, d_r
+    # commutes with hi-multiplication (the filtration-1 Leibniz rule
+    # d(x*hi) = d(x)*hi), so registering them as maps lets natural/natural_rev
+    # resolve column differentials in both directions. Their tables are loaded
+    # from E2_C2_products.csv.
+    **{name: _make_hi_map(name, stem) for name, stem in _HI_STEM.items()},
 }
 
 # The four C2 filtration-1 product maps (h0/h1/h2/h3), registered alongside C2.
-C2_PRODUCT_MAPS = ['h0', 'h1', 'h2', 'h3']
+C2_PRODUCT_MAPS = list(_HI_STEM)
 
 
 def standard_map_names(with_C2, with_hi=True):
@@ -582,9 +593,6 @@ def standard_map_names(with_C2, with_hi=True):
         if with_hi:
             names.extend(C2_PRODUCT_MAPS)
     return names
-
-# stem of each hi multiplier.
-_HI_STEM = {'h0': 0, 'h1': 1, 'h2': 3, 'h3': 7}
 
 
 class ContradictionError(Exception):
