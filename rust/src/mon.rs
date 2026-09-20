@@ -2,10 +2,9 @@
 //! algebra, stored as a boxed slice of small unsigned indices.
 //!
 //! One representation serves both storage (BTreeSet/HashMap keys) and
-//! manipulation, replacing the old dual `Vec<i32>` ↔ `Box<[u128]>` encoding.
-//! The derived `Ord` is lexicographic on the indices — identical to the
-//! ordering the completion algorithms and lead-term logic have always used
-//! (all entries are non-negative, enforced at construction).
+//! manipulation. The derived `Ord` is lexicographic on the indices — the
+//! ordering the completion algorithms and lead-term logic rely on (all
+//! entries are non-negative, enforced at construction).
 //!
 //! In the Λ(C2) column (dimension key n = 0 of `E2`) the FIRST entry of a
 //! monomial is a cell marker rather than a lambda index: `TOP` (1) = e_{2n},
@@ -16,8 +15,7 @@ use std::borrow::Borrow;
 use std::fmt;
 use std::ops::Deref;
 
-/// Storage scalar for lambda indices: 2 bytes per index instead of the
-/// historical 16 (`u128`), a ~6-8x reduction on the dominant in-memory data.
+/// Storage scalar for lambda indices: 2 bytes per index.
 /// Indices stay far below `u16::MAX` at any reachable degree; construction is
 /// checked and panics loudly on overflow. Changing this scalar changes the
 /// bincode cache format — the cache filename is versioned accordingly.
@@ -141,7 +139,7 @@ impl fmt::Display for Monomial {
 }
 
 impl fmt::Debug for Monomial {
-    /// `"[2, 4, 1]"` — matches the old `Vec<i32>` debug output in logs.
+    /// `"[2, 4, 1]"` — plain index-list form for logs.
     fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         f.debug_list().entries(self.0.iter()).finish()
     }

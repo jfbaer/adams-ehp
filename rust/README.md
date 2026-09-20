@@ -80,9 +80,9 @@ and `src/io/csv.rs`.
 s+f > N, for incrementally extending an existing table (`--mult-ceil` caps
 it); the default computes the full table.
 
-A run also leaves its Curtis working stores (`*_v4.store`) and `.done`
-progress sidecars in the out-dir — `--cache-dir` defaults to `--out-dir`;
-point it elsewhere to keep the CSV directory clean.
+A run also leaves its Curtis working stores (`*_v4.store`) in the cache dir
+and `.done` progress sidecars next to the CSVs — `--cache-dir` defaults to
+`--out-dir`; point it elsewhere to keep the stores out of the CSV directory.
 
 ## Resource use
 

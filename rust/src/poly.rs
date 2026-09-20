@@ -194,9 +194,8 @@ impl Poly {
     /// no materialized tag differentials): pending terms live in a heap of
     /// runs (see `crate::sweep`); a popped lead that is a basis element is
     /// recorded and its cocycle representative peeled as a streaming run; a
-    /// reducible lead pushes the stored d(tag) run. Identical lead-emission
-    /// order and results to the historical restart-based completion — both
-    /// walk the canonical descending sequence of maxima.
+    /// reducible lead pushes the stored d(tag) run. Leads are emitted in the
+    /// canonical descending sequence of maxima.
     pub fn complete(
         &self,
         dim: i32,
@@ -205,15 +204,13 @@ impl Poly {
         pages: &E2,
     ) -> Option<Vec<Monomial>> {
         let basis = pages.basis(crate::grading::tri(dim, self.stem(), self.filtration()));
-        // Empty basis: nothing can ever be recognized (historically the first
-        // reduction attempt returned None immediately).
+        // Empty basis: nothing can ever be recognized.
         if basis.is_empty() {
             return None;
         }
         let basis_set: FxHashSet<&[Idx]> = basis.iter().map(|m| &**m).collect();
-        // Historical stop condition ("all_greater"): reduction halts when the
-        // current lead is strictly BELOW every basis element — it can then
-        // never reach one.
+        // Stop condition: reduction halts when the current lead is strictly
+        // BELOW every basis element — it can then never reach one.
         let basis_min: &Monomial = basis.iter().min().expect("non-empty basis");
 
         let mut heap: BinaryHeap<Run<'_>> = BinaryHeap::new();
@@ -250,8 +247,8 @@ impl Poly {
                 continue;
             }
 
-            // survivor recognition (and the historical in_lambda break-path,
-            // which also records the lead and peels its cocycle)
+            // survivor recognition (the in_lambda break-path below also
+            // records the lead and peels its cocycle)
             let mut take_as_survivor = basis_set.contains(&lead[..]);
 
             if !take_as_survivor {
@@ -272,7 +269,7 @@ impl Poly {
                             tag.lead_first().unwrap_or(0)
                         };
                         if first as i32 >= dim {
-                            take_as_survivor = true; // historical break-path
+                            take_as_survivor = true; // lead lies outside Λ(dim)
                         } else {
                             let prefix = lead[..prefix_len].to_vec();
                             let mut run = Run::packed(prefix.clone(), target);
@@ -319,7 +316,7 @@ impl Poly {
                             continue 'sweep;
                         }
                     }
-                    None => break 'sweep, // historical `?`: stop, keep survivors
+                    None => break 'sweep, // unresolvable lead: stop, keep survivors
                 }
             }
 
@@ -376,17 +373,16 @@ impl Poly {
     }
 
     /// Send a Poly through the Theorem-2.5 map to Λ(C2) = e_{2n}Λ ⊕ e_{2n-1}Λ,
-    /// where `dim = 2n+1`. Result is in the legacy `[e, β…]` encoding with
+    /// where `dim = 2n+1`. Result is in the `[e, β…]` encoding with
     /// `e = 1` marking the e_{2n} (κ₁, top) cell and `e = 0` the e_{2n-1}
     /// (κ₀, bottom) cell. Leading index `dim-1 (=2n) → top`, `dim-2 (=2n-1) →
     /// bottom`, `≤ dim-3 → dropped`.
     ///
     /// CORRECTION TERM: the clean readoff is not a chain map — on the
     /// `λ_{2n}λ_{4n}` family it must also emit `e_{2n-1}·λ_{4n+1}·β` into the
-    /// BOTTOM cell. (Verified against a direct F2 normal-form computation: this makes the map an exact
-    /// chain map — 0 defects over 247k monomials — and the correction lives in
-    /// the e_{2n-1} summand, NOT e_{2n}.) Because it is strictly lex-lower than
-    /// the `[1, 4n, β]` readoff, it never changes a class's leading-term name.
+    /// BOTTOM cell (the e_{2n-1} summand, NOT e_{2n}), making the map an exact
+    /// chain map. Because the correction is strictly lex-lower than the
+    /// `[1, 4n, β]` readoff, it never changes a class's leading-term name.
     pub fn to_c2(&self, dim: i32) -> Poly {
         let two_n = (dim - 1) as Idx;
         let four_n = (2 * (dim - 1)) as Idx;

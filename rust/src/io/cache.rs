@@ -39,14 +39,12 @@ pub(crate) fn db_stem(degree: i32, max_filt: Option<i32>) -> String {
     }
 }
 
-/// Run the Curtis algorithm for `degree` (streaming its poly stores to disk
-/// under `cache_dir` as working storage). Every invocation computes fresh:
-/// the previous-run reuse convenience was removed (2026-09-15) so there is
-/// exactly one artifact per run and nothing to explain about staleness. The
-/// `.idx` layout remains in use by the incremental checkpoint/resume path
-/// (`CurtisState::checkpoint` / `read_db_index`), which is unaffected. With
-/// `max_filt = Some(F)` the algorithm runs only for Adams filtration ≤ F.
-pub fn load_or_compute_curtis(
+/// Run the Curtis algorithm for `degree`, streaming its poly stores to disk
+/// under `cache_dir` as working storage, then apply the evens additions and
+/// seal the stores. With `max_filt = Some(F)` the algorithm runs only for
+/// Adams filtration ≤ F. The `.idx` layout is shared with the incremental
+/// checkpoint/resume path (`CurtisState::checkpoint` / `read_db_index`).
+pub fn compute_curtis(
     degree: i32,
     cache_dir: &Path,
     debug_dir: Option<&Path>,

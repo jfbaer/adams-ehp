@@ -10,7 +10,7 @@ use anyhow::Context;
 use clap::{Args, Parser, Subcommand};
 
 use lambda_e2::grading::ClassId;
-use lambda_e2::io::cache::load_or_compute_curtis;
+use lambda_e2::io::cache::compute_curtis;
 use lambda_e2::io::csv::{
     build_names, write_e_csv, write_h_csv, write_names_json, write_operation_csv, write_p_csv,
     write_rank_csv,
@@ -103,7 +103,7 @@ struct Opts {
 
     /// Run the full Curtis algorithm only up to this Adams filtration (the E2
     /// page is exact through it; the C2 outputs are clamped to their
-    /// provably-complete range). Accepted by curtis, c2, c2-all and
+    /// provably-complete range). Accepted by curtis, c2, c2-names, c2-all and
     /// c2-products; capped databases are cached under their own key
     /// (curtis_deg{N}_f{F}_v4.*)
     #[arg(long, global = true)]
@@ -178,8 +178,8 @@ fn main() -> lambda_e2::Result<()> {
         && matches!(cli.cmd, Cmd::Generate | Cmd::Products | Cmd::H | Cmd::P)
     {
         return Err(
-            "--max-filt is only supported by the curtis, c2, c2-all and c2-products \
-             subcommands"
+            "--max-filt is only supported by the curtis, c2, c2-names, c2-all and \
+             c2-products subcommands"
                 .into(),
         );
     }
@@ -189,7 +189,7 @@ fn main() -> lambda_e2::Result<()> {
             let deg = cli.opts.degree.unwrap_or(70);
             let t0 = std::time::Instant::now();
             let (tags, cocycles, pages) =
-                load_or_compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
+                compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
             log::info!("[phase] curtis+db: {:.2}s", t0.elapsed().as_secs_f64());
             lambda_e2::census::run(&tags, &cocycles, &pages);
             log::info!(
@@ -204,7 +204,7 @@ fn main() -> lambda_e2::Result<()> {
         Cmd::Products => {
             let deg = cli.opts.degree.unwrap_or(70);
             let (tags, cocycles, pages) =
-                load_or_compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
+                compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
             let names = build_names(&pages);
             write_names_json(&pages, &names, &out_dir.join("E2_names.json"))?;
             log::info!("Computing E2_relations.csv...");
@@ -224,7 +224,7 @@ fn main() -> lambda_e2::Result<()> {
         Cmd::H => {
             let deg = cli.opts.degree.unwrap_or(70);
             let (tags, cocycles, pages) =
-                load_or_compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
+                compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
             let names = build_names(&pages);
             write_names_json(&pages, &names, &out_dir.join("E2_names.json"))?;
             log::info!("Computing E2_H.csv...");
@@ -238,7 +238,7 @@ fn main() -> lambda_e2::Result<()> {
         Cmd::P => {
             let deg = cli.opts.degree.unwrap_or(70);
             let (tags, cocycles, pages) =
-                load_or_compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
+                compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
             let names = build_names(&pages);
             write_names_json(&pages, &names, &out_dir.join("E2_names.json"))?;
             // P is defined via H, so compute the Hopf image first (not written).
@@ -256,7 +256,7 @@ fn main() -> lambda_e2::Result<()> {
             let deg = cli.opts.degree.unwrap_or(70);
             let t0 = std::time::Instant::now();
             let (tags, cocycles, mut pages) =
-                load_or_compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
+                compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
             log::info!("[phase] curtis+load: {:.2}s", t0.elapsed().as_secs_f64());
             lambda_e2::census::run(&tags, &cocycles, &pages);
 
@@ -265,7 +265,7 @@ fn main() -> lambda_e2::Result<()> {
             let c2_results =
                 compute_c2_images(&tags, &cocycles, &mut pages, max_filt, src_filter)?;
             log::info!("[phase] c2 map: {:.2}s", t1.elapsed().as_secs_f64());
-            // (0, 0, 0, 0) marks images that are zero or could not be completed;
+            // ClassId::ZERO marks images that are zero or could not be completed;
             // both are omitted so the downstream solver treats them as unknown
             // rather than as an explicit zero constraint.
             let c2_nonzero: std::collections::HashMap<_, _> = c2_results
@@ -282,7 +282,7 @@ fn main() -> lambda_e2::Result<()> {
             let deg = cli.opts.degree.unwrap_or(70);
             let t0 = std::time::Instant::now();
             let (tags, cocycles, mut pages) =
-                load_or_compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
+                compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
             log::info!("[phase] curtis+load: {:.2}s", t0.elapsed().as_secs_f64());
             lambda_e2::census::run(&tags, &cocycles, &pages);
 
@@ -307,7 +307,7 @@ fn main() -> lambda_e2::Result<()> {
             let deg = cli.opts.degree.unwrap_or(70);
             let t0 = std::time::Instant::now();
             let (tags, cocycles, mut pages) =
-                load_or_compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
+                compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
             log::info!("[phase] curtis+load: {:.2}s", t0.elapsed().as_secs_f64());
             lambda_e2::census::run(&tags, &cocycles, &pages);
 
@@ -332,7 +332,7 @@ fn main() -> lambda_e2::Result<()> {
             let deg = cli.opts.degree.unwrap_or(70);
             let t0 = std::time::Instant::now();
             let (tags, cocycles, mut pages) =
-                load_or_compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
+                compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
             log::info!("[phase] curtis+load: {:.2}s", t0.elapsed().as_secs_f64());
             // Sphere-side basis fingerprint (for cross-run identity checks).
             let names = build_names(&pages);
@@ -352,7 +352,7 @@ fn main() -> lambda_e2::Result<()> {
             let deg = cli.opts.degree.unwrap_or(70);
             // 1–2. Curtis + evens (cached per degree)
             let (tags, cocycles, mut pages) =
-                load_or_compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
+                compute_curtis(deg, &cache_dir, debug_dir, max_filt)?;
 
             // 3. Build vector name dictionary
             log::info!("Building vector names dictionary...");
@@ -394,7 +394,7 @@ fn main() -> lambda_e2::Result<()> {
             log::info!("Computing E2_C2.csv...");
             let c2_results =
                 compute_c2_images(&tags, &cocycles, &mut pages, max_filt, src_filter)?;
-            // (0, 0, 0, 0) marks images that are zero or could not be completed;
+            // ClassId::ZERO marks images that are zero or could not be completed;
             // both are omitted so the downstream solver treats them as unknown
             // rather than as an explicit zero constraint.
             let c2_nonzero: std::collections::HashMap<_, _> = c2_results

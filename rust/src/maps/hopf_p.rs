@@ -36,8 +36,8 @@ pub fn compute_hopf(
 
     // The Hopf image of each class is independent, so compute the keys in
     // parallel and merge the per-key results in sorted-key order afterwards
-    // (the merge is byte-identical to the old sequential loop). Each entry is
-    // (dim, per-class images, single-element image contributions).
+    // (so output is deterministic). Each entry is (dim, per-class images,
+    // single-element image contributions).
     type KeyOut = (
         i32,
         Vec<(Vec<i32>, Vec<Vec<i32>>)>,
@@ -118,13 +118,11 @@ pub fn compute_p(
     pages: &E2,
     hopf_image_by_bidegree: &HopfImageIndex,
 ) -> crate::Result<crate::OpResults> {
-    // Create thread-safe results collection
     let p_results = Arc::new(Mutex::new(HashMap::new()));
 
     let mut keys: Vec<_> = pages.0.keys().collect();
     keys.sort();
 
-    // Process keys with parallel processing (only odd dimensions)
     keys.par_iter()
         .filter(|&&k| k.n % 2 != 0)
         .for_each(|&&key| {
@@ -136,8 +134,8 @@ pub fn compute_p(
                 for compact_mon in vectors.iter() {
                     let mon = to_i32s(compact_mon);
 
-                    // Shortcut 1: Skip if element is in the image of H for this specific bidegree
-                    // Mathematical principle: P can only take nontrivial values on vectors not in image of H
+                    // Shortcut 1: P can only take nontrivial values on
+                    // classes NOT in the image of H.
                     if let Some(hopf_set) = hopf_image_by_bidegree.get(&key) {
                         if hopf_set.contains(&mon) {
                             local_results.insert(mon, vec![]);
@@ -147,14 +145,12 @@ pub fn compute_p(
 
                     let poly = cocycles.get(compact_mon).unwrap().unpack();
 
-                    // Calculate target dimension for P operation
                     let target_dim = (dim - 1) / 2;
 
-                    // Calculate target coordinates according to P map formula: (n,s,f) -> ((n-1)/2, s+(n-1)/2-1, f+2)
+                    // Target coordinates: (n, s, f) -> ((n-1)/2, s+(n-1)/2-1, f+2).
                     let target_stem_predicted = stem + (dim - 1) / 2 - 1;
                     let target_filt_predicted = filt + 2;
 
-                    // Bounds check: skip computation if target would exceed maximum bounds
                     if target_stem_predicted > pages.max_stem() - 1
                         || target_filt_predicted > pages.max_filt() - 1
                     {
@@ -162,11 +158,10 @@ pub fn compute_p(
                         continue;
                     }
 
-                    // Apply P operation to get the polynomial
                     let p_poly = poly.p(dim);
 
-                    // Shortcut 2: Check if we're trying to complete into a dimension where all basis elements suspend
-                    // Mathematical principle: P can only hit vectors which do not suspend
+                    // Shortcut 2: P can only hit non-suspending classes,
+                    // so a target where the whole basis suspends receives 0.
                     let target_stem = p_poly.stem();
                     let target_filt = p_poly.filtration();
                     if all_basis_elements_suspend(target_dim, target_stem, target_filt, pages) {
@@ -174,7 +169,6 @@ pub fn compute_p(
                         continue;
                     }
 
-                    // Complete the P operation
                     if let Some(completed) = p_poly.complete(target_dim, tags, cocycles, pages) {
                         local_results
                             .insert(mon, completed.iter().map(|m| m.to_i32_vec()).collect());
@@ -184,7 +178,6 @@ pub fn compute_p(
                 }
             }
 
-            // Merge local results into global results
             {
                 let mut global_results = p_results.lock().unwrap();
                 global_results
@@ -203,8 +196,7 @@ pub fn compute_p(
 /// non-suspending vectors, so a bidegree where everything suspends
 /// receives nothing.
 pub fn all_basis_elements_suspend(dim: i32, stem: i32, filt: i32, pages: &E2) -> bool {
-    // Check if all basis monomials suspend with k=1 (vacuously true when empty,
-    // matching the previous behavior of the always-Some basis lookup).
+    // Vacuously true when the bidegree is empty.
     pages
         .basis(tri(dim, stem, filt))
         .iter()
@@ -219,29 +211,24 @@ pub fn compute_e(pages: &E2) -> crate::Result<crate::OpResults> {
     let mut keys: Vec<_> = pages.keys().collect();
     keys.sort();
 
-    // Check for suspensions by comparing vectors in dimension n with vectors in dimension n+1
     for &key in &keys {
         let n = key.n;
         if let Some(vectors) = pages.0.get(key) {
             for compact_vector in vectors.iter() {
                 let vector = to_i32s(compact_vector);
 
-                // Ensure dimension exists in results
                 results.entry(n).or_default();
 
-                // Check if the same vector exists in dimension n+1 (suspended)
                 let suspends = pages
                     .basis(key.suspend(1))
                     .iter()
                     .any(|v| to_i32s(v) == vector);
                 if suspends {
-                    // Found the same vector in dimension n+1 - this is a suspension
                     results
                         .get_mut(&n)
                         .unwrap()
                         .insert(vector.clone(), vec![vector]);
                 } else {
-                    // Vector doesn't suspend
                     results.get_mut(&n).unwrap().insert(vector, vec![]);
                 }
             }

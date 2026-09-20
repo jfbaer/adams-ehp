@@ -44,9 +44,9 @@ pub struct ClassId {
 impl ClassId {
     /// The zero-class sentinel. Deliberately an impossible coordinate:
     /// the tridegree (0, 0, 0) hosts a real class (the bottom-cell
-    /// fundamental of the Lambda(C2) column), so the historical (0,0,0,0)
-    /// encoding collided with it — silently filtering that class's rows
-    /// out of every writer.
+    /// fundamental of the Lambda(C2) column), so an all-zero sentinel
+    /// would collide with it and silently filter that class's rows out
+    /// of every writer.
     pub const ZERO: ClassId = ClassId {
         grade: tri(-1, -1, -1),
         index: -1,
@@ -73,8 +73,7 @@ impl fmt::Display for ClassId {
 impl FromStr for ClassId {
     type Err = ();
 
-    /// Parse `"n_s_f"` or `"n_s_f_i"`; `"0"` (or anything malformed) is ZERO —
-    /// matching the tolerant behavior of the old `parse_element_name`.
+    /// Parse `"n_s_f"` or `"n_s_f_i"`; `"0"` (or anything malformed) is ZERO.
     fn from_str(name: &str) -> Result<Self, ()> {
         if name == "0" {
             return Ok(ClassId::ZERO);

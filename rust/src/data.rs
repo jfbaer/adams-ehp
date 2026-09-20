@@ -404,30 +404,12 @@ impl Tags {
 }
 
 impl Tags {
-    /// Does `v` resolve to a tag? (No materialization.) Note: whenever this is
-    /// true, the resolved tag's lead has length `v.len() - 1` identically —
-    /// prefixed lead length = prefix_len + filtration = f − 1 — so callers
-    /// that used to check `tag_lead.len() == mon.len() - 1` need only this.
+    /// Does `v` resolve to a tag? (No materialization.) Whenever this is
+    /// true, the resolved tag's lead has length `v.len() - 1` identically
+    /// (prefixed lead length = prefix_len + filtration = f − 1), so callers
+    /// need no separate length check.
     pub fn resolves(&self, v: &[Idx]) -> bool {
         self.resolve_parts(v).is_some()
-    }
-
-    /// First index of the resolved tag's lead, without materializing:
-    /// prefix case → v[0] (the lead is prefix ++ stored-lead); exact case →
-    /// the stored tag's first lead index.
-    pub fn tag_lead_first(&self, v: &[Idx]) -> Option<Idx> {
-        match self.resolve_parts(v)? {
-            ResolvedParts::Stored { prefix_len, tag, .. } => {
-                if prefix_len > 0 {
-                    Some(v[0])
-                } else {
-                    tag.lead_first()
-                }
-            }
-            ResolvedParts::Synthesized { tag } => {
-                tag.lead_mon().and_then(|l| l.first().copied())
-            }
-        }
     }
 }
 

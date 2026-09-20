@@ -12,7 +12,7 @@ use crate::packed::{PackedCursor, PackedEncoder, PackedView};
 /// list (usually a BORROWED stored poly), walked from the back, with a common
 /// admissible `prefix` prepended virtually. Pushing a whole tag differential
 /// becomes one O(1) run instead of materializing (and boxing) every term —
-/// the allocator was ~half of all CPU in the deg-60 profile.
+/// allocation otherwise dominates the reduction profile at high degree.
 pub(crate) struct Run<'a> {
     prefix: Vec<Idx>,
     src: RunSrc<'a>,

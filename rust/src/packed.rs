@@ -17,8 +17,8 @@
 //! heap wants (largest term first).
 //!
 //! `PackedPoly` is storage-only: computation happens on `Poly`; consumers
-//! call [`PackedPoly::unpack`] where they previously cloned, and the hot
-//! reduction loop streams via [`PackedCursor`] without materializing.
+//! [`PackedPoly::unpack`] at the boundary, and the hot reduction loop
+//! streams via [`PackedCursor`] without materializing.
 
 use serde::{Deserialize, Serialize};
 
@@ -152,12 +152,6 @@ impl PackedPoly {
         self.n_terms == 0
     }
 
-    /// In-RAM footprint: encoded payload bytes plus the handle struct itself
-    /// (census/reporting).
-    pub fn byte_size(&self) -> usize {
-        self.data.len() + std::mem::size_of::<Self>()
-    }
-
     /// Decode back to a working `Poly` (ascending order restored).
     pub fn unpack(&self) -> Poly {
         self.view().unpack()
@@ -201,10 +195,6 @@ impl PackedCursor<'_> {
         } else {
             Some(&self.buf)
         }
-    }
-
-    pub fn remaining(&self) -> usize {
-        self.remaining
     }
 
     pub fn advance(&mut self) {

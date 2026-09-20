@@ -22,10 +22,9 @@ anyhow = "1.0"
 log = "0.4"
 env_logger = "0.11"
 
-# HPC-specific optimizations
+# Release profile for long batch runs
 [profile.release]
-lto = "fat"              # Link-time optimization for maximum performance
-codegen-units = 1        # Single compilation unit for better optimization
-panic = "abort"          # Abort on panic (no unwinding overhead)
-strip = true            # Strip symbols to reduce binary size
-opt-level = 3           # Maximum optimization level
+lto = "fat"
+codegen-units = 1
+panic = "abort"
+strip = true

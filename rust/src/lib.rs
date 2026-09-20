@@ -10,7 +10,7 @@
 //!    (s+f) bound, producing [`data::Tags`] (non-survivors with their
 //!    target/tag pairs), [`data::Cocycles`] (survivor → cocycle
 //!    representative), and the page [`data::E2`] itself.
-//!    [`io::cache::load_or_compute_curtis`] runs it fresh each invocation.
+//!    [`io::cache::compute_curtis`] drives it.
 //! 2. [`maps::products`] computes the multiplication table,
 //!    [`maps::hopf_p`] the Hopf map H, Whitehead product P, and suspension E,
 //!    and [`maps::c2`] Mahowald's map to Λ(C2) — each by applying the

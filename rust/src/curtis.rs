@@ -64,8 +64,7 @@ impl SeedTable {
 ///     path applies them only after curtis finishes, and an incremental run
 ///     applies them to each read-only snapshot instead.
 ///
-/// [`add_evens`] folds the two halves and is exactly the historical one-shot
-/// behavior.
+/// [`add_evens`] folds the two halves (the one-shot path).
 pub fn add_evens(cocycles: &mut Cocycles, pages: &mut E2, tags: &mut Tags) {
     let max_filt = pages.max_filt();
     let max_dim = pages.max_dimension();
@@ -316,7 +315,7 @@ pub fn reduce_differential(seed: Poly, tags: &Tags) -> Reduced {
 /// only when the tag's lead head exceeds `2·initial` (the Curtis rejection
 /// rule). Returns the kept candidates sorted lexicographically, or `None`
 /// if there are none.
-fn generate_next_monsx(
+fn generate_next_mons(
     stem: i32,
     length: i32,
     initial: i32,
@@ -383,8 +382,7 @@ pub struct CheckpointMeta {
 }
 
 /// Cross-degree state of the Curtis algorithm, advanced one total degree at
-/// a time. [`curtis`] drives it 0..=N in one shot (byte-identical to the
-/// historical single-function run); an incremental driver interleaves
+/// a time. [`curtis`] drives it 0..=N in one shot; an incremental driver interleaves
 /// [`CurtisState::step`] with [`CurtisState::checkpoint`] and
 /// [`CurtisState::snapshot`] so read-only consumers can work on completed
 /// degrees while the frontier advances.
@@ -533,7 +531,6 @@ impl CurtisState {
     /// at least `len_start` (1 for a normal step; old_cap+1 for a filtration
     /// extension pass).
     fn run_degree_lens(&mut self, deg: i32, len_start: i32) -> crate::Result<()> {
-        // Iterate through n from 0 to floor((deg + 4) / 3).
         for n in (len_start - 1)..=((deg + 4) / 3) {
             let len = n + 1;
             // Filtration cap: len ascends with n, so nothing above the cap is
@@ -554,7 +551,7 @@ impl CurtisState {
                         vec![]
                     }
                 } else {
-                    generate_next_monsx(stem, len, initial, &self.mon_table, &self.tags)
+                    generate_next_mons(stem, len, initial, &self.mon_table, &self.tags)
                         .unwrap_or_default()
                 };
 
@@ -651,8 +648,7 @@ impl CurtisState {
         Ok(())
     }
 
-    /// Run one total degree (the verbatim body of the historical outer
-    /// degree loop), returning the degree just completed.
+    /// Run one total degree, returning the degree just completed.
     pub fn step(&mut self) -> crate::Result<i32> {
         let deg = self.next_deg;
         self.run_degree_lens(deg, 1)?;

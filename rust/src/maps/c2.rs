@@ -3,7 +3,7 @@
 //!
 //! Λ(C2) = Cone(h0 = λ0·) over the lambda algebra; its E2 page is
 //! ker(h0) [top cell e_{2n}, stem shifted +1] ⊕ coker(h0) [bottom cell
-//! e_{2n-1}], stored in the shared `E2` map as the n = 0 column with legacy
+//! e_{2n-1}], stored in the shared `E2` map as the n = 0 column with
 //! monomials `[cell, β…]`, cell ∈ {0 = e_{2n-1}, 1 = e_{2n}}.
 //!
 //! The chain-level map (including its correction term) is `Poly::to_c2`; this
@@ -14,8 +14,6 @@
 //!   - `compute_c2_products`: filtration-1 products on the Λ(C2) homology;
 //!   - `compute_all`: both of the above plus the rank and names of the Λ(C2)
 //!     homology (the n = 0 column), written as CSV/JSON.
-//!
-//! The map semantics were validated against a direct F2 normal-form computation.
 
 use std::collections::HashSet;
 use std::io::Write as _;
@@ -41,9 +39,7 @@ const REDUCTION_STEP_LIMIT: u32 = 1_000_000;
 /// and the only degree-raising step is the λ0 threading of the top-cell
 /// terms (+1). With a curtis table to degree `N` (all tags through `N`
 /// materialized), products landing at total degree `N - 1` are therefore
-/// fully supported, so the cap is `N - MARGIN` with margin 1. (The margin
-/// was 3 historically, from an unmeasured "safe margin" guess; validated
-/// margin-3 vs margin-1 at d=40 — identical rows on the overlap. A product
+/// fully supported, so the cap is `N - MARGIN` with margin 1. (A product
 /// that does run off the end of the tags warns loudly rather than corrupting
 /// silently.)
 const PRODUCT_TAG_MARGIN: i32 = 1;
@@ -241,7 +237,7 @@ fn primitive_by_tags(mut b: Poly, tags: &Tags, ctx: &Monomial) -> Option<Poly> {
     Some(gamma)
 }
 
-/// Split a legacy `[e, β]` C2 image into its top (e = 1, e_{2n}) and bottom
+/// Split a `[e, β]` C2 image into its top (e = 1, e_{2n}) and bottom
 /// (e = 0, e_{2n-1}) Λ-coefficients.
 fn split_cells(img: &Poly) -> (Poly, Poly) {
     let mut top = Poly::new();
@@ -356,7 +352,7 @@ fn reduce_c2(
 
 /// The C2 map computed the H/P way: apply the (corrected) chain map `to_c2` to
 /// the class's cocycle representative, then reduce the image into the C2 basis,
-/// returning a SUM of legacy `[e, β]` C2 names.
+/// returning a SUM of `[e, β]` C2 names.
 ///
 /// `img = to_c2(x)` is a cocycle (`d top = 0`, `d bot = λ0·top`); we split it
 /// into cells and hand it to `reduce_c2`.
@@ -440,28 +436,12 @@ fn c2_representative(
             // λ0·coc(β) should reduce to 0 for a ker(h0) class; if it does not
             // (e.g. an h0-tower class whose h0-image runs off the top of the
             // computed range), the representative is incomplete — warn and drop.
-            log::warn!("c2_product: no primitive for λ0·coc({name:?}); top-cell class dropped");
+            log::warn!(
+                "c2_representative: no primitive for λ0·coc({name:?}); top-cell class dropped"
+            );
             None
         }
     }
-}
-
-/// The filtration-1 product `x · λ_gen` of a Λ(C2) basis class `name = [cell, β]`
-/// with a Hopf generator `λ_gen` (gen ∈ {0,1,3,7}), as a SUM of `[cell, β']` C2
-/// names: multiply the class's `c2_representative` by λ_gen (on the right) and
-/// reduce into the C2 basis.
-pub fn c2_product(
-    name: &Monomial,
-    gen: Idx,
-    tags: &Tags,
-    cocycles: &Cocycles,
-    pages: &E2,
-) -> Vec<Monomial> {
-    let Some((top, bot)) = c2_representative(name, tags, cocycles) else {
-        return Vec::new();
-    };
-    let gp = Poly::from_monomial(vec![gen as i32]);
-    reduce_c2(top.multiply(&gp), bot.multiply(&gp), tags, cocycles, pages, name)
 }
 
 /// Coordinates in the n = 0 column for a `[cell, β]` C2 name (None if it is not
@@ -503,13 +483,12 @@ pub fn process_odd_spheres_csv(
     max_filt: Option<i32>,
     filter: SourceFilter,
 ) -> crate::Result<crate::CoordMap> {
-    // One FLAT parallel pass over every in-range source class. In this
-    // one-shot path the n=0 column is final before the map runs and each
-    // class's computation is independent and read-only into a KEYED map, so
-    // the old serial outer loop over total degree (which mirrors the
-    // pipeline's incremental per-degree contract) only serialized the slow
-    // reductions across degrees. The pipeline path still uses
-    // process_odd_spheres_degree with its real ordering contract.
+    // Parallel over total degrees (each degree's classes run in parallel
+    // within). In this one-shot path the n = 0 column is final before the
+    // map runs and each class's computation is read-only into a keyed map,
+    // so no cross-degree ordering is needed; the pipeline path drives
+    // process_odd_spheres_degree directly, which does carry an ordering
+    // contract (see its doc).
     let max_t = pages
         .0
         .keys()
@@ -631,9 +610,7 @@ fn c2_image_of(
 /// parallel pass over every source class, each class's row appended and
 /// flushed as it completes, with a `E2_C2.done` sidecar line (the class name)
 /// appended AFTER the row flush. A kill or wall-time limit therefore loses at
-/// most the in-flight classes — never hours of finished reductions (job
-/// 39958755 lost its entire ~2-day map pass to exactly that: the map was
-/// buffered in memory and written only after the join).
+/// most the in-flight classes — never hours of finished reductions.
 ///
 /// With `resume`, classes named in the sidecar or already present as rows are
 /// skipped; zero-image classes killed between "computed" and "sidecar line"
@@ -747,14 +724,14 @@ pub fn process_odd_spheres_csv_incremental(
 /// landing at 71 or below. Products above the cap are neither computed (avoiding
 /// expensive off-the-edge reductions that run out of tags) nor emitted.
 ///
-/// Source degrees are processed in ASCENDING order (a barrier between them), and
-/// each degree's classes run in parallel. Every product is announced BEFORE it is
-/// reduced (`computing FACTOR * hK`), so a stall names exactly which `λ_I * h_i`
-/// is in flight and at what degree; the reduction routines also warn if a leading
-/// term fails to drop after a round. Each class's `c2_representative` — whose γ
+/// Classes run in one flat parallel pass. Every product is announced BEFORE it
+/// is reduced (`computing FACTOR * hK`), so a stall names exactly which
+/// `λ_I * h_i` is in flight; the reduction routines also warn if a leading term
+/// fails to drop after a round. Each class's `c2_representative` — whose γ
 /// primitive is the expensive part — is built ONCE and reused for all four
-/// generators. Rows are appended and flushed under a lock as each class finishes,
-/// so a kill or timeout leaves every completed class on disk (rows not sorted).
+/// generators. Rows are appended and flushed under a lock as each class
+/// finishes (and sorted at the end), so a kill or timeout leaves every
+/// completed class on disk.
 pub fn compute_c2_products(
     tags: &Tags,
     cocycles: &Cocycles,
@@ -862,11 +839,10 @@ pub fn compute_c2_products(
 
     // One flat parallel pass over EVERY class, no per-degree barrier: each
     // class's products depend only on the (read-only) tags/cocycles/pages,
-    // and the old degree-by-degree barrier serialized the deep-filtration
-    // reduce_c2 grinds (hours each near t≈60+) one degree at a time. Flat,
-    // the grinds run concurrently and the wall collapses from sum(grinds)
-    // to max(grinds). CSV row ORDER becomes nondeterministic; the row SET is
-    // unchanged (loaders don't order-depend).
+    // and a degree-by-degree barrier would serialize the deep-filtration
+    // reduce_c2 grinds (hours each at high total degree); flat, they run
+    // concurrently. Rows land in completion order and are sorted at the end,
+    // so the artifact is deterministic.
     let flat: Vec<&(ClassId, Monomial)> = by_degree
         .values()
         .flatten()
@@ -905,7 +881,9 @@ pub fn compute_c2_products(
                         .map(|c| pages.name_from_coords(c))
                         .collect::<Vec<_>>()
                         .join(" + ");
-                        if !result.is_empty() && result != "0" {
+                        // c2_name_to_coords never yields ZERO, so a non-empty
+                        // joined result is a genuine sum of basis names.
+                        if !result.is_empty() {
                             records.push([factor.clone(), label.to_string(), result]);
                         }
                     }

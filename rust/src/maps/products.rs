@@ -43,17 +43,14 @@ pub fn decompositions(
 ) -> crate::Result<crate::ProductTable> {
     let mut results = crate::ProductTable::new();
 
-    // Collect all work items that need expensive computation
     let mut work_items = Vec::new();
 
-    // Iterate through all potential element positions
     for n in 2..pages.max_tot() {
         for stem in 0..=target_stem {
             for filt in 0..target_filt {
                 {
                     let elements = pages.basis(tri(n, stem, filt));
                     for element in elements.iter() {
-                        // Skip empty elements to avoid index out of bounds
                         if element.is_empty() {
                             continue;
                         }
@@ -69,7 +66,6 @@ pub fn decompositions(
                                 let sources =
                                     pages.basis(tri(source_dim, source_stem, source_filt));
                                 for source in sources.iter() {
-                                    // Skip empty sources to avoid index out of bounds
                                     if source.is_empty() {
                                         continue;
                                     }
@@ -116,15 +112,12 @@ pub fn decompositions(
         }
     }
 
-    // Process work items in parallel
     let parallel_results: Vec<_> = work_items
         .par_iter()
         .filter_map(|(n, element, source)| {
-            // Compute base product
             let element_poly = cocycles.get(element)?.unpack();
             let source_poly = cocycles.get(source)?.unpack();
 
-            // Calculate target dimension for the product
             let target_dim = *n;
 
             if let Some(product) = element_poly
@@ -144,7 +137,6 @@ pub fn decompositions(
         })
         .collect();
 
-    // Collect all results into final HashMap
     for (target_dim, element, source, product) in parallel_results {
         results
             .entry(target_dim)
@@ -167,7 +159,6 @@ pub fn compute_suspensions_vector_based(
 ) -> crate::Result<crate::ProductTable> {
     let mut suspension_results = crate::ProductTable::new();
 
-    // Collect all fundamental products for parallel processing
     let mut work_items = Vec::new();
     for (target_dim, dim_results) in fundamental_results {
         for ((element_vector, source_vector), product_vectors) in dim_results {
@@ -180,14 +171,12 @@ pub fn compute_suspensions_vector_based(
         }
     }
 
-    // Process suspensions in parallel
     let parallel_suspension_results: Vec<_> = work_items
         .par_iter()
         .filter_map(
             |(target_dim, element_vector, source_vector, product_vectors)| {
                 let mut local_suspensions = Vec::new();
 
-                // Calculate element coordinates for suspension checking
                 let element_stem: i32 = element_vector.iter().sum();
                 let element_filt = element_vector.len() as i32;
                 let source_stem: i32 = source_vector.iter().sum();
@@ -201,7 +190,6 @@ pub fn compute_suspensions_vector_based(
                     .map(|v| Monomial::from(v.clone()))
                     .collect();
 
-                // Check suspensions for k = 1, 2, 3, ...
                 let mut k = 1;
                 while pages.suspends(*target_dim, element_stem, element_filt, k, &element_mon)
                     && pages.suspends(source_dim, source_stem, source_filt, k, &source_mon)
@@ -227,8 +215,6 @@ pub fn compute_suspensions_vector_based(
                     }
 
                     if !suspended_product_vectors.is_empty() {
-                        // The factor words are unchanged by suspension; only
-                        // the dimension key (target_dim + k) moves.
                         let suspended_element = element_vector.clone();
                         let suspended_source = source_vector.clone();
 
@@ -252,7 +238,6 @@ pub fn compute_suspensions_vector_based(
         .flatten()
         .collect();
 
-    // Collect results into final HashMap
     for (suspended_dim, element_vec, source_vec, product_vecs) in parallel_suspension_results {
         suspension_results
             .entry(suspended_dim)
@@ -280,7 +265,6 @@ pub fn mult_table(
     floor: i32,
     ceil: Option<i32>,
 ) -> crate::Result<()> {
-    // Collect unique (stem, filt) pairs from all pages
     let mut stem_filt_pairs = std::collections::HashSet::new();
 
     for k in pages.keys() {
@@ -289,18 +273,15 @@ pub fn mult_table(
         }
     }
 
-    // Convert to sorted vector: first by total degree (s + f), then by descending s within each degree
     let mut pairs: Vec<(i32, i32)> = stem_filt_pairs.into_iter().collect();
     pairs.sort_by_key(|(s, f)| (s + f, -s));
 
-    // Create the output CSV file with headers
     let file = std::fs::File::create(path)?;
     let mut wtr = csv::Writer::from_writer(file);
     wtr.write_record(["factor1", "factor2", "result"])?;
     wtr.flush()?;
     drop(wtr); // Close the file so we can append to it
 
-    // Run decompositions for each (stem, filt) pair sequentially
     for (stem, filt) in pairs.iter() {
         log::info!(
             "Computing decompositions for ({}, {}) at total degree {}",
@@ -311,11 +292,9 @@ pub fn mult_table(
 
         let results = decompositions(*stem, *filt, pages, cocycles, tags)?;
 
-        // Compute suspensions for this batch
         log::info!("Computing suspensions for ({}, {})...", stem, filt);
         let suspension_results = compute_suspensions_vector_based(&results, pages)?;
 
-        // Write fundamental products to CSV immediately
         log::info!(
             "Writing fundamental products for ({}, {}) to CSV...",
             stem,
@@ -323,7 +302,6 @@ pub fn mult_table(
         );
         write_decompositions_csv_append(&results, names, path)?;
 
-        // Write suspension products to CSV immediately
         log::info!(
             "Writing suspension products for ({}, {}) to CSV...",
             stem,

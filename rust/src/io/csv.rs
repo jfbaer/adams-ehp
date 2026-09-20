@@ -18,14 +18,12 @@ pub fn vectors_to_string(vectors: &[Vec<i32>]) -> String {
     vectors
         .iter()
         .map(|vector| {
-            // Join the components of each vector with a space
             vector
                 .iter()
                 .map(|&num| num.to_string())
                 .collect::<Vec<String>>()
                 .join(" ")
         })
-        // Join each vector string with a "+" sign
         .collect::<Vec<String>>()
         .join(" + ")
 }
@@ -40,14 +38,12 @@ pub fn parse_element_name(name: &str) -> ClassId {
 /// `"unknown_..."` marker (which the writers below filter out on the
 /// source/factor side) when the vector is not in the dictionary.
 pub fn get_name_from_vector(n: i32, vector: &Vec<i32>, names: &crate::Names) -> String {
-    // Look up in names dictionary first
     if let Some(inner_map) = names.get(&n) {
         if let Some(name) = inner_map.get(vector) {
             return name.clone();
         }
     }
-
-    // Fallback (shouldn't happen if names dictionary is complete)
+    // Fallback (shouldn't happen if the names dictionary is complete)
     format!("unknown_{}_{:?}", n, vector)
 }
 
@@ -57,14 +53,11 @@ pub fn write_rank_csv(pages: &E2, path: &Path) -> crate::Result<()> {
     let file = File::create(path)?;
     let mut wtr = csv::Writer::from_writer(file);
 
-    // Write header
     wtr.write_record(["n", "s", "f", "dimension"])?;
 
-    // Collect and sort keys
     let mut keys: Vec<_> = pages.keys().collect();
     keys.sort();
 
-    // Write data rows
     for &key in &keys {
         if let Some(vectors) = pages.0.get(key) {
             let rank = vectors.len();
@@ -85,15 +78,12 @@ pub fn write_rank_csv(pages: &E2, path: &Path) -> crate::Result<()> {
 pub fn build_names(pages: &E2) -> crate::Names {
     let mut names = crate::Names::new();
 
-    // Collect and sort keys for consistent ordering
     let mut keys: Vec<_> = pages.keys().collect();
     keys.sort();
 
     for &key in &keys {
         if let Some(vectors) = pages.0.get(key) {
             let vector_count = vectors.len();
-
-            // Ensure the dimension n exists in the outer HashMap
             names.entry(key.n).or_default();
 
             for (i, compact_vector) in vectors.iter().enumerate() {
@@ -105,7 +95,6 @@ pub fn build_names(pages: &E2) -> crate::Names {
                     format!("{}_{}_{}_{}", key.n, key.s, key.f, i)
                 };
 
-                // Insert into names[n][vector] = name
                 names.get_mut(&key.n).unwrap().insert(vector, name);
             }
         }
@@ -119,14 +108,10 @@ pub fn build_names(pages: &E2) -> crate::Names {
 /// representative as a space-separated lambda-index word. The python pipeline
 /// loads this file alongside the CSVs for human-readable chart labels.
 pub fn write_names_json(pages: &E2, names: &crate::Names, path: &Path) -> crate::Result<()> {
-    // Collect and sort keys for consistent ordering
     let mut keys: Vec<_> = pages.keys().collect();
     keys.sort();
 
-    // Create sorted entries for JSON serialization
     let mut all_entries: Vec<(i32, i32, i32, i32, Vec<i32>, String)> = Vec::new();
-
-    // Collect all entries with their (n, s, f, i) coordinates
     for &key in &keys {
         if let Some(vectors) = pages.0.get(key) {
             for (i, compact_vector) in vectors.iter().enumerate() {
@@ -137,11 +122,8 @@ pub fn write_names_json(pages: &E2, names: &crate::Names, path: &Path) -> crate:
             }
         }
     }
-
-    // Sort by (n, s, f, i)
     all_entries.sort_by_key(|(n, s, f, i, _, _)| (*n, *s, *f, *i));
 
-    // Convert to ordered JSON structure: name -> space-joined lambda word
     let mut json_names = serde_json::Map::new();
     for (_n, _s, _f, _i, vector, name) in all_entries {
         let word = vector
@@ -152,182 +134,88 @@ pub fn write_names_json(pages: &E2, names: &crate::Names, path: &Path) -> crate:
         json_names.insert(name, serde_json::Value::String(word));
     }
 
-    // Save dictionary as JSON
     let json_data = serde_json::to_string_pretty(&json_names)?;
     std::fs::write(path, json_data)?;
 
     Ok(())
 }
 
-/// Write the E (suspension) map CSV (`E2_E.csv`): `element,image` rows with
-/// target dimension n + 1. Rows with zero/unknown sources and zero images
-/// are omitted; output is sorted by source (n, s, f, i).
+/// Shared body of the E/H/P writers: `element,image` rows where the image
+/// lives in `target_dim(n)`. Rows with zero/unknown sources and zero or empty
+/// images are omitted; output is sorted by source (n, s, f, i).
+fn write_map_csv(
+    results: &crate::OpResults,
+    names: &crate::Names,
+    path: &Path,
+    target_dim: impl Fn(i32) -> i32,
+) -> crate::Result<()> {
+    let file = File::create(path)?;
+    let mut wtr = csv::Writer::from_writer(file);
+    wtr.write_record(["element", "image"])?;
+
+    let mut all_entries = Vec::new();
+
+    for (dim, dim_results) in results {
+        for (vector, result_vectors) in dim_results {
+            let element_name = get_name_from_vector(*dim, vector, names);
+            if element_name == "0" || element_name.starts_with("unknown_") {
+                continue;
+            }
+            if result_vectors.is_empty() {
+                continue;
+            }
+
+            let target_dim = target_dim(*dim);
+            let result_names: Vec<String> = result_vectors
+                .iter()
+                .map(|result_vec| get_name_from_vector(target_dim, result_vec, names))
+                .collect();
+            let result_name = result_names.join(" + ");
+            if result_name == "0" {
+                continue;
+            }
+
+            let coords = parse_element_name(&element_name);
+            all_entries.push((coords, element_name, result_name));
+        }
+    }
+
+    all_entries.sort_by_key(|(coords, _, _)| *coords);
+
+    for (_, element_name, result_name) in all_entries {
+        wtr.write_record(&[element_name, result_name])?;
+    }
+
+    wtr.flush()?;
+    Ok(())
+}
+
+/// Write the E (suspension) map CSV (`E2_E.csv`): images in dimension n + 1.
 pub fn write_e_csv(
     results: &crate::OpResults,
     names: &crate::Names,
     path: &Path,
 ) -> crate::Result<()> {
-    let file = File::create(path)?;
-    let mut wtr = csv::Writer::from_writer(file);
-    wtr.write_record(["element", "image"])?;
-
-    let mut all_entries = Vec::new();
-
-    for (dim, dim_results) in results {
-        for (vector, result_vectors) in dim_results {
-            let element_name = get_name_from_vector(*dim, vector, names);
-
-            // Skip if element name is "0" or unknown
-            if element_name == "0" || element_name.starts_with("unknown_") {
-                continue;
-            }
-
-            // Skip if result is empty (no suspension)
-            if result_vectors.is_empty() {
-                continue;
-            }
-
-            let target_dim = dim + 1; // E operation: suspension to next dimension
-            let result_names: Vec<String> = result_vectors
-                .iter()
-                .map(|result_vec| get_name_from_vector(target_dim, result_vec, names))
-                .collect();
-            let result_name = result_names.join(" + ");
-
-            // Skip if result is "0"
-            if result_name == "0" {
-                continue;
-            }
-
-            // Parse element name to get (n, s, f, i) for sorting
-            let coords = parse_element_name(&element_name);
-            all_entries.push((coords, element_name, result_name));
-        }
-    }
-
-    // Sort by (n, s, f, i)
-    all_entries.sort_by_key(|(coords, _, _)| *coords);
-
-    for (_, element_name, result_name) in all_entries {
-        wtr.write_record(&[element_name, result_name])?;
-    }
-
-    wtr.flush()?;
-    Ok(())
+    write_map_csv(results, names, path, |dim| dim + 1)
 }
 
-/// Write the H (Hopf) map CSV (`E2_H.csv`): `element,image` rows with target
-/// dimension 2n - 1. Rows with zero/unknown sources and zero images are
-/// omitted; output is sorted by source (n, s, f, i).
+/// Write the H (Hopf) map CSV (`E2_H.csv`): images in dimension 2n - 1.
 pub fn write_h_csv(
     results: &crate::OpResults,
     names: &crate::Names,
     path: &Path,
 ) -> crate::Result<()> {
-    let file = File::create(path)?;
-    let mut wtr = csv::Writer::from_writer(file);
-    wtr.write_record(["element", "image"])?;
-
-    let mut all_entries = Vec::new();
-
-    for (dim, dim_results) in results {
-        for (vector, result_vectors) in dim_results {
-            let element_name = get_name_from_vector(*dim, vector, names);
-
-            // Skip if element name is "0" or unknown
-            if element_name == "0" || element_name.starts_with("unknown_") {
-                continue;
-            }
-
-            // Skip if result is empty
-            if result_vectors.is_empty() {
-                continue;
-            }
-
-            let target_dim = 2 * dim - 1; // H operation: Hopf map dimension
-            let result_names: Vec<String> = result_vectors
-                .iter()
-                .map(|result_vec| get_name_from_vector(target_dim, result_vec, names))
-                .collect();
-            let result_name = result_names.join(" + ");
-
-            // Skip if result is "0"
-            if result_name == "0" {
-                continue;
-            }
-
-            // Parse element name to get (n, s, f, i) for sorting
-            let coords = parse_element_name(&element_name);
-            all_entries.push((coords, element_name, result_name));
-        }
-    }
-
-    // Sort by (n, s, f, i)
-    all_entries.sort_by_key(|(coords, _, _)| *coords);
-
-    for (_, element_name, result_name) in all_entries {
-        wtr.write_record(&[element_name, result_name])?;
-    }
-
-    wtr.flush()?;
-    Ok(())
+    write_map_csv(results, names, path, |dim| 2 * dim - 1)
 }
 
-/// Write the P (Whitehead product) map CSV (`E2_P.csv`): `element,image` rows
-/// with target dimension (n - 1) / 2. Rows with zero/unknown sources and
-/// zero images are omitted; output is sorted by source (n, s, f, i).
+/// Write the P (Whitehead product) map CSV (`E2_P.csv`): images in dimension
+/// (n - 1) / 2.
 pub fn write_p_csv(
     results: &crate::OpResults,
     names: &crate::Names,
     path: &Path,
 ) -> crate::Result<()> {
-    let file = File::create(path)?;
-    let mut wtr = csv::Writer::from_writer(file);
-    wtr.write_record(["element", "image"])?;
-
-    let mut all_entries = Vec::new();
-
-    for (dim, dim_results) in results {
-        for (vector, result_vectors) in dim_results {
-            let element_name = get_name_from_vector(*dim, vector, names);
-
-            // Skip if element name is "0" or unknown
-            if element_name == "0" || element_name.starts_with("unknown_") {
-                continue;
-            }
-
-            // Skip if result is empty
-            if result_vectors.is_empty() {
-                continue;
-            }
-
-            let target_dim = (dim - 1) / 2; // P operation: target dimension
-            let result_names: Vec<String> = result_vectors
-                .iter()
-                .map(|result_vec| get_name_from_vector(target_dim, result_vec, names))
-                .collect();
-            let result_name = result_names.join(" + ");
-
-            // Skip if result is "0"
-            if result_name == "0" {
-                continue;
-            }
-
-            // Parse element name to get (n, s, f, i) for sorting
-            let coords = parse_element_name(&element_name);
-            all_entries.push((coords, element_name, result_name));
-        }
-    }
-
-    // Sort by (n, s, f, i)
-    all_entries.sort_by_key(|(coords, _, _)| *coords);
-
-    for (_, element_name, result_name) in all_entries {
-        wtr.write_record(&[element_name, result_name])?;
-    }
-
-    wtr.flush()?;
-    Ok(())
+    write_map_csv(results, names, path, |dim| (dim - 1) / 2)
 }
 
 /// Append one batch of product rows (`factor1,factor2,result` columns) to the
@@ -349,12 +237,11 @@ pub fn write_decompositions_csv_append(
         for ((element_vector, source_vector), product_vectors) in dim_results {
             let element_name = get_name_from_vector(*target_dim, element_vector, names);
 
-            // Calculate source dimension: n + s where n = target_dim and s = sum of element_vector
+            // Source dimension: n + s where n = target_dim, s = the element's stem.
             let element_stem: i32 = element_vector.iter().sum();
             let source_dim = target_dim + element_stem;
             let source_name = get_name_from_vector(source_dim, source_vector, names);
 
-            // Skip if element or source name is "0" or unknown
             if element_name == "0"
                 || element_name.starts_with("unknown_")
                 || source_name == "0"
@@ -362,8 +249,6 @@ pub fn write_decompositions_csv_append(
             {
                 continue;
             }
-
-            // Skip if result is empty
             if product_vectors.is_empty() {
                 continue;
             }
@@ -373,13 +258,10 @@ pub fn write_decompositions_csv_append(
                 .map(|result_vec| get_name_from_vector(*target_dim, result_vec, names))
                 .collect();
             let result_name = result_names.join(" + ");
-
-            // Skip if result is "0"
             if result_name == "0" {
                 continue;
             }
 
-            // Parse element name to get (n, s, f, i) for sorting
             let element_coords = parse_element_name(&element_name);
             let source_coords = parse_element_name(&source_name);
             all_entries.push((
@@ -392,7 +274,6 @@ pub fn write_decompositions_csv_append(
         }
     }
 
-    // Sort by element coordinates first, then source coordinates
     all_entries
         .sort_by_key(|(element_coords, source_coords, _, _, _)| (*element_coords, *source_coords));
 
@@ -416,7 +297,6 @@ pub fn write_operation_csv(
     let mut wtr = csv::Writer::from_writer(file);
     wtr.write_record(["element", "image"])?;
 
-    // Sort entries for consistent output
     let mut entries: Vec<_> = results.iter().collect();
     entries.sort_by_key(|(element_coords, _)| *element_coords);
 
