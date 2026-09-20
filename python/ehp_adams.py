@@ -34,6 +34,14 @@ Conventions at this module's boundaries:
   indexed by the SOURCE basis and each row is the image vector in the TARGET
   basis (so `x.vect * M` is the image of x). This holds for map matrices,
   the multiplication matrices L/R/M/EM, and differentials via as_matrix.
+
+Failure policy (see _apply_constraint): a ContradictionError -- an empty
+constraint intersection, meaning the input data or an earlier deduction is
+wrong -- is always fatal and reported with its full deduction trace. Any
+other failure in a constraint application (typically a matrix shape mismatch
+at a data boundary) is also fatal in generic constraint code; only sites
+where a data-coverage edge is expected (the C2 reverse sweep) pass
+soft_structural=True to warn and skip instead.
 """
 import ast
 import copy as cpy
@@ -698,36 +706,18 @@ class SpectralSequencePage:
 
         old_dx = self.d[x_n, x_s, x_f].dimension()
 
-        # Apply naturality constraint
-        try:
+        def apply():
             map_matrix_x = self.map_matrix(map_name, x_n, x_s, x_f)
             map_matrix_source = self.map_matrix(map_name, x_n, x_s - 1, x_f + r)
             self.d[x_n, x_s, x_f] &= (map_matrix_x * self.d[y_n, y_s, y_f]) // map_matrix_source
-        except ContradictionError as e:
-            # A genuine inconsistency must never be skipped silently: report
-            # the full deduction trace and stop.
-            self._constraint_failure(
+            return True
+
+        if not self._apply_constraint(
                 f"natural_rev({map_name}) at source ({x_n},{x_s},{x_f}), target ({y_n},{y_s},{y_f})",
-                e,
                 [(x_n, x_s, x_f), (y_n, y_s, y_f),
                  self.d_target(x_n, x_s, x_f), self.d_target(y_n, y_s, y_f)],
-            )
-            raise
-        except Exception as e:
-            if soft_structural:
-                # Structural failures (dimension mismatches at data
-                # boundaries) stay non-fatal but are not silent.
-                print(f"\n  warning: {map_name} reverse naturality skipped at "
-                      f"({x_n},{x_s},{x_f}): {type(e).__name__}: {e}")
-                return False
-            if isinstance(e, (ArithmeticError, AttributeError)):
-                self._constraint_failure(
-                    f"natural_rev({map_name}) at source ({x_n},{x_s},{x_f}), target ({y_n},{y_s},{y_f})",
-                    e,
-                    [(x_n, x_s, x_f), (y_n, y_s, y_f),
-                     self.d_target(x_n, x_s, x_f), self.d_target(y_n, y_s, y_f)],
-                )
-            raise
+                apply, soft_structural=soft_structural):
+            return False
 
         new_dx = self.d[x_n, x_s, x_f].dimension()
         changed = old_dx > new_dx
@@ -768,19 +758,16 @@ class SpectralSequencePage:
 
         old_dy = self.d[y_n, y_s, y_f].dimension()
 
-        # Apply naturality constraint
-        map_matrix_x = self.map_matrix(map_name, x_n, x_s, x_f)
-        map_matrix_source = self.map_matrix(map_name, x_n, x_s - 1, x_f + r)
-        try:
+        def apply():
+            map_matrix_x = self.map_matrix(map_name, x_n, x_s, x_f)
+            map_matrix_source = self.map_matrix(map_name, x_n, x_s - 1, x_f + r)
             self.d[y_n, y_s, y_f] &= map_matrix_x // (self.d[x_n, x_s, x_f] * map_matrix_source)
-        except (ArithmeticError, AttributeError) as e:
-            self._constraint_failure(
-                f"natural({map_name}) at source ({x_n},{x_s},{x_f}), target ({y_n},{y_s},{y_f})",
-                e,
-                [(x_n, x_s, x_f), (y_n, y_s, y_f),
-                 self.d_target(x_n, x_s, x_f), self.d_target(y_n, y_s, y_f)],
-            )
-            raise
+
+        self._apply_constraint(
+            f"natural({map_name}) at source ({x_n},{x_s},{x_f}), target ({y_n},{y_s},{y_f})",
+            [(x_n, x_s, x_f), (y_n, y_s, y_f),
+             self.d_target(x_n, x_s, x_f), self.d_target(y_n, y_s, y_f)],
+            apply)
         new_dy = self.d[y_n, y_s, y_f].dimension()
         changed = old_dy > new_dy
 
@@ -830,13 +817,12 @@ class SpectralSequencePage:
                     zero_space.ambient.span([])
                 )
                 constraint = d // zero_space
-                try:
+
+                def apply():
                     self.d[target_td] = d2 & constraint
-                except ContradictionError as e:
-                    self._constraint_failure(
-                        f"d^2=0 constraining d{target_td} from forced d{source_td}",
-                        e, [source_td, target_td])
-                    raise
+                self._apply_constraint(
+                    f"d^2=0 constraining d{target_td} from forced d{source_td}",
+                    [source_td, target_td], apply)
                 new_dim = self.d[target_td].dimension()
                 if old_dim > new_dim:
                     self.outcome_map('d^2', *source_td, *target_td, 0, 0, old_dim, new_dim)
@@ -853,13 +839,11 @@ class SpectralSequencePage:
                     zero_space.ambient.zero(),
                     zero_space.ambient.span([])
                 )
-                try:
+                def apply():
                     self.d[source_td] = d1 & (zero_space // d)
-                except ContradictionError as e:
-                    self._constraint_failure(
-                        f"d^2=0 constraining d{source_td} from forced d{target_td}",
-                        e, [source_td, target_td])
-                    raise
+                self._apply_constraint(
+                    f"d^2=0 constraining d{source_td} from forced d{target_td}",
+                    [source_td, target_td], apply)
                 new_dim = self.d[source_td].dimension()
                 if old_dim > new_dim:
                     self.outcome_map('d^2', *source_td, *target_td, old_dim, new_dim, 0, 0)
@@ -884,24 +868,14 @@ class SpectralSequencePage:
                 continue
             old_dx = self.d[x_n, x_s, x_f].dimension()
 
-            try:
+            def apply():
                 map_matrix_x = self.map_matrix('E', x_n, x_s, x_f)
                 map_matrix_source = self.map_matrix('E', x_n, x_s - 1, x_f + r)
-                d_y = self.d[x_n + 1, x_s, x_f]
-
-                # Compute the product and quotient
-                product = map_matrix_x * d_y
-                quotient = product // map_matrix_source
-
-                # Apply the intersection
-                self.d[x_n, x_s, x_f] &= quotient
-            except Exception as e:
-                self._constraint_failure(
-                    f"desuspend at ({x_n},{x_s},{x_f})",
-                    e,
-                    [(x_n, x_s, x_f), (x_n + 1, x_s, x_f)],
-                )
-                raise
+                self.d[x_n, x_s, x_f] &= \
+                    (map_matrix_x * self.d[y_n, y_s, y_f]) // map_matrix_source
+            self._apply_constraint(
+                f"desuspend at ({x_n},{x_s},{x_f})",
+                [(x_n, x_s, x_f), (y_n, y_s, y_f)], apply)
 
             # This constraint only touches d[x]; the y-side dims are passed
             # equal so outcome_stable never reports a y change.
@@ -987,12 +961,13 @@ class SpectralSequencePage:
 
         print()  # New line after leibniz completes
         return changed
+
     def leibniz_full(self, x_n, x_s, x_f, y_n, y_s, y_f):
         """Apply the full Leibniz rule d(xy) = d(x)y + x d(y) at the level of affine matrix subspaces, constraining the differentials at x, y, and the product tridegree"""
         r = self.d.r
         xy_n, xy_s, xy_f = x_n, x_s + y_s, x_f + y_f
 
-        try:
+        def apply():
             if not self.d[x_n, x_s, x_f].is_forced:
                 self.d[x_n, x_s, x_f] &= (
                     self.ELM_dagger(x_n, x_s, x_f, y_n, y_s, y_f)
@@ -1012,15 +987,13 @@ class SpectralSequencePage:
                     self.d[x_n, x_s, x_f].tensor(self.dimension[y_n - 1, y_s, y_f]) * self.M_matrix(x_n, x_s - 1, x_f + r, y_n - 1, y_s, y_f)
                     + (self.map_matrix('E', y_n - 1, y_s, y_f) * self.d[y_n, y_s, y_f]).rtensor(self.dimension[x_n, x_s, x_f]) * self.M_matrix(x_n, x_s, x_f, y_n, y_s - 1, y_f + r)
                 )
-        except Exception as e:
-            self._constraint_failure(
-                f"leibniz_full: x=({x_n},{x_s},{x_f}) * y=({y_n},{y_s},{y_f}) -> xy=({xy_n},{xy_s},{xy_f})",
-                e,
-                [(x_n, x_s, x_f), (x_n, x_s - 1, x_f + r),
-                 (y_n, y_s, y_f), (y_n - 1, y_s, y_f), (y_n, y_s - 1, y_f + r),
-                 (xy_n, xy_s, xy_f), (xy_n, xy_s - 1, xy_f + r)],
-            )
-            raise
+
+        self._apply_constraint(
+            f"leibniz_full: x=({x_n},{x_s},{x_f}) * y=({y_n},{y_s},{y_f}) -> xy=({xy_n},{xy_s},{xy_f})",
+            [(x_n, x_s, x_f), (x_n, x_s - 1, x_f + r),
+             (y_n, y_s, y_f), (y_n - 1, y_s, y_f), (y_n, y_s - 1, y_f + r),
+             (xy_n, xy_s, xy_f), (xy_n, xy_s - 1, xy_f + r)],
+            apply)
 
     def leibniz_x(self, x, y_n, y_s, y_f):
         """Apply the Leibniz rule with a fixed cycle x (so the d(x) term vanishes): constrain the differentials at (y_n, y_s, y_f) and at the product tridegree via left-multiplication by x and the E map"""
@@ -1046,7 +1019,7 @@ class SpectralSequencePage:
         #   e_matrix . d[y] . L_source = e_matrix . L_target . d[xy]
         # for whichever side is not yet forced; the second branch reads d[y]
         # after the first may have shrunk it.
-        try:
+        def apply():
             e_matrix = self.map_matrix('E', y_n - 1, y_s, y_f)
             L_target = self.L_matrix(x, y_n, y_s, y_f)
             L_source = self.L_matrix(x, y_n, y_s - 1, y_f + r)
@@ -1060,14 +1033,12 @@ class SpectralSequencePage:
                 self.d[xy_n, xy_s, xy_f] &= (e_matrix * L_target) // (
                     e_matrix * self.d[y_n, y_s, y_f] * L_source
                 )
-        except Exception as e:
-            self._constraint_failure(
-                f"leibniz_x: cycle x={x} at ({x_n},{x_s},{x_f}), y at ({y_n},{y_s},{y_f})",
-                e,
-                [(y_n, y_s, y_f), (y_n, y_s - 1, y_f + r),
-                 (xy_n, xy_s, xy_f), (xy_n, xy_s - 1, xy_f + r)],
-            )
-            raise
+
+        self._apply_constraint(
+            f"leibniz_x: cycle x={x} at ({x_n},{x_s},{x_f}), y at ({y_n},{y_s},{y_f})",
+            [(y_n, y_s, y_f), (y_n, y_s - 1, y_f + r),
+             (xy_n, xy_s, xy_f), (xy_n, xy_s - 1, xy_f + r)],
+            apply)
 
     def leibniz_y(self, y, x_n, x_s, x_f):
         """Apply the Leibniz rule with a fixed cycle y (so the d(y) term vanishes): constrain the differentials at (x_n, x_s, x_f) and at the product tridegree via right-multiplication by y and its suspension y.E()"""
@@ -1084,7 +1055,7 @@ class SpectralSequencePage:
         if not self._tridegrees_ok(relevant_tridegrees):
             return
 
-        try:
+        def apply():
             if not self.d[x_n, x_s, x_f].is_forced:
                 self.d[x_n, x_s, x_f] &= (
                     self.R_matrix(y.E(), x_n, x_s, x_f)
@@ -1093,14 +1064,12 @@ class SpectralSequencePage:
 
             if not self.d[xy_n, xy_s, xy_f].is_forced:
                 self.d[xy_n, xy_s, xy_f] &= self.R_matrix(y.E(), x_n, x_s, x_f) // (self.d[x_n, x_s, x_f] * self.R_matrix(y, x_n, x_s - 1, x_f + r))
-        except Exception as e:
-            self._constraint_failure(
-                f"leibniz_y: cycle y={y} at ({y.n},{y_s},{y_f}), x at ({x_n},{x_s},{x_f})",
-                e,
-                [(x_n, x_s, x_f), (x_n, x_s - 1, x_f + r),
-                 (xy_n, xy_s, xy_f), (xy_n, xy_s - 1, xy_f + r)],
-            )
-            raise
+
+        self._apply_constraint(
+            f"leibniz_y: cycle y={y} at ({y.n},{y_s},{y_f}), x at ({x_n},{x_s},{x_f})",
+            [(x_n, x_s, x_f), (x_n, x_s - 1, x_f + r),
+             (xy_n, xy_s, xy_f), (xy_n, xy_s - 1, xy_f + r)],
+            apply)
 
 
     def _tridegrees_ok(self, tridegrees, *, polygon=True, uncertainty=True, source=True):
@@ -1122,6 +1091,26 @@ class SpectralSequencePage:
         r = self.d.r
         return (map_obj.data_complete(x_n, x_s, x_f)
                 and map_obj.data_complete(x_n, x_s - 1, x_f + r))
+
+    def _apply_constraint(self, label, tridegrees, apply_fn, soft_structural=False):
+        """Run apply_fn() under the standard failure policy: a
+        ContradictionError (the math is inconsistent) is always fatal and
+        reported with the full deduction trace; any other failure --
+        typically a matrix shape mismatch at a data boundary -- is also
+        fatal in generic constraint code, but warns and skips when
+        soft_structural (expected at the C2 data edge). Returns apply_fn()'s
+        value, or False when a soft failure was skipped."""
+        try:
+            return apply_fn()
+        except ContradictionError as e:
+            self._constraint_failure(label, e, tridegrees)
+            raise
+        except Exception as e:
+            if soft_structural:
+                print(f"\n  warning: {label} skipped: {type(e).__name__}: {e}")
+                return False
+            self._constraint_failure(label, e, tridegrees)
+            raise
 
     def _record_deduction(self, w_nsf, x_nsf, y_nsf, label):
         """Record the proof reason for a shrink at tridegree w (state

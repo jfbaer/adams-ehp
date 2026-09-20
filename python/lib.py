@@ -587,10 +587,14 @@ def standard_map_names(with_C2, with_hi=True):
 _HI_STEM = {'h0': 0, 'h1': 1, 'h2': 3, 'h3': 7}
 
 
-class ContradictionError(ArithmeticError):
+class ContradictionError(Exception):
     """Raised when a constraint intersection comes up empty: the new constraint
     is incompatible with everything deduced so far, so either the input data or
     an earlier recorded differential is wrong.
+
+    Deliberately NOT an ArithmeticError: a contradiction (the math is
+    inconsistent) must be distinguishable from a matrix shape mismatch at a
+    data boundary, which sage raises as a plain ArithmeticError.
 
     Carries the two inconsistent AffineMatrixSubspace states (`left` is the
     accumulated space, `right` the incoming constraint) so the failure site can
