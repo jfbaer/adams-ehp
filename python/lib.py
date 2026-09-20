@@ -1204,6 +1204,46 @@ def relations_complete_through(relations_file):
     return max(bound, 0)
 
 
+def stable_path(name):
+    """Resolve a filename under the stable/ dir (run from python/), matching
+    check_stable's convention."""
+    import os
+    return os.path.join("stable", name) if os.path.isdir("stable") else name
+
+
+def load_entry_list(path):
+    """Parse a hand-written differential list into (n, s, f, row, col, value)
+    tuples. Lines are `n s f row col value`; blank lines and `#` comments are
+    ignored. Missing file -> empty list. Used for the optional hand lists
+    Contradiction3.txt / Spurious4.txt (hand-proved differentials layered on
+    top of the stable inputs; see stable/README.md for the input-data
+    conventions)."""
+    import os
+    entries = []
+    if not os.path.exists(path):
+        return entries
+    with open(path) as fh:
+        for lineno, line in enumerate(fh, 1):
+            line = line.strip()
+            if not line or line.startswith("#"):
+                continue
+            parts = line.split()
+            # A malformed line is a hand-editing accident; silently dropping
+            # it would silently delete a hand-proved differential, so fail
+            # loudly instead.
+            if len(parts) != 6:
+                raise ValueError(
+                    f"{path}:{lineno}: malformed hand-list line "
+                    f"(expected 6 whitespace-separated fields): {line!r}")
+            try:
+                entries.append(tuple(int(x) for x in parts))
+            except ValueError as exc:
+                raise ValueError(
+                    f"{path}:{lineno}: non-integer field in hand-list "
+                    f"line: {line!r}") from exc
+    return entries
+
+
 def load_spectral_sequence(prefix, r, tot, build_pairs=True):
     """Load a spectral sequence page from CSV files and return the
     SpectralSequencePage (C2 availability is readable off page.has_C2)."""

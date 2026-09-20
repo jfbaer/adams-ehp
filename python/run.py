@@ -37,91 +37,10 @@ Outputs:
 import argparse
 import os
 
-from sage.all import GF, vector
-
 from ehp_adams import SpectralSequence
-from lib import Element
+from lib import load_entry_list, stable_path
 
 TOT = 70  # default total degree; the loader lowers it if the data covers less
-
-def load_entry_list(path):
-    """Parse a hand-written differential list into (n, s, f, row, col, value)
-    tuples. Lines are `n s f row col value`; blank lines and `#` comments are
-    ignored. Missing file -> empty list. Used for the optional hand lists
-    Contradiction3.txt / Spurious4.txt (hand-proved differentials layered on top of the stable
-    inputs; see stable/README.md for the input-data conventions)."""
-    entries = []
-    if not os.path.exists(path):
-        return entries
-    with open(path) as fh:
-        for lineno, line in enumerate(fh, 1):
-            line = line.strip()
-            if not line or line.startswith("#"):
-                continue
-            parts = line.split()
-            # A malformed line is a hand-editing accident; silently dropping
-            # it would silently delete a hand-proved differential, so fail
-            # loudly instead.
-            if len(parts) != 6:
-                raise ValueError(
-                    f"{path}:{lineno}: malformed hand-list line "
-                    f"(expected 6 whitespace-separated fields): {line!r}")
-            try:
-                entries.append(tuple(int(x) for x in parts))
-            except ValueError as exc:
-                raise ValueError(
-                    f"{path}:{lineno}: non-integer field in hand-list "
-                    f"line: {line!r}") from exc
-    return entries
-
-
-def _differential_state(page):
-    """Comparable snapshot of a page's derived state: the dimension of the
-    differential constraint space at every populated tridegree, plus the set
-    of uncertain tridegrees. compute() only narrows spaces and resolves
-    uncertainties, so two equal snapshots mean a fixpoint was reached."""
-    dims = {}
-    for tri, dim in page.dimension.items():
-        if dim > 0:
-            dims[tri] = page.d[tri].dimension()
-    uncertain = page.uncertainty_manager.uncertain
-    uncertain_keys = (
-        sorted(uncertain.keys()) if hasattr(uncertain, "keys") else len(uncertain))
-    return dims, uncertain_keys
-
-
-MAX_EXTRA_CONVERGENCE_PASSES = 5
-
-
-def compute_to_fixpoint(ss, verify):
-    """ss.compute(), optionally re-run until the differential state stops
-    changing. compute() exits only when a full constraint pass changes
-    nothing, so `verify` is an independent double-check of that exit test;
-    0 extra passes = converged first try (the expected outcome)."""
-    ss.compute()
-    if not verify:
-        return
-    for extra in range(1, MAX_EXTRA_CONVERGENCE_PASSES + 1):
-        before = _differential_state(ss.current_page)
-        ss.compute()
-        after = _differential_state(ss.current_page)
-        if before == after:
-            print(f"  convergence verified ({extra - 1} extra pass(es) needed)")
-            return
-        changed = sorted(
-            set(k for k in after[0] if before[0].get(k) != after[0][k])
-            | set(before[0]) - set(after[0]))
-        print(f"  WARNING: compute() had not converged; extra pass {extra} "
-              f"changed {len(changed)} tridegree(s), e.g. {changed[:8]}")
-    raise RuntimeError(
-        f"compute() still changing after {MAX_EXTRA_CONVERGENCE_PASSES} extra "
-        f"passes; do not trust this state")
-
-
-def stable_path(name):
-    """Resolve a filename under the stable/ dir (run from python/), matching
-    check_stable's convention."""
-    return os.path.join("stable", name) if os.path.isdir("stable") else name
 
 
 def main():
@@ -148,10 +67,10 @@ def main():
     )
     parser.add_argument(
         "--verify-converged", action="store_true",
-        help="after each compute(), re-run it until the differential state "
-             "stops changing and report how many extra passes were needed. "
-             "Independent check of compute()'s fixpoint exit test; use "
-             "for the definitive publication run (expected: 0 extra passes).",
+        help="after each compute(), run one extra pass and check the "
+             "differential state is unchanged -- an independent check of "
+             "compute()'s fixpoint exit test (raises if the pass still "
+             "makes progress). Use for the definitive publication run.",
     )
     args = parser.parse_args()
     tot = args.tot
@@ -168,7 +87,7 @@ def main():
     # (never preloaded) and written once under --data as a plain output, so
     # why.py can render d2 proof diagrams.
     print("\nComputing d2...")
-    compute_to_fixpoint(ss, args.verify_converged)
+    ss.compute(verify=args.verify_converged)
     ss.current_page.save_d(os.path.join(args.data, "d2"))
     ss.write_spheres(charts_dir=args.charts_dir)  # E2 chart
 
@@ -194,7 +113,7 @@ def main():
                 print(f"  imposed {imposed} of {len(unstable)}")
 
         print(f"\nComputing d{r}...")
-        compute_to_fixpoint(ss, args.verify_converged)
+        ss.compute(verify=args.verify_converged)
 
         # Close still-open differentials with the in-house resolver (product
         # and map reasoning): the self-contained replacement for the

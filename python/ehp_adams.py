@@ -1225,6 +1225,22 @@ class SpectralSequencePage:
                 changed |= self.natural_rev(n, s, f, map_name, locked=True)
         return changed
 
+    def differential_state(self):
+        """Comparable snapshot of this page's derived state: the dimension of
+        the differential constraint space at every populated tridegree, plus
+        the set of uncertain tridegrees. compute() only narrows spaces and
+        resolves uncertainties, so two equal snapshots mean a fixpoint was
+        reached."""
+        dims = {}
+        for tri, dim in self.dimension.items():
+            if dim > 0:
+                dims[tri] = self.d[tri].dimension()
+        uncertain = self.uncertainty_manager.uncertain
+        uncertain_keys = (
+            sorted(uncertain.keys()) if hasattr(uncertain, "keys")
+            else len(uncertain))
+        return dims, uncertain_keys
+
     def compute(self, use_active_pairs=True):
         """Compute differentials using constraints.
 
@@ -1697,10 +1713,28 @@ class SpectralSequence:
         """Get the E_r page"""
         return self.pages.get(r)
 
-    def compute(self):
-        """Compute differentials on the current page"""
-        if self.current_page:
+    def compute(self, verify=False):
+        """Compute differentials on the current page. With verify, run one
+        more compute() pass and check the differential state is unchanged --
+        an independent check of compute()'s fixpoint exit test. Raises if
+        the extra pass still makes progress: that means the exit test's
+        progress accounting has a bug, and the state must not be trusted."""
+        if not self.current_page:
+            return
+        self.current_page.compute()
+        if verify:
+            before = self.current_page.differential_state()
             self.current_page.compute()
+            after = self.current_page.differential_state()
+            if before != after:
+                changed = sorted(
+                    set(k for k in after[0] if before[0].get(k) != after[0][k])
+                    | (set(before[0]) - set(after[0])))
+                raise RuntimeError(
+                    f"compute() exit test failed: an extra pass changed "
+                    f"{len(changed)} tridegree(s), e.g. {changed[:8]}; "
+                    f"do not trust this state")
+            print("  convergence verified (extra pass changed nothing)")
 
     def write_spheres(self, charts_dir=None):
         """Write spheres chart for the current page"""
