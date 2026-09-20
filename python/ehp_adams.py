@@ -407,7 +407,14 @@ class SpectralSequencePage:
                 writer.writerow([n, s, f])
 
     def save_to_directory(self, directory):
-        """Save page data to directory (pure file I/O, no computation)"""
+        """Save page data to directory (pure file I/O, no computation).
+
+        The data/E{r} directories this writes are ARCHIVAL OUTPUTS, not
+        reload inputs: reloading a later page is unsupported (it would lack
+        the induced hi product tables, the complete_through coverage bounds,
+        and the uncertainty data accumulated over earlier pages -- and the
+        loader reads E2-prefixed filenames while this writes E{r}-prefixed
+        ones). Every run recomputes all pages fresh from the E2 data."""
         os.makedirs(directory, exist_ok=True)
         r_value = self.d.r
 

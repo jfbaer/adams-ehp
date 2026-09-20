@@ -1211,27 +1211,21 @@ def load_spectral_sequence(prefix, r, tot, build_pairs=True):
     from ehp_adams import SpectralSequencePage
     from differentials import DifferentialsPage
 
-    # File paths - check directory first, then fallback to flat files
+    # File paths: a directory holds E2-prefixed files (the directory name is
+    # the distinguishing factor); otherwise prefix is the flat file stem.
     import os
-    if os.path.exists(prefix) and os.path.isdir(prefix):
-        # Files inside directory always use "E2" prefix, directory name is distinguishing factor
-        E_file = f"{prefix}/E2_E.csv"
-        H_file = f"{prefix}/E2_H.csv"
-        P_file = f"{prefix}/E2_P.csv"
-        C2_file = f"{prefix}/E2_C2.csv"
-        rank_file = f"{prefix}/E2_rank.csv"
-        relations_file = f"{prefix}/E2_relations.csv"
-        c2_products_file = f"{prefix}/E2_C2_products.csv"
-        names_file = f"{prefix}/E2_names.json"
+    if os.path.isdir(prefix):
+        stem = f"{prefix}/E2"
     else:
-        E_file = f"{prefix}_E.csv"
-        H_file = f"{prefix}_H.csv"
-        P_file = f"{prefix}_P.csv"
-        C2_file = f"{prefix}_C2.csv"
-        rank_file = f"{prefix}_rank.csv"
-        relations_file = f"{prefix}_relations.csv"
-        c2_products_file = f"{prefix}_C2_products.csv"
-        names_file = f"{prefix}_names.json"
+        stem = prefix
+    E_file = f"{stem}_E.csv"
+    H_file = f"{stem}_H.csv"
+    P_file = f"{stem}_P.csv"
+    C2_file = f"{stem}_C2.csv"
+    rank_file = f"{stem}_rank.csv"
+    relations_file = f"{stem}_relations.csv"
+    c2_products_file = f"{stem}_C2_products.csv"
+    names_file = f"{stem}_names.json"
 
     # Detect C2 availability by checking if file exists
     has_C2 = os.path.exists(C2_file)
