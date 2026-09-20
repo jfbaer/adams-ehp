@@ -138,6 +138,8 @@ def merge_manifest(out_dir):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
+    # Pages 6-8 carry no nonzero differentials in the shipped range, so
+    # there are no proof graphs to draw for them.
     parser.add_argument("--page", type=int, choices=(2, 3, 4, 5),
                         help="generate dot files for this page (needs sage)")
     parser.add_argument("--limit", type=int, default=None,

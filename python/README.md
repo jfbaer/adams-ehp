@@ -81,13 +81,13 @@ uncertainties about their differentials on an earlier page.
 ## Outputs
 
 - `data/E{r}/d{r}` (JSON): the d_r differentials with full proof chains,
-  r = 2..5 (d2 lands under `--data`)
+  r = 2..8 (d2 lands under `--data`)
 - `data/E{r}/d{r}_unknown.csv`: tridegrees where d_r could not be fully
   determined
 - `charts/E{r}_{tot}.csv`: chart data for each page (one row per
   element: coordinates, products with h_i, map images, differential target,
   and uncertainty generators); rendered by [`../charts/`](../charts/README.md)
-- `data/E{r}/`: complete page data (rank, relations, maps) for r = 3..5, in
+- `data/E{r}/`: complete page data (rank, relations, maps) for r = 3..8, in
   the same per-file format as `data/E2/` (files named `E{r}_*`)
 
 ## Proof diagrams

@@ -11,7 +11,7 @@ Key operations:
 - save_to_directory(): Export results to CSV files
 
 Typical workflow:
-    >>> ss = SpectralSequence.from_data("E2", r=2, tot=79)
+    >>> ss = SpectralSequence.from_data("E2", r=2, tot=76)
     >>> ss.current_page.compute()
     >>> ss.next_page(save=True)
 
@@ -43,18 +43,12 @@ at a data boundary) is also fatal in generic constraint code; only sites
 where a data-coverage edge is expected (the C2 reverse sweep) pass
 soft_structural=True to warn and skip instead.
 """
-import ast
-import copy as cpy
 import csv
-import itertools
 import json
 import os
-import re
-import sys
 from collections import defaultdict
 import sage.all
-from sage.all import GF, Hom, Sequence, VectorSpace, matrix, span, vector
-from sage.geometry.hyperplane_arrangement.affine_subspace import AffineSubspace
+from sage.all import GF, matrix, vector
 
 from lib import *
 from uncertainty import UncertaintyManager
@@ -101,7 +95,7 @@ class SpectralSequencePage:
         self.rule_deduction_counts = defaultdict(int)
 
     def compute_max_values(self):
-        """Infer max_n/max_s/max_f/max_t from the dimension table (with a safety margin of 2), filling in only the values not already set"""
+        """Infer max_n/max_s/max_f/max_t from the dimension table, filling in only the values not already set: max_n/max_s/max_t get a safety margin of 2; max_f is the highest filtration inside the resulting window (no margin)"""
         if not self.dimension:
             return
         max_n = 0
@@ -265,9 +259,10 @@ class SpectralSequencePage:
     def resolve_spurious_uncertainties(self, multiplier_bidegrees=None,
                                        map_names=None, max_stem=None):
         """Close still-open differential values by the product/map reasoning
-        in the spurious module (the self-contained replacement for the
-        Spurious{r}.txt hand data); see spurious.resolve_spurious_uncertainties
-        for the full contract. Returns its counts dict."""
+        in the spurious module (it settles spurious zero differentials; the
+        nonzero remainder stays hand-supplied in stable/Spurious4.txt); see
+        spurious.resolve_spurious_uncertainties for the full contract.
+        Returns its counts dict."""
         return spurious.resolve_spurious_uncertainties(
             self, multiplier_bidegrees=multiplier_bidegrees,
             map_names=map_names, max_stem=max_stem)
@@ -322,18 +317,6 @@ class SpectralSequencePage:
         """Return True if the uncertainty manager marks the tridegree (n, s, f) as unknown"""
         return self.uncertainty_manager.is_tridegree_unknown(n, s, f)
 
-    def are_any_tridegrees_unknown(self, tridegrees):
-        return self.uncertainty_manager.are_any_tridegrees_unknown(tridegrees)
-
-    def remove_uncertain_tridegree(self, tridegree):
-        return self.uncertainty_manager.remove_uncertain_tridegree(tridegree)
-
-    def restore_uncertain_tridegree(self, tridegree, data):
-        self.uncertainty_manager.restore_uncertain_tridegree(tridegree, data)
-
-    def has_simple_uncertainty(self, n, s, f):
-        return self.uncertainty_manager.has_simple_uncertainty(n, s, f)
-
     def load_d(self, filename):
         """Load differential data from a JSON file into the existing
         DifferentialsPage. Returns the number of entries that were reshaped to
@@ -345,22 +328,6 @@ class SpectralSequencePage:
         """Load differential data from a CSV file into the existing DifferentialsPage"""
         self.d.load_from_csv(csv_file)
 
-    def get_simple_uncertainties_for_r(self, target_r):
-        return self.uncertainty_manager.get_simple_uncertainties_for_r(target_r)
-
-    def get_all_uncertainties_for_r(self, target_r):
-        return self.uncertainty_manager.get_all_uncertainties_for_r(target_r, self.max_t)
-
-    def get_all_uncertainties(self):
-        return self.uncertainty_manager.get_all_uncertainties(self.d)
-
-    def is_element_uncertain(self, element):
-        return self.uncertainty_manager.is_element_uncertain(element)
-
-    def element_is_uncertain_plus(self, element):
-        r = self.d.r
-        return self.uncertainty_manager.element_is_uncertain_plus(element, r)
-
     def degree_is_uncertain_plus(self, n, s, f):
         """Ask the uncertainty manager whether the tridegree (n, s, f) is uncertain-plus at the current page r"""
         r = self.d.r
@@ -369,23 +336,11 @@ class SpectralSequencePage:
     def get_lowest_r_uncertainty_for_element(self, element, n, s, f):
         return self.uncertainty_manager.get_lowest_r_uncertainty_for_element(element, n, s, f)
 
-    def add_unknown_tridegree(self, n, s, f, r_value=None):
-        self.uncertainty_manager.add_unknown_tridegree(n, s, f, r_value, self.d)
-
-    def save_uncertainties(self, filename):
-        self.uncertainty_manager.save_uncertainties(filename)
-
-    def load_uncertainties(self, filename):
-        return self.uncertainty_manager.load_uncertainties(filename, self)
-
     def update_uncertainties_from_differentials(self):
         return self.uncertainty_manager.update_uncertainties_from_differentials(self)
 
     def propagate_uncertainties_forward(self, previous_uncertain, turned_page):
         self.uncertainty_manager.propagate_uncertainties_forward(previous_uncertain, turned_page, self)
-
-    def transform_uncertainties(self, old_uncertain, make_new_element):
-        self.uncertainty_manager.transform_uncertainties(old_uncertain, make_new_element, self)
 
     def save_d(self, filename):
         """Save the differentials to a JSON file and write the still-unforced tridegrees to a companion _unknown.csv"""
@@ -456,10 +411,9 @@ class SpectralSequencePage:
         return 'C2' in self.maps
 
     # Maps whose declared STANDARD_MAPS domain restriction is enforced at
-    # runtime. E/H/P/C2 historically ran with an always-true domain; their
-    # data tables carry no off-domain rows (and the n=1 column is empty), so
-    # off-domain applications were vacuous zero-map constraints -- verified
-    # byte-identical on the tot=40 harness with the restrictions enforced.
+    # runtime. For E/H/P/C2 the data tables carry no off-domain rows (and
+    # the n=1 column is empty), so enforcing the declared restriction is
+    # equivalent to applying the map unrestricted.
     HONOR_DOMAIN_CHECKS = ('h0', 'h1', 'h2', 'h3', 'C2', 'P', 'H', 'E')
 
     def initialize_maps(self, with_C2=True):
@@ -740,8 +694,8 @@ class SpectralSequencePage:
         r = self.d.r
         map_obj = self.maps[map_name]
 
-        # The source must lie in the map's domain (mirrors natural_rev; for
-        # E/H/P/C2 this is currently always true, see initialize_maps).
+        # The source must lie in the map's domain (mirrors natural_rev; see
+        # HONOR_DOMAIN_CHECKS).
         if not map_obj.domain_check(x_n, x_s, x_f):
             return False
 
@@ -884,11 +838,11 @@ class SpectralSequencePage:
                 [(x_n, x_s, x_f), (y_n, y_s, y_f)], apply)
 
             # This constraint only touches d[x]; the y-side dims are passed
-            # equal so outcome_stable never reports a y change.
+            # equal so outcome_desuspend never reports a y change.
             new_dx = self.d[x_n, x_s, x_f].dimension()
             dy = self.d[y_n, y_s, y_f].dimension()
-            self.outcome_stable('E', x_n, x_s, x_f, y_n, y_s, y_f,
-                                old_dx, new_dx, dy, dy)
+            self.outcome_desuspend('E', x_n, x_s, x_f, y_n, y_s, y_f,
+                                   old_dx, new_dx, dy, dy)
             changed |= old_dx > new_dx
         return changed
 
@@ -1151,11 +1105,13 @@ class SpectralSequencePage:
                 self._print_deduction(w_nsf, old, new)
                 self._record_deduction(w_nsf, x_nsf, y_nsf, label)
 
-    def outcome_stable(self, map_name, x_n, x_s, x_f, y_n, y_s, y_f, old_dx, new_dx, old_dy, new_dy):
+    def outcome_desuspend(self, map_name, x_n, x_s, x_f, y_n, y_s, y_f, old_dx, new_dx, old_dy, new_dy):
+        # Proof label "desuspend", NOT "stable": why.py renders "stable" as
+        # an assumed-input terminal, and a desuspension deduction is derived.
         self._outcome(
             f"From {map_name}({x_n},{x_s},{x_f}):                    ",
             [((x_n, x_s, x_f), old_dx, new_dx), ((y_n, y_s, y_f), old_dy, new_dy)],
-            (x_n, x_s, x_f), (y_n, y_s, y_f), "stable")
+            (x_n, x_s, x_f), (y_n, y_s, y_f), "desuspend")
 
     def outcome_map(self, map_name, x_n, x_s, x_f, y_n, y_s, y_f, old_dx, new_dx, old_dy, new_dy):
         if old_dx > new_dx or old_dy > new_dy:
@@ -1235,10 +1191,7 @@ class SpectralSequencePage:
         for tri, dim in self.dimension.items():
             if dim > 0:
                 dims[tri] = self.d[tri].dimension()
-        uncertain = self.uncertainty_manager.uncertain
-        uncertain_keys = (
-            sorted(uncertain.keys()) if hasattr(uncertain, "keys")
-            else len(uncertain))
+        uncertain_keys = sorted(self.uncertainty_manager.uncertain.keys())
         return dims, uncertain_keys
 
     def compute(self, use_active_pairs=True):
@@ -1666,8 +1619,8 @@ class SpectralSequence:
         - Creating the spectral sequence container
         - Optionally loading known differentials from file
 
-        Known stable/C2 differentials from stable/*.txt are not seeded here;
-        check_stable() resolves them during compute().
+        The known stable/C2 differentials (the stable/*.csv tables) are not
+        seeded here; check_stable() resolves them during compute().
 
         Args:
             prefix: Directory or file prefix containing the data (e.g., "E2" or "E2/E2")
@@ -1845,8 +1798,9 @@ class SpectralSequence:
 
             # For each basis element in target_page at this degree
             for x in target_page.page[x_n, x_s, x_f]:
+                # Skip anything that doesn't print as an n_s_f monomial/sum.
                 x_str = str(x)
-                if not x_str or "_" not in x_str or x_str in ["1", "0"] or x_str.count("_") < 2:
+                if x_str.count("_") < 2:
                     continue
 
                 # Lift to source page, apply map, quotient to target page
@@ -2010,7 +1964,7 @@ class SpectralSequence:
         5. Optionally save to disk
 
         Args:
-            save: If True, save results to directory E_{r+1}/
+            save: If True, save results to directory data/E{r+1}/
 
         Returns:
             The next spectral sequence page E_{r+1}

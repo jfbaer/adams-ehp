@@ -116,9 +116,10 @@ def main():
         ss.compute(verify=args.verify_converged)
 
         # Close still-open differentials with the in-house resolver (product
-        # and map reasoning): the self-contained replacement for the
-        # Spurious{r}.txt hand data. Entries it cannot derive are left
-        # genuinely uncertain rather than pinned from an outside list.
+        # and map reasoning). It settles spurious ZERO differentials
+        # automatically; the nonzero ones it cannot yet derive are the
+        # hand list Spurious4.txt applied above (see stable/README.md).
+        # Entries neither source determines stay genuinely uncertain.
         print(f"\nResolving spurious uncertainties on d{r}...")
         ss.current_page.resolve_spurious_uncertainties()
 
@@ -130,7 +131,7 @@ def main():
     print("=" * 80)
     print("Differentials saved to data/E{r}/d{r} (proof chains) and d{r}_unknown.csv "
           "for each page r.")
-    print("Charts saved to charts/")
+    print(f"Charts saved to {args.charts_dir or 'charts'}/")
 
 
 if __name__ == "__main__":

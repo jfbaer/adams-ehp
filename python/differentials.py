@@ -64,7 +64,7 @@ C2_N_VALUE = 0        # n-value for C2 differential processing
 
 # The not-a-boundary machinery enumerates 2^(ncols-1) functionals of the
 # target space; past this many columns that enumeration (here 2^16) is too
-# large, so nb / certainly_not_boundary decline rather than attempt it.
+# large, so nb_multi declines rather than attempt it.
 MAX_NB_TARGET_NCOLS = 17
 
 
@@ -166,23 +166,6 @@ class DifferentialsPage(key_defaultdict):
 
         return {"offset": v, "uncertainty": gens}
 
-    def most_complex(self):
-        """
-        Find the (n, s, f) with the longest proof chain (most recorded `why` steps).
-
-        Returns:
-            tuple: (n, s, f) with the longest `why` list.
-        """
-        max_key = None
-        max_why_len = -1  # Start with a value lower than any possible length
-
-        for key in self.keys():
-            if len(self[key].why) > max_why_len:
-                max_why_len = len(self[key].why)
-                max_key = key
-
-        return max_key
-
     def __copy__(self):
         """Shallow copy: the new page SHARES this page's AffineMatrixSubspace
         entries, so an in-place restriction on either copy is visible to
@@ -232,7 +215,7 @@ class DifferentialsPage(key_defaultdict):
 
         try:
             with open(csv_file, 'r') as f:
-                reader = csv.DictReader(f, delimiter='\t')  # Tab-delimited based on the sample
+                reader = csv.DictReader(f, delimiter='\t')
                 for line in reader:
                     try:
                         n = int(line['n'])
@@ -268,122 +251,6 @@ class DifferentialsPage(key_defaultdict):
 
         except FileNotFoundError:
             print(f"  Warning: {csv_file} not found")
-
-    def set_element_differential(self, element, target_differential, adams_page):
-        """
-        Force the differential of a specific element to be a specific value.
-
-        Args:
-            element: Element in domain space
-            target_differential: Element in codomain space (desired d(element))
-            adams_page: The adams_page dict to determine element ordering
-        """
-        bidegree = (element.n, element.s, element.f)
-
-        # Find the index of the element in the Adams page basis
-        if bidegree not in adams_page:
-            raise ValueError(f"Bidegree {bidegree} not found in Adams page")
-
-        basis_elements = adams_page[bidegree]
-        try:
-            element_index = basis_elements.index(element)
-        except ValueError:
-            # Element is not a single basis element (likely a linear combination)
-            # Skip setting differential for linear combinations
-            return
-
-        # Call the underlying set_element_differential method
-        counter = self.counter
-        try:
-            self.counter += 1
-            self[bidegree].set_element_differential(element, target_differential, element_index, self.counter)
-        except Exception:
-            # Rollback counter on any error before re-raising
-            self.counter = counter
-            raise
-
-    def nb(self, element, label="nb", reason=None, verbose=True):
-        """Force the fact that `element` is NOT a boundary on this page: no
-        remaining candidate for the differential targeting its tridegree may
-        contain it in its image.  `label`/`reason` override the recorded
-        proof-step provenance (see AffineMatrixSubspace.restrict);
-        `verbose=False` suppresses the refusal certificate and cap messages
-        (for bulk callers that count refusals instead).
-
-        Looks up the incoming differential d[n, s+1, f-r] and intersects its
-        affine space with the exact solution set of "element.vect not in the
-        row space".  That set is a union of flats (one per functional phi with
-        phi(element.vect) = 1, cut out by M phi^T = 0), so the fact can only be
-        imposed when the pruned union collapses to a single flat.
-
-        Returns True when the space shrank, False when the fact already holds
-        for every remaining candidate (no-op), and None when it could not be
-        imposed (the survivors form a genuine multi-flat union, reported as a
-        per-phi certificate, or the target dimension exceeds the functional-
-        enumeration cap).  Raises ContradictionError when every remaining
-        candidate hits the element.
-        """
-        n, s, f = element.n, element.s, element.f
-        source = (n, s + 1, f - self.r)
-        diff = self[source]
-        y = element.vect
-        if len(y) != diff.ncols:
-            raise ValueError(
-                f"nb: element at {(n, s, f)} has length {len(y)} but the "
-                f"incoming differential d{self.r}{source} targets dimension "
-                f"{diff.ncols}"
-            )
-        if y.is_zero():
-            raise ValueError("nb: zero is in the image of every differential")
-        if diff.nrows == 0 or diff.is_cycle():
-            return False
-        if diff.is_forced:
-            if y in diff.as_matrix(diff.v).row_space():
-                raise ContradictionError(
-                    f"nb: element {list(y)} at {(n, s, f)} is in the image of "
-                    f"the forced differential d{self.r}{source}",
-                    left=diff,
-                )
-            return False
-        if diff.ncols > MAX_NB_TARGET_NCOLS:
-            if verbose:
-                print(f"  nb: skipping d{self.r}{source}: target dimension "
-                      f"{diff.ncols} exceeds the 2^16-functional cap")
-            return None
-
-        pieces = _not_in_image_pieces(diff, y)
-        if not pieces:
-            raise ContradictionError(
-                f"nb: every remaining candidate for d{self.r}{source} contains "
-                f"{list(y)} at {(n, s, f)} in its image",
-                left=diff,
-            )
-        if len(pieces) == 1:
-            piece = pieces[0][1]
-            # piece is a subset of the current space, so equal dimensions mean
-            # the fact already holds for every remaining candidate
-            if piece.dimension() == diff.dimension():
-                return False
-            counter = self.counter
-            try:
-                self.counter += 1
-                diff.restrict(piece, self.counter, label=label, reason=reason)
-            except Exception:
-                self.counter = counter
-                raise
-            return True
-        # A genuine union of flats is not representable as one affine space;
-        # refuse rather than impose a lossy hull.
-        if verbose:
-            print(f"  nb: cannot impose 'not a boundary' for {list(y)} at "
-                  f"{(n, s, f)}: the surviving candidates for d{self.r}{source} "
-                  f"form a union of {len(pieces)} flats, not a single affine "
-                  f"space; leaving it open")
-            for phi, piece in pieces:
-                basis = [list(b) for b in piece.linear_part().basis()]
-                print(f"    phi={list(phi)}: point={list(piece.point())} "
-                      f"dim={piece.dimension()} basis={basis}")
-        return None
 
     def nb_multi(self, elements, label="nb", reason=None, verbose=True,
                  max_pieces=64):
@@ -466,32 +333,10 @@ class DifferentialsPage(key_defaultdict):
                   f"d{self.r}{source}; leaving it open")
         return None
 
-    def certainly_not_boundary(self, element):
-        """Return True when NO remaining candidate for the differential
-        targeting `element`'s tridegree contains it in its image -- i.e. the
-        element is certainly not a boundary on this page, whatever the still-
-        open differentials turn out to be.  Conservative: False whenever
-        certainty cannot be established (zero element, basis-length drift, or
-        a target dimension past the functional-enumeration cap)."""
-        n, s, f = element.n, element.s, element.f
-        diff = self[n, s + 1, f - self.r]
-        y = element.vect
-        if y.is_zero() or len(y) != diff.ncols:
-            return False
-        if diff.nrows == 0 or diff.is_cycle():
-            return True
-        if diff.is_forced:
-            return y not in diff.as_matrix(diff.v).row_space()
-        if diff.ncols > MAX_NB_TARGET_NCOLS:
-            return False
-        pieces = _not_in_image_pieces(diff, y)
-        return len(pieces) == 1 and pieces[0][1].dimension() == diff.dimension()
-
     def force_cycle(self, element, label="cycle", reason=None):
         """Force d(element) = 0 for a single element (possibly a linear
-        combination of basis vectors, which set_element_differential silently
-        skips): intersect the affine space at the element's tridegree with the
-        linear flat {M : element.vect . M = 0}.
+        combination of basis vectors): intersect the affine space at the
+        element's tridegree with the linear flat {M : element.vect . M = 0}.
 
         Returns True when the space shrank and False when the constraint
         already held for every candidate (no proof step recorded).  Raises
@@ -694,9 +539,8 @@ class DifferentialsPage(key_defaultdict):
     # r,n,s,f,row,col,value with row = TARGET index and col = SOURCE index in
     # the exporting session's basis; our matrices are source x target, so an
     # entry (row, col, v) pins M[col, row] = v. Explicit zeros are information.
-    # Tridegrees absent from the file stay OPEN (unlike the txt tables, where
-    # absence forces the whole matrix to zero): only what the session actually
-    # determined is imposed. Multi-dimensional C2 spots are only meaningful
+    # Tridegrees absent from the file stay OPEN: only what the session
+    # actually determined is imposed. Multi-dimensional C2 spots are only meaningful
     # against the same C2 dataset the session was loaded with.
     KNOWN_DIFF_CSVS = ("stable_sphere_diffs.csv", "c2_diffs.csv")
 
@@ -704,8 +548,9 @@ class DifferentialsPage(key_defaultdict):
         """Load (once) the exported known-differential CSVs for this page's r.
 
         Returns (stable_table, c2_table), each {(s, f): [(target_idx,
-        source_idx, value)]}, or None when the CSVs are absent or hold no rows
-        for this r (fall back to the txt tables; r = 6..8 always land there)."""
+        source_idx, value)]}, or None when the CSVs are absent or hold no
+        rows for this r (the tables cover r = 2..5; for r = 6..8 the
+        zero-fill in _check_stable_csv takes over)."""
         if hasattr(self, "_known_csv"):
             return self._known_csv
         import csv as csv_mod
@@ -832,79 +677,6 @@ class DifferentialsPage(key_defaultdict):
 
     # d_r vanishes for r >= 6 through this total degree (stable range and C2).
     HIGH_R_TRIVIAL_TOT = C2_DATA_COMPLETE_TOT
-
-    def ratio_solved(self):
-        """
-        Calculate the percentage of nontrivial differentials that are solved.
-
-        Returns:
-            float: Percentage of forced differentials among nontrivial ones
-        """
-        nontrivial_count = 0
-        forced_count = 0
-
-        for bidegree in self.keys():
-            diff_space = self[bidegree]
-
-            # Skip trivial spaces (zero rows or columns)
-            if diff_space.nrows == 0 or diff_space.ncols == 0:
-                continue
-
-            nontrivial_count += 1
-
-            # Count if this differential is forced (solved)
-            if diff_space.is_forced:
-                forced_count += 1
-
-        if nontrivial_count == 0:
-            return 0.0
-
-        return (forced_count / nontrivial_count) * 100.0
-
-    def count_proof_reasons(self, max_n=None):
-        """
-        Count tridegrees by their proof reasons for length 1 proofs.
-
-        Args:
-            max_n: Maximum n value to consider (to match write_proofs filtering)
-
-        Returns:
-            dict: Counts of different proof types
-        """
-        stable_count = 0
-        c2_count = 0
-        other_count = 0
-
-        for bidegree in self.keys():
-            n, s, f = bidegree
-            diff_space = self[bidegree]
-
-            # Skip if n exceeds max limit (to match write_proofs filtering)
-            if max_n is not None and n > max_n:
-                continue
-
-            # Skip trivial spaces (zero rows or columns)
-            if diff_space.nrows == 0 or diff_space.ncols == 0:
-                continue
-
-            # Check if this has a length 1 proof (exactly one step in why list)
-            if len(diff_space.why) == 1:
-                why_entry = diff_space.why[0]
-                label = why_entry.get("label", "")
-
-                if label == "stable":
-                    stable_count += 1
-                elif label == "C2":
-                    c2_count += 1
-                else:
-                    other_count += 1
-
-        return {
-            'stable': stable_count,
-            'c2': c2_count,
-            'other': other_count,
-            'total_length_1': stable_count + c2_count + other_count
-        }
 
     def to_json(self, **kwargs):
         """Serialize the page to a JSON-compatible dict keyed by bidegree string, plus the page number r"""

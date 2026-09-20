@@ -129,10 +129,9 @@ class Element:
         self.hash = 0
         self.vect = vect
 
-        if vect.is_zero():
-            self.dim = len(vect) if len(vect) > 0 else 1
-        else:
-            self.dim = len(vect)
+        # dim is the ambient basis size used by decompose/make_basis_vector;
+        # a length-0 vector still gets dim 1 (the zero of a rank-0 spot).
+        self.dim = max(len(vect), 1)
 
         self.spectral_sequence = spectral_sequence
         self.r = r
@@ -146,8 +145,8 @@ class Element:
             return self
         else:
             assert (
-                self.s == other.s and self.f == other.f
-            ), "Trying to sum elements in different bidegrees"
+                self.n == other.n and self.s == other.s and self.f == other.f
+            ), "Trying to sum elements in different tridegrees"
             return Element(self.n, self.s, self.f, self.vect + other.vect, spectral_sequence=self.spectral_sequence)
 
     def __contains__(self, other):
@@ -213,16 +212,13 @@ class Element:
         """Return True if the underlying coefficient vector is zero"""
         return self.vect.is_zero()
 
-    def decompose(self, mat=None):
-        """Yield the basis monomials (one per nonzero coordinate) whose sum is this element; the mat argument is not implemented"""
-        if mat is None:
-            return (
-                Element(self.n, self.s, self.f, make_basis_vector(self.dim, pos))
-                for pos, i in enumerate(self.vect)
-                if i == 1
-            )
-        else:
-            raise NotImplementedError
+    def decompose(self):
+        """Yield the basis monomials (one per nonzero coordinate) whose sum is this element"""
+        return (
+            Element(self.n, self.s, self.f, make_basis_vector(self.dim, pos))
+            for pos, i in enumerate(self.vect)
+            if i == 1
+        )
 
     def multiply(self, other, products):
         """Multiply by another element using the given product table, summing products of basis monomials; results are cached, and products beyond max_s/max_f are zero"""
@@ -236,12 +232,6 @@ class Element:
         prod_n = self.n
         prod_s = self.s + other.s
         prod_f = self.f + other.f
-        # Zero is easy to multiply
-        if self.dim == 0 or other.dim == 0:
-            zero_prod = self.spectral_sequence.zero(prod_n, prod_s, prod_f)
-            products[self, other] = zero_prod
-            products[other, self] = zero_prod
-            return zero_prod
         # The fundamental class is the composition unit (1 ∘ E^0 y = y and
         # x ∘ E^f(ι) = x); the relations table never records unit products
         # (the rust enumeration skips empty-word factors), so resolve them
@@ -313,40 +303,6 @@ class Element:
         """Apply the E map to this element."""
         return self.apply_map('E')
     
-    def indecomposable(self):
-        """Returns True if this element cannot be written as a linear combination
-        of elements that appear in the multiplication table outputs"""
-
-        if self.spectral_sequence is None:
-            raise ValueError("Element must have spectral_sequence reference for indecomposable check")
-
-        if self == self.spectral_sequence.zero(self.n, self.s, self.f):
-            return False  # Zero is always decomposable
-
-        table = self.spectral_sequence.products
-        
-        # Collect all multiplication outputs in the same tridegree as self
-        same_tridegree_products = []
-        for product in table.values():
-            if product.n == self.n and product.s == self.s and product.f == self.f:
-                same_tridegree_products.append(product)
-        
-        if not same_tridegree_products:
-            return True  # No products in this tridegree means indecomposable
-        
-        # Check if self can be written as a linear combination of these products
-        # Create a vector space spanned by the products
-        try:
-            from sage.modules.free_module import span
-            product_vectors = [p.vect for p in same_tridegree_products]
-            product_span = span(product_vectors)
-
-            # Check if self.vect is in the span
-            return self.vect not in product_span
-        except (ValueError, TypeError, AttributeError):
-            # Fallback if span computation fails (empty list, incompatible vectors, etc.)
-            return self not in same_tridegree_products
-        
     def H(self):
         """Apply the H map to this element."""
         return self.apply_map('H')
@@ -412,12 +368,6 @@ class Map:
 
         # Compute target tridegree
         target_n, target_s, target_f = self.target_degree(element.n, element.s, element.f)
-
-        # Zero is easy to handle
-        if element.dim == 0:
-            zero_result = element.spectral_sequence.zero(target_n, target_s, target_f)
-            self.table[element] = zero_result
-            return zero_result
 
         # Check if the result is outside the boundaries
         max_n = element.spectral_sequence.max_n
@@ -888,31 +838,6 @@ class AffineMatrixSubspace:
         """Restrict this subspace to the single matrix `mat`, recording a proof reason"""
         self.restrict(AffineSubspace(vectorify(mat), self.ambient.span([])), counter)
 
-    def set_element_differential(self, element, target_differential, element_index, counter):
-        """
-        Force the differential of a specific element to be a specific value.
-        """
-        # Replace the specified row with the target differential
-        current_matrix = self.as_matrix(self.v)
-        new_matrix = matrix(current_matrix)
-        new_matrix[element_index, :] = target_differential.vect.list() + [0] * (self.ncols - len(target_differential.vect))
-        
-        new_offset = vectorify(new_matrix)
-
-        # Keep only basis vectors whose row at element_index is zero
-        filtered_basis = [
-            b for b in self.subspace.linear_part().basis()
-            if all(self.as_matrix(b)[element_index, j] == 0 for j in range(self.ncols))
-        ]
-
-        new_linear_part = self.ambient.span(filtered_basis, base_ring=GF(2))
-        new_subspace = AffineSubspace(new_offset, new_linear_part)
-
-        self.v = new_offset
-        self.subspace = new_subspace
-        self.is_forced = new_subspace.dimension() == 0
-        self.add_reason(counter, 0, 0, 0, 0, 0, 0, "set_element_differential")
-
     def set_subspace(self, v, span):
         """Set the affine subspace to the coset v + span, reducing v against the span so the stored offset is the canonical coset representative"""
         # Reduce v against the span's echelon basis to get the canonical
@@ -1184,7 +1109,6 @@ def relations_complete_through(relations_file):
 def stable_path(name):
     """Resolve a filename under the stable/ dir (run from python/), matching
     check_stable's convention."""
-    import os
     return os.path.join("stable", name) if os.path.isdir("stable") else name
 
 
@@ -1195,7 +1119,6 @@ def load_entry_list(path):
     Contradiction3.txt / Spurious4.txt (hand-proved differentials layered on
     top of the stable inputs; see stable/README.md for the input-data
     conventions)."""
-    import os
     entries = []
     if not os.path.exists(path):
         return entries
@@ -1230,7 +1153,6 @@ def load_spectral_sequence(prefix, r, tot, build_pairs=True):
 
     # File paths: a directory holds E2-prefixed files (the directory name is
     # the distinguishing factor); otherwise prefix is the flat file stem.
-    import os
     if os.path.isdir(prefix):
         stem = f"{prefix}/E2"
     else:

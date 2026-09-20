@@ -2,9 +2,10 @@
 
 `resolve_spurious_uncertainties(ss, ...)` closes still-open differential
 values by product and map reasoning that the Leibniz/naturality engines in
-ehp_adams.py do not attempt. It is the self-contained replacement for the
-hand-curated Spurious{r}.txt outside data: the published pipeline calls it as
-a page step instead of imposing those lists.
+ehp_adams.py do not attempt. It settles spurious ZERO differentials
+automatically; the nonzero ones it cannot yet derive remain hand-supplied
+in stable/Spurious4.txt, which run.py imposes before compute() on E4 (see
+stable/README.md).
 
 The function takes the SpectralSequence page object (`ss`) and reads only its
 public surface -- ss.d, ss.page, ss.maps, ss.d_source/d_target,
@@ -103,9 +104,7 @@ def resolve_spurious_uncertainties(ss, multiplier_bidegrees=None,
             incoming differential contains it in its row space.  The
             union of candidate row spaces is enumerated ONCE per source
             tridegree (post-compute spaces are almost all dimension 0-3)
-            and shared by every image landing there -- same predicate as
-            DifferentialsPage.certainly_not_boundary, without a flats
-            computation per image."""
+            and shared by every image landing there."""
             src = ss.d_source(img.n, img.s, img.f)
             if src not in cnb_cache:
                 diff = ss.d[src]

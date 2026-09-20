@@ -1,5 +1,3 @@
-#!/usr/bin/ipython3 -i
-
 """
 Uncertainty management for spectral sequences.
 
@@ -17,7 +15,6 @@ Classes:
 
 Key Concepts:
 - Uncertain tridegree: A tridegree (n,s,f) where some element's differential is not forced
-- Simple uncertainty: One r-value, one element, zero offset, one uncertainty generator
 - Uncertainty propagation: When turning pages, uncertain elements map through quotient
 - Differential direction: d_q maps (n, s, f) to (n, s-1, f+q), so the d_q-source of
   (n, s, f) is (n, s+1, f-q); the "_plus" checks walk this arithmetic to find
@@ -39,10 +36,9 @@ Data Structure:
 
 Main Operations:
 - is_tridegree_unknown(): Check if any differential at (n,s,f) is uncertain
-- element_is_uncertain_plus(): Check if element appears in uncertainty data
+- degree_is_uncertain_plus(): Check if (n,s,f) is uncertain or hit by one
 - update_uncertainties_from_differentials(): Extract uncertainties from d
 - propagate_uncertainties_forward(): Track uncertainties through page turns
-- save_uncertainties() / load_uncertainties(): Persistence
 
 Uncertainty tracking enables:
 - Partial computation when constraints are insufficient
@@ -50,8 +46,6 @@ Uncertainty tracking enables:
 - Tracking which uncertainties persist to higher pages
 """
 
-import json
-import ast
 from lib import Element
 
 
@@ -71,145 +65,6 @@ class UncertaintyManager:
         for r_value, r_data in self.uncertain[n, s, f].items():
             if 'elements' in r_data and len(r_data['elements']) > 0:
                 return True
-
-        return False
-
-    def are_any_tridegrees_unknown(self, tridegrees):
-        """Check if any tridegrees in a list are unknown"""
-        return any(self.is_tridegree_unknown(*td) for td in tridegrees)
-
-    def remove_uncertain_tridegree(self, tridegree):
-        """
-        Temporarily remove a tridegree from self.uncertain.
-
-        Args:
-            tridegree: Tuple (n, s, f) to remove
-
-        Returns:
-            The removed data (dict) or None if tridegree doesn't exist
-        """
-        if tridegree in self.uncertain:
-            return self.uncertain.pop(tridegree)
-        return None
-
-    def restore_uncertain_tridegree(self, tridegree, data):
-        """
-        Restore a previously removed tridegree to self.uncertain.
-
-        Args:
-            tridegree: Tuple (n, s, f) to restore
-            data: The data that was returned from remove_uncertain_tridegree
-        """
-        if data is not None:
-            self.uncertain[tridegree] = data
-
-    def has_simple_uncertainty(self, n, s, f):
-        """Check if tridegree has simple uncertainty: one r-value, one element, offset zero, uncertainty length 1"""
-        if (n, s, f) not in self.uncertain or len(self.uncertain[n, s, f]) != 1:
-            return False
-        r_data = next(iter(self.uncertain[n, s, f].values()))
-        elements = r_data.get('elements', {})
-        if len(elements) != 1:
-            return False
-        element_data = next(iter(elements.values()))
-        return (element_data.get('offset', None) is not None and
-                element_data['offset'].is_zero() and
-                len(element_data.get('uncertainty', [])) == 1)
-
-    def get_simple_uncertainties_for_r(self, target_r):
-        """Find all tridegrees with simple uncertainties for a specific r-value"""
-        simple_uncertainties = []
-        for tridegree in self.uncertain:
-            if self.has_simple_uncertainty(*tridegree):
-                r_data_dict = self.uncertain[tridegree]
-                r_value = next(iter(r_data_dict.keys()))
-                if r_value == target_r:
-                    r_data = r_data_dict[r_value]
-                    element, element_data = next(iter(r_data['elements'].items()))
-                    uncertainty_element = element_data['uncertainty'][0]  # Length 1 guaranteed by has_simple_uncertainty
-                    simple_uncertainties.append((tridegree, element, uncertainty_element))
-        # Sort by n, s, then f
-        simple_uncertainties.sort(key=lambda x: (x[1].n, x[1].s, x[1].f))
-        return simple_uncertainties
-
-    def get_all_uncertainties_for_r(self, target_r, max_t):
-        """Find all tridegrees with uncertainties for a specific r-value (not just simple ones)
-
-        Args:
-            target_r: The r-value to get uncertainties for
-            max_t: Total-degree cap; only elements with
-                element.s + element.f + target_r < max_t - 2 are included
-        """
-        all_uncertainties = []
-        for tridegree in self.uncertain:
-            r_data_dict = self.uncertain[tridegree]
-            if target_r in r_data_dict:
-                r_data = r_data_dict[target_r]
-                for element, element_data in r_data.get('elements', {}).items():
-                    # Only include elements where s + f + r < max_t - 2
-                    if element.s + element.f + target_r < max_t - 2:
-                        all_uncertainties.append((tridegree, element, element_data))
-        # Sort by n, s, then f of the element
-        all_uncertainties.sort(key=lambda x: (x[1].n, x[1].s, x[1].f))
-        return all_uncertainties
-
-    def get_all_uncertainties(self, differentials_page):
-        """Find all tridegrees with uncertainties for every r-value from 2 up to,
-        but not including, the current page r
-
-        Args:
-            differentials_page: The differentials page object containing the current r value
-        """
-        all_uncertainties = []
-        for target_r in range(2, differentials_page.r):
-            if not hasattr(differentials_page, 'spectral_sequence') or not differentials_page.spectral_sequence:
-                raise ValueError("DifferentialsPage must have spectral_sequence reference to get uncertainties")
-            uncertainties_for_r = self.get_all_uncertainties_for_r(target_r, differentials_page.spectral_sequence.max_t)
-            all_uncertainties.extend(uncertainties_for_r)
-        return all_uncertainties
-
-    def is_element_uncertain(self, element):
-        """Check if a specific element has uncertain differential"""
-        n, s, f = element.n, element.s, element.f
-        if (n, s, f) not in self.uncertain:
-            return False
-
-        # Check if element is uncertain in any r-value
-        for r_value, r_data in self.uncertain[n, s, f].items():
-            if element in r_data.get('elements', {}):
-                return True
-        return False
-
-    def element_is_uncertain_plus(self, element, r):
-        """Check if element x is in uncertain, and also if element x is in offset or
-        uncertainty for any element in uncertain[x_n, x_s + 1, x_f - q] for all q with 2 <= q < r
-
-        Args:
-            element: The element to check
-            r: The current r-value from the differentials page
-        """
-        x_n, x_s, x_f = element.n, element.s, element.f
-
-        # Check if element is directly in uncertain for any r-value
-        if self.is_element_uncertain(element):
-            return True
-
-        # Check for each q with 2 <= q < r
-        for q in range(2, r):
-            target_tridegree = (x_n, x_s + 1, x_f - q)
-            if target_tridegree in self.uncertain:
-                # Check all r-values for this tridegree
-                for r_value, r_data in self.uncertain[target_tridegree].items():
-                    if 'elements' in r_data:
-                        # Check all elements in this uncertain tridegree
-                        for other_element, element_data in r_data['elements'].items():
-                            # Check if element x is in the offset or uncertainty list
-                            if 'offset' in element_data and element_data['offset'] == element:
-                                return True
-                            if 'uncertainty' in element_data:
-                                for unc_element in element_data['uncertainty']:
-                                    if unc_element == element:
-                                        return True
 
         return False
 
@@ -270,81 +125,6 @@ class UncertaintyManager:
             return self.uncertain[n, s, f][lowest_r]['elements'][element]['uncertainty']
 
         return []
-
-    def add_unknown_tridegree(self, n, s, f, r_value=None, differentials_page=None):
-        """Add a tridegree to the unknown set
-
-        Args:
-            n, s, f: Tridegree coordinates
-            r_value: The r-value for this uncertainty (if None, uses differentials_page.r or 2)
-            differentials_page: Optional differentials page to get r_value from
-        """
-        if r_value is None:
-            r_value = differentials_page.r if differentials_page else 2
-
-        if (n, s, f) not in self.uncertain:
-            self.uncertain[n, s, f] = {}
-
-        if r_value not in self.uncertain[n, s, f]:
-            self.uncertain[n, s, f][r_value] = {'elements': {}}
-
-    def save_uncertainties(self, filename):
-        """Save unknown tridegrees to file"""
-        with open(filename, 'w') as f:
-            # Convert tuple keys and Element objects to strings for JSON serialization
-            uncertain_serialized = {}
-            for tridegree, r_data_dict in self.uncertain.items():
-                serialized_r_data = {}
-                for r_value, uncertain_data in r_data_dict.items():
-                    serialized_elements = {}
-                    for element, element_data in uncertain_data.get('elements', {}).items():
-                        serialized_elements[str(element)] = {
-                            'uncertainty': [str(u) for u in element_data['uncertainty']],
-                            'offset': str(element_data['offset'])
-                        }
-                    serialized_r_data[str(r_value)] = {
-                        'elements': serialized_elements
-                    }
-                uncertain_serialized[str(tridegree)] = serialized_r_data
-            json.dump(uncertain_serialized, f)
-
-    def load_uncertainties(self, filename, spectral_sequence):
-        """Load unknown tridegrees from file
-
-        Args:
-            filename: Path to the uncertainties file
-            spectral_sequence: The spectral sequence object (needed for Element.from_str)
-
-        Returns:
-            True if file loaded successfully, False if file not found
-        """
-        try:
-            with open(filename, 'r') as f:
-                uncertain_serialized = json.load(f)
-
-            # Convert string keys back to tuples and strings back to Elements
-            self.uncertain = {}
-            for tridegree_str, r_data_dict in uncertain_serialized.items():
-                tridegree = ast.literal_eval(tridegree_str)
-                self.uncertain[tridegree] = {}
-
-                for r_value_str, uncertain_data in r_data_dict.items():
-                    r_value = int(r_value_str)
-                    elements_dict = {}
-                    for element_str, element_data in uncertain_data.get('elements', {}).items():
-                        element = Element.from_str(element_str, spectral_sequence=spectral_sequence)
-                        uncertainty_elements = [Element.from_str(u, spectral_sequence=spectral_sequence) for u in element_data['uncertainty']]
-                        offset_element = Element.from_str(element_data['offset'], spectral_sequence=spectral_sequence)
-                        elements_dict[element] = {
-                            'uncertainty': uncertainty_elements,
-                            'offset': offset_element
-                        }
-                    self.uncertain[tridegree][r_value] = {
-                        'elements': elements_dict
-                    }
-            return True
-        except FileNotFoundError:
-            return False
 
     def update_uncertainties_from_differentials(self, spectral_sequence):
         """Update unknown tridegrees based on current differentials page
@@ -466,50 +246,4 @@ class UncertaintyManager:
                     self.uncertain[n, s, f][r_value]['elements'][e3_element] = {
                         'uncertainty': uncertainty_e3,
                         'offset': offset_e3
-                    }
-
-    def transform_uncertainties(self, old_uncertain, make_new_element, spectral_sequence):
-        """Transform all Element references in an uncertainty dict through a change-of-basis.
-
-        Args:
-            old_uncertain: The uncertain dictionary to transform (from previous page's uncertainty_manager)
-            make_new_element: Callable (td, old_vect) -> Element that converts old-coordinates
-                             vectors to new-page Elements. Should return zero element if vector is zero.
-            spectral_sequence: The new spectral sequence page (for creating zero elements)
-        """
-        for (n, s, f), r_data_dict in old_uncertain.items():
-            for r_value, uncertain_data in r_data_dict.items():
-                for element, element_data in uncertain_data.get('elements', {}).items():
-                    # Transform the element itself
-                    elem_td = (element.n, element.s, element.f)
-                    new_elem = make_new_element(elem_td, element.vect)
-                    if new_elem.is_zero():
-                        continue
-
-                    # Transform the offset
-                    offset = element_data['offset']
-                    if offset.is_zero():
-                        new_offset = spectral_sequence.zero(offset.n, offset.s, offset.f)
-                    else:
-                        offset_td = (offset.n, offset.s, offset.f)
-                        new_offset = make_new_element(offset_td, offset.vect)
-
-                    # Transform uncertainty generators, dropping any that become zero
-                    new_uncertainty = []
-                    for unc in element_data['uncertainty']:
-                        unc_td = (unc.n, unc.s, unc.f)
-                        new_unc = make_new_element(unc_td, unc.vect)
-                        if not new_unc.is_zero():
-                            new_uncertainty.append(new_unc)
-
-                    # Initialize nested structure if needed
-                    if (n, s, f) not in self.uncertain:
-                        self.uncertain[n, s, f] = {}
-                    if r_value not in self.uncertain[n, s, f]:
-                        self.uncertain[n, s, f][r_value] = {'elements': {}}
-
-                    # Store with preserved r-value
-                    self.uncertain[n, s, f][r_value]['elements'][new_elem] = {
-                        'offset': new_offset,
-                        'uncertainty': new_uncertainty
                     }
