@@ -16,3 +16,7 @@ preferred-citation:
     - family-names: "Baer"
       given-names: "Jake Francis"
   year: 2026
+  identifiers:
+    - type: other
+      value: "arXiv:2609.23984"
+  url: "https://arxiv.org/abs/2609.23984"

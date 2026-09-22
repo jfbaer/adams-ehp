@@ -102,15 +102,17 @@ the shipped dataset, give each build its own `--output-dir`.)
 ## Citing this work
 
 Machine-readable citation metadata is in [`CITATION.cff`](CITATION.cff). The
-preprint is not yet posted; this BibTeX entry will be completed with the
-arXiv ID when it is:
+preprint is [arXiv:2609.23984](https://arxiv.org/abs/2609.23984):
 
 ```bibtex
 @misc{baer-adams-ehp,
-  author = {Baer, Jake Francis},
-  title  = {Automated proofs of unstable {Adams} differentials},
-  year   = {2026},
-  note   = {arXiv ID pending. Code and data: \url{https://github.com/jfbaer/adams-ehp}}
+  author        = {Baer, Jake Francis},
+  title         = {Automated proofs of unstable {Adams} differentials},
+  year          = {2026},
+  eprint        = {2609.23984},
+  archiveprefix = {arXiv},
+  primaryclass  = {math.AT},
+  note          = {Code and data: \url{https://github.com/jfbaer/adams-ehp}}
 }
 ```
 
