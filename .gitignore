@@ -1,0 +1,113 @@
+# Working notes — not for publication
+TODO.md
+checklist.md
+REFACTOR_SPEC.md
+AUDIT-*.md
+charts/make_bounds_true.py
+
+# macOS
+.DS_Store
+
+# Python bytecode
+__pycache__/
+
+# Rust
+rust/target/
+rust/*.log
+
+# Rust generator outputs (written to --out-dir, default the invocation dir)
+rust/E2_*.csv
+rust/E2_names.json
+rust/tags.txt
+rust/LTO.txt
+
+# Curtis on-disk database (v4: bincode .idx index + two .store poly stores),
+# wherever it is written (--cache-dir)
+curtis_deg*_v4.idx
+cocycles_deg*_v4.store
+tags_deg*_v4.store
+rust/lam*/
+rust/c2_deg*/
+db80/
+
+# Local generation runs (reproduce_c2.sh): per-degree database and output dirs
+rust/db*/
+rust/out*/
+rust/go.txt
+
+# Private incremental-pipeline driver (not part of the public release),
+# its databases (cocycles_run_* naming escapes the deg* patterns above),
+# and its outputs
+rust/pipeline/
+rust/pdb*/
+rust/pout*/
+
+# Private run tooling: HPC job scripts, the local reproduction driver, and
+# the run-comparison checker (the READMEs inline the equivalent commands)
+rust/hpc/
+rust/reproduce_c2.sh
+python/compare_e2.py
+
+# Python pipeline outputs
+python/__pycache__/
+python/charts/
+python/data/E3/
+python/data/E4/
+python/data/E5/
+python/data/E6/
+python/data/E7/
+python/data/E8/
+python/data/E9/
+python/charts76/
+python/data/E2/d2
+python/data/E2/d2_unknown.csv
+python/debug_graphs/
+python/why_*.dot
+python/why_*.pdf
+# Generated why-graph browser content (not shipped — the tracked index.html
+# regenerates it locally via make_why_graphs.py); keep only index.html
+python/why_graphs/*
+!python/why_graphs/index.html
+python/*.log
+
+# Interactive chart generator outputs (charts/ source is tracked); the *.csv
+# pattern catches chart CSVs written by mistakenly running run.py from the
+# repo root instead of python/
+charts/interactive_*/
+charts/_site/
+charts/poetry.lock
+charts/.venv/
+charts/*.csv
+charts/*.zip
+
+# Scratch output of local pipeline runs (regenerated E2 + Curtis cache;
+# written by ./lambda and the README quick-start commands)
+build/
+
+# Paper: the LaTeX source is tracked, but build artifacts are not
+paper/arxiv-submission.tar.gz
+paper/*.aux
+paper/*.bbl
+paper/*.bcf
+paper/*.bcf-SAVE-ERROR
+paper/*.blg
+paper/*.fdb_latexmk
+paper/*.fls
+paper/*.log
+paper/*.out
+paper/*.pdf
+!paper/lambda.pdf
+paper/*.run.xml
+paper/*.synctex.gz
+paper/*.toc
+paper/_minted-*/
+paper/.claude/
+paper/.DS_Store
+# development test suites stay in the private tree
+python/test_*.py
+
+# Audit working brief (not for publication)
+AUDIT.md
+
+# Untracked build artifacts (not for the tracked tree)
+paper/make_arxiv.sh

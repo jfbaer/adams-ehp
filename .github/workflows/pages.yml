@@ -1,0 +1,48 @@
+# Deploy the prebuilt interactive Adams charts to GitHub Pages.
+#
+# The site lives on the `site` branch: the full output of
+# charts/generate_charts.py --sidebyside (JSON intermediates excluded),
+# built locally from the charts/data CSVs. To publish a new chart set:
+#
+#     cd charts && poetry run python generate_charts.py --sidebyside \
+#         --output-dir /tmp/site && find /tmp/site -name '*.json' -delete
+#     # bundle the proof browser and repoint the click-through URL:
+#     #   copy python/why_graphs/{index.html,manifest.js,d*/[*.svg only]}
+#     #   to /tmp/site/why_graphs/, then in /tmp/site/*.html replace
+#     #   ../../python/why_graphs/index.html -> why_graphs/index.html
+#     # replace the site branch contents with /tmp/site, commit, push
+#     # (the push auto-deploys once Pages is enabled)
+#
+# One-time setup: repo Settings -> Pages -> Source: "GitHub Actions"
+# (requires the repository to be public).
+name: charts-to-pages
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [site]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: .
+      - id: deployment
+        uses: actions/deploy-pages@v4

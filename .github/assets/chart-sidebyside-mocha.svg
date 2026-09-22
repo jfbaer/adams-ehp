@@ -1,0 +1,998 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 2690 1274" width="960" font-family="Georgia, serif">
+<style>
+    .st{stroke:#cdd6f4;stroke-width:3;fill:none}
+    .d2{stroke:#94e2d5;stroke-width:3;fill:none}
+    .emph{stroke-width:3.6}
+    .deemph{opacity:0.13}
+    .nd{fill:#cdd6f4}
+    .g{stroke:#313244;stroke-width:1.1}
+    .ttl{font:600 30px Georgia,serif;fill:#cdd6f4}
+    .ax{font:20px Georgia,serif;fill:#a6adc8}
+    .hmap{font:italic 30px Georgia,serif;fill:#a6adc8}
+</style>
+<defs><clipPath id="clip-mocha" clipPathUnits="userSpaceOnUse"><rect x="0" y="0" width="1200" height="1140"/></clipPath></defs>
+<rect width="2690" height="1274" fill="#181825"/>
+<text class="ttl" x="670" y="48" text-anchor="middle">E₂(S⁶)</text>
+<g transform="translate(70 74)" clip-path="url(#clip-mocha)">
+<line class="g" x1="0" y1="0" x2="0" y2="1140"/>
+<line class="g" x1="60" y1="0" x2="60" y2="1140"/>
+<line class="g" x1="120" y1="0" x2="120" y2="1140"/>
+<line class="g" x1="180" y1="0" x2="180" y2="1140"/>
+<line class="g" x1="240" y1="0" x2="240" y2="1140"/>
+<line class="g" x1="300" y1="0" x2="300" y2="1140"/>
+<line class="g" x1="360" y1="0" x2="360" y2="1140"/>
+<line class="g" x1="420" y1="0" x2="420" y2="1140"/>
+<line class="g" x1="480" y1="0" x2="480" y2="1140"/>
+<line class="g" x1="540" y1="0" x2="540" y2="1140"/>
+<line class="g" x1="600" y1="0" x2="600" y2="1140"/>
+<line class="g" x1="660" y1="0" x2="660" y2="1140"/>
+<line class="g" x1="720" y1="0" x2="720" y2="1140"/>
+<line class="g" x1="780" y1="0" x2="780" y2="1140"/>
+<line class="g" x1="840" y1="0" x2="840" y2="1140"/>
+<line class="g" x1="900" y1="0" x2="900" y2="1140"/>
+<line class="g" x1="960" y1="0" x2="960" y2="1140"/>
+<line class="g" x1="1020" y1="0" x2="1020" y2="1140"/>
+<line class="g" x1="1080" y1="0" x2="1080" y2="1140"/>
+<line class="g" x1="1140" y1="0" x2="1140" y2="1140"/>
+<line class="g" x1="1200" y1="0" x2="1200" y2="1140"/>
+<line class="g" x1="0" y1="0" x2="1200" y2="0"/>
+<line class="g" x1="0" y1="60" x2="1200" y2="60"/>
+<line class="g" x1="0" y1="120" x2="1200" y2="120"/>
+<line class="g" x1="0" y1="180" x2="1200" y2="180"/>
+<line class="g" x1="0" y1="240" x2="1200" y2="240"/>
+<line class="g" x1="0" y1="300" x2="1200" y2="300"/>
+<line class="g" x1="0" y1="360" x2="1200" y2="360"/>
+<line class="g" x1="0" y1="420" x2="1200" y2="420"/>
+<line class="g" x1="0" y1="480" x2="1200" y2="480"/>
+<line class="g" x1="0" y1="540" x2="1200" y2="540"/>
+<line class="g" x1="0" y1="600" x2="1200" y2="600"/>
+<line class="g" x1="0" y1="660" x2="1200" y2="660"/>
+<line class="g" x1="0" y1="720" x2="1200" y2="720"/>
+<line class="g" x1="0" y1="780" x2="1200" y2="780"/>
+<line class="g" x1="0" y1="840" x2="1200" y2="840"/>
+<line class="g" x1="0" y1="900" x2="1200" y2="900"/>
+<line class="g" x1="0" y1="960" x2="1200" y2="960"/>
+<line class="g" x1="0" y1="1020" x2="1200" y2="1020"/>
+<line class="g" x1="0" y1="1080" x2="1200" y2="1080"/>
+<g transform="matrix(1,0,0,-1,0,1140)">
+<line class="st deemph" x1="0" y1="300" x2="0" y2="360"/>
+<line class="st deemph" x1="0" y1="300" x2="180" y2="360"/>
+<line class="st deemph" x1="0" y1="360" x2="180" y2="420"/>
+<line class="st deemph" x1="60" y1="300" x2="123" y2="360"/>
+<line class="st emph" x1="180" y1="240" x2="237" y2="300"/>
+<line class="st deemph" x1="60" y1="420" x2="60" y2="480"/>
+<line class="st emph" x1="60" y1="420" x2="120" y2="480"/>
+<line class="st deemph" x1="60" y1="420" x2="240" y2="480"/>
+<line class="st emph" x1="117" y1="360" x2="117" y2="420"/>
+<line class="st emph" x1="117" y1="360" x2="300" y2="420"/>
+<line class="st deemph" x1="123" y1="360" x2="180" y2="420"/>
+<line class="st deemph" x1="180" y1="300" x2="180" y2="360"/>
+<line class="st deemph" x1="180" y1="300" x2="363" y2="360"/>
+<line class="st deemph" x1="240" y1="240" x2="243" y2="300"/>
+<line class="st deemph" x1="240" y1="240" x2="420" y2="300"/>
+<line class="d2 deemph" x1="240" y1="240" x2="180" y2="360"/>
+<line class="st emph" x1="300" y1="180" x2="300" y2="240"/>
+<line class="st deemph" x1="300" y1="180" x2="480" y2="240"/>
+<line class="st deemph" x1="60" y1="480" x2="240" y2="540"/>
+<line class="st emph" x1="117" y1="420" x2="120" y2="480"/>
+<line class="st deemph" x1="117" y1="420" x2="300" y2="480"/>
+<line class="st deemph" x1="123" y1="420" x2="180" y2="480"/>
+<line class="st deemph" x1="180" y1="360" x2="180" y2="420"/>
+<line class="d2 deemph" x1="243" y1="300" x2="180" y2="420"/>
+<line class="st deemph" x1="180" y1="480" x2="240" y2="540"/>
+<line class="st deemph" x1="240" y1="420" x2="240" y2="480"/>
+<line class="st deemph" x1="240" y1="420" x2="300" y2="480"/>
+<line class="st deemph" x1="240" y1="420" x2="420" y2="480"/>
+<line class="st emph" x1="300" y1="360" x2="300" y2="420"/>
+<line class="st emph" x1="300" y1="360" x2="477" y2="420"/>
+<line class="st deemph" x1="360" y1="300" x2="363" y2="360"/>
+<line class="st deemph" x1="360" y1="300" x2="546" y2="360"/>
+<line class="st deemph" x1="180" y1="540" x2="240" y2="600"/>
+<line class="st deemph" x1="240" y1="480" x2="240" y2="540"/>
+<line class="st deemph" x1="300" y1="420" x2="300" y2="480"/>
+<line class="st emph" x1="300" y1="420" x2="480" y2="480"/>
+<line class="st emph" x1="357" y1="360" x2="360" y2="420"/>
+<line class="st emph" x1="357" y1="360" x2="540" y2="420"/>
+<line class="st deemph" x1="480" y1="240" x2="663" y2="300"/>
+<line class="st emph" x1="360" y1="420" x2="360" y2="480"/>
+<line class="st emph" x1="480" y1="300" x2="477" y2="360"/>
+<line class="st deemph" x1="480" y1="300" x2="483" y2="360"/>
+<line class="st emph" x1="480" y1="300" x2="534" y2="360"/>
+<line class="st emph" x1="480" y1="300" x2="654" y2="360"/>
+<line class="st deemph" x1="480" y1="300" x2="660" y2="360"/>
+<line class="st deemph" x1="480" y1="300" x2="666" y2="360"/>
+<line class="d2 emph" x1="480" y1="300" x2="420" y2="420"/>
+<line class="st emph" x1="537" y1="240" x2="531" y2="300"/>
+<line class="st emph" x1="537" y1="240" x2="597" y2="300"/>
+<line class="st deemph" x1="537" y1="240" x2="717" y2="300"/>
+<line class="st deemph" x1="543" y1="240" x2="603" y2="300"/>
+<line class="st deemph" x1="543" y1="240" x2="717" y2="300"/>
+<line class="st deemph" x1="543" y1="240" x2="723" y2="300"/>
+<line class="st deemph" x1="240" y1="600" x2="300" y2="660"/>
+<line class="st deemph" x1="300" y1="540" x2="300" y2="600"/>
+<line class="st deemph" x1="300" y1="540" x2="360" y2="600"/>
+<line class="st deemph" x1="300" y1="540" x2="480" y2="600"/>
+<line class="st emph" x1="360" y1="480" x2="360" y2="540"/>
+<line class="st deemph" x1="420" y1="420" x2="420" y2="480"/>
+<line class="st emph" x1="420" y1="420" x2="480" y2="480"/>
+<line class="st deemph" x1="420" y1="420" x2="600" y2="480"/>
+<line class="st emph" x1="477" y1="360" x2="477" y2="420"/>
+<line class="st emph" x1="477" y1="360" x2="654" y2="420"/>
+<line class="st deemph" x1="483" y1="360" x2="483" y2="420"/>
+<line class="st deemph" x1="483" y1="360" x2="666" y2="420"/>
+<line class="d2 deemph" x1="483" y1="360" x2="420" y2="480"/>
+<line class="st emph" x1="537" y1="300" x2="534" y2="360"/>
+<line class="st emph" x1="537" y1="300" x2="540" y2="360"/>
+<line class="st emph" x1="537" y1="300" x2="600" y2="360"/>
+<line class="st emph" x1="537" y1="300" x2="714" y2="360"/>
+<line class="st emph" x1="543" y1="300" x2="534" y2="360"/>
+<line class="st emph" x1="543" y1="300" x2="720" y2="360"/>
+<line class="d2 emph" x1="543" y1="300" x2="477" y2="420"/>
+<line class="st deemph" x1="549" y1="300" x2="546" y2="360"/>
+<line class="st deemph" x1="549" y1="300" x2="726" y2="360"/>
+<line class="st deemph" x1="600" y1="240" x2="663" y2="300"/>
+<line class="st emph" x1="600" y1="240" x2="780" y2="300"/>
+<line class="st deemph" x1="300" y1="600" x2="300" y2="660"/>
+<line class="st deemph" x1="360" y1="540" x2="360" y2="600"/>
+<line class="st emph" x1="477" y1="420" x2="480" y2="480"/>
+<line class="d2 emph" x1="534" y1="360" x2="480" y2="480"/>
+<line class="st emph" x1="540" y1="360" x2="540" y2="420"/>
+<line class="st emph" x1="540" y1="360" x2="720" y2="420"/>
+<line class="d2 emph" x1="540" y1="360" x2="480" y2="480"/>
+<line class="st deemph" x1="603" y1="300" x2="660" y2="360"/>
+<line class="st deemph" x1="660" y1="240" x2="657" y2="300"/>
+<line class="st deemph" x1="660" y1="240" x2="717" y2="300"/>
+<line class="st deemph" x1="660" y1="240" x2="840" y2="300"/>
+<line class="st emph" x1="540" y1="420" x2="717" y2="480"/>
+<line class="st emph" x1="600" y1="360" x2="660" y2="420"/>
+<line class="st deemph" x1="657" y1="300" x2="660" y2="360"/>
+<line class="st deemph" x1="720" y1="240" x2="717" y2="300"/>
+<line class="st deemph" x1="480" y1="540" x2="480" y2="600"/>
+<line class="st deemph" x1="480" y1="540" x2="660" y2="600"/>
+<line class="st deemph" x1="600" y1="420" x2="600" y2="480"/>
+<line class="st deemph" x1="600" y1="420" x2="783" y2="480"/>
+<line class="st emph" x1="654" y1="360" x2="654" y2="420"/>
+<line class="st emph" x1="654" y1="360" x2="837" y2="420"/>
+<line class="st deemph" x1="666" y1="360" x2="666" y2="420"/>
+<line class="st deemph" x1="666" y1="360" x2="843" y2="420"/>
+<line class="d2 deemph" x1="666" y1="360" x2="600" y2="480"/>
+<line class="st deemph" x1="723" y1="300" x2="894" y2="360"/>
+<line class="st deemph" x1="480" y1="600" x2="660" y2="660"/>
+<line class="st deemph" x1="540" y1="540" x2="603" y2="600"/>
+<line class="st emph" x1="660" y1="420" x2="717" y2="480"/>
+<line class="st emph" x1="714" y1="360" x2="720" y2="420"/>
+<line class="st emph" x1="714" y1="360" x2="897" y2="420"/>
+<line class="st deemph" x1="720" y1="360" x2="903" y2="420"/>
+<line class="st deemph" x1="726" y1="360" x2="903" y2="420"/>
+<line class="st emph" x1="780" y1="300" x2="960" y2="360"/>
+<line class="st emph" x1="660" y1="480" x2="717" y2="540"/>
+<line class="st emph" x1="720" y1="420" x2="717" y2="480"/>
+<line class="st emph" x1="780" y1="360" x2="777" y2="420"/>
+<line class="d2 emph" x1="780" y1="360" x2="717" y2="480"/>
+<line class="st deemph" x1="840" y1="300" x2="1017" y2="360"/>
+<line class="st deemph" x1="540" y1="660" x2="540" y2="720"/>
+<line class="st emph" x1="540" y1="660" x2="600" y2="720"/>
+<line class="st deemph" x1="540" y1="660" x2="720" y2="720"/>
+<line class="st emph" x1="597" y1="600" x2="597" y2="660"/>
+<line class="st emph" x1="597" y1="600" x2="780" y2="660"/>
+<line class="st deemph" x1="603" y1="600" x2="660" y2="660"/>
+<line class="st deemph" x1="660" y1="540" x2="660" y2="600"/>
+<line class="st deemph" x1="660" y1="540" x2="843" y2="600"/>
+<line class="st deemph" x1="723" y1="480" x2="723" y2="540"/>
+<line class="st deemph" x1="723" y1="480" x2="900" y2="540"/>
+<line class="d2 deemph" x1="723" y1="480" x2="660" y2="600"/>
+<line class="st emph" x1="777" y1="420" x2="777" y2="480"/>
+<line class="st deemph" x1="783" y1="420" x2="783" y2="480"/>
+<line class="st deemph" x1="783" y1="420" x2="960" y2="480"/>
+<line class="st emph" x1="840" y1="360" x2="837" y2="420"/>
+<line class="st deemph" x1="840" y1="360" x2="903" y2="420"/>
+<line class="st emph" x1="840" y1="360" x2="1020" y2="420"/>
+<line class="st deemph" x1="540" y1="720" x2="720" y2="780"/>
+<line class="st emph" x1="597" y1="660" x2="600" y2="720"/>
+<line class="st deemph" x1="597" y1="660" x2="780" y2="720"/>
+<line class="st deemph" x1="603" y1="660" x2="660" y2="720"/>
+<line class="st deemph" x1="660" y1="600" x2="660" y2="660"/>
+<line class="d2 deemph" x1="723" y1="540" x2="660" y2="660"/>
+<line class="st deemph" x1="894" y1="360" x2="1083" y2="420"/>
+<line class="st emph" x1="900" y1="360" x2="897" y2="420"/>
+<line class="st emph" x1="900" y1="360" x2="1077" y2="420"/>
+<line class="st deemph" x1="906" y1="360" x2="903" y2="420"/>
+<line class="st deemph" x1="906" y1="360" x2="1083" y2="420"/>
+<line class="st emph" x1="957" y1="300" x2="960" y2="360"/>
+<line class="st deemph" x1="957" y1="300" x2="1017" y2="360"/>
+<line class="st deemph" x1="963" y1="300" x2="1023" y2="360"/>
+<line class="st deemph" x1="660" y1="720" x2="720" y2="780"/>
+<line class="st deemph" x1="720" y1="660" x2="720" y2="720"/>
+<line class="st deemph" x1="720" y1="660" x2="780" y2="720"/>
+<line class="st deemph" x1="720" y1="660" x2="900" y2="720"/>
+<line class="st emph" x1="780" y1="600" x2="780" y2="660"/>
+<line class="st emph" x1="780" y1="600" x2="957" y2="660"/>
+<line class="st deemph" x1="840" y1="540" x2="843" y2="600"/>
+<line class="st deemph" x1="840" y1="540" x2="1026" y2="600"/>
+<line class="st deemph" x1="900" y1="480" x2="900" y2="540"/>
+<line class="st deemph" x1="900" y1="480" x2="1083" y2="540"/>
+<line class="d2 deemph" x1="900" y1="480" x2="843" y2="600"/>
+<line class="st deemph" x1="960" y1="420" x2="960" y2="480"/>
+<line class="st deemph" x1="960" y1="420" x2="1140" y2="480"/>
+<line class="st deemph" x1="1023" y1="360" x2="1083" y2="420"/>
+<line class="st emph" x1="1077" y1="300" x2="1140" y2="360"/>
+<line class="st deemph" x1="1083" y1="300" x2="1080" y2="360"/>
+<line class="st deemph" x1="660" y1="780" x2="720" y2="840"/>
+<line class="st deemph" x1="720" y1="720" x2="720" y2="780"/>
+<line class="st deemph" x1="780" y1="660" x2="780" y2="720"/>
+<line class="st emph" x1="780" y1="660" x2="960" y2="720"/>
+<line class="st emph" x1="837" y1="600" x2="840" y2="660"/>
+<line class="st emph" x1="837" y1="600" x2="1020" y2="660"/>
+<line class="d2 deemph" x1="837" y1="600" x2="780" y2="720"/>
+<line class="st deemph" x1="1080" y1="360" x2="1083" y2="420"/>
+<line class="st emph" x1="840" y1="660" x2="840" y2="720"/>
+<line class="st emph" x1="960" y1="540" x2="957" y2="600"/>
+<line class="st deemph" x1="960" y1="540" x2="963" y2="600"/>
+<line class="st emph" x1="960" y1="540" x2="1014" y2="600"/>
+<line class="st emph" x1="960" y1="540" x2="1137" y2="600"/>
+<line class="st deemph" x1="960" y1="540" x2="1143" y2="600"/>
+<line class="d2 emph" x1="960" y1="540" x2="900" y2="660"/>
+<line class="st emph" x1="1017" y1="480" x2="1077" y2="540"/>
+<line class="st emph" x1="1023" y1="480" x2="1014" y2="540"/>
+<line class="st deemph" x1="1023" y1="480" x2="1026" y2="540"/>
+<line class="st deemph" x1="1023" y1="480" x2="1083" y2="540"/>
+<line class="st emph" x1="1023" y1="480" x2="1197" y2="540"/>
+<line class="st deemph" x1="1023" y1="480" x2="1203" y2="540"/>
+<line class="d2 emph" x1="1023" y1="480" x2="957" y2="600"/>
+<line class="st deemph" x1="720" y1="840" x2="780" y2="900"/>
+<line class="st deemph" x1="780" y1="780" x2="780" y2="840"/>
+<line class="st deemph" x1="780" y1="780" x2="840" y2="840"/>
+<line class="st deemph" x1="780" y1="780" x2="960" y2="840"/>
+<line class="st emph" x1="840" y1="720" x2="840" y2="780"/>
+<line class="st deemph" x1="900" y1="660" x2="900" y2="720"/>
+<line class="st emph" x1="900" y1="660" x2="960" y2="720"/>
+<line class="st deemph" x1="900" y1="660" x2="1080" y2="720"/>
+<line class="st emph" x1="957" y1="600" x2="957" y2="660"/>
+<line class="st emph" x1="957" y1="600" x2="1134" y2="660"/>
+<line class="st deemph" x1="963" y1="600" x2="963" y2="660"/>
+<line class="st deemph" x1="963" y1="600" x2="1146" y2="660"/>
+<line class="d2 deemph" x1="963" y1="600" x2="900" y2="720"/>
+<line class="st emph" x1="1014" y1="540" x2="1014" y2="600"/>
+<line class="st emph" x1="1014" y1="540" x2="1194" y2="600"/>
+<line class="d2 emph" x1="1014" y1="540" x2="957" y2="660"/>
+<line class="st emph" x1="1020" y1="540" x2="1014" y2="600"/>
+<line class="st emph" x1="1020" y1="540" x2="1020" y2="600"/>
+<line class="st emph" x1="1020" y1="540" x2="1080" y2="600"/>
+<line class="st emph" x1="1020" y1="540" x2="1194" y2="600"/>
+<line class="st emph" x1="1020" y1="540" x2="1200" y2="600"/>
+<line class="st deemph" x1="1026" y1="540" x2="1026" y2="600"/>
+<line class="st deemph" x1="1026" y1="540" x2="1206" y2="600"/>
+<line class="st deemph" x1="1080" y1="480" x2="1083" y2="540"/>
+<line class="st deemph" x1="1080" y1="480" x2="1263" y2="540"/>
+<line class="d2 deemph" x1="1080" y1="480" x2="1026" y2="600"/>
+<line class="st deemph" x1="1140" y1="420" x2="1140" y2="480"/>
+<line class="st emph" x1="1197" y1="360" x2="1200" y2="420"/>
+<line class="st deemph" x1="1203" y1="360" x2="1380" y2="420"/>
+<line class="st deemph" x1="780" y1="840" x2="780" y2="900"/>
+<line class="st deemph" x1="840" y1="780" x2="840" y2="840"/>
+<line class="st emph" x1="957" y1="660" x2="960" y2="720"/>
+<line class="d2 emph" x1="1014" y1="600" x2="960" y2="720"/>
+<line class="st emph" x1="1020" y1="600" x2="1020" y2="660"/>
+<line class="st emph" x1="1020" y1="600" x2="1200" y2="660"/>
+<line class="d2 emph" x1="1020" y1="600" x2="960" y2="720"/>
+<line class="st emph" x1="1020" y1="660" x2="1197" y2="720"/>
+<line class="st emph" x1="1080" y1="600" x2="1140" y2="660"/>
+<line class="st emph" x1="1140" y1="540" x2="1137" y2="600"/>
+<line class="st deemph" x1="1140" y1="540" x2="1143" y2="600"/>
+<line class="st emph" x1="1140" y1="540" x2="1194" y2="600"/>
+<line class="st emph" x1="1140" y1="540" x2="1317" y2="600"/>
+<line class="st deemph" x1="1140" y1="540" x2="1323" y2="600"/>
+<line class="d2 deemph" x1="1140" y1="540" x2="1080" y2="660"/>
+<line class="st emph" x1="1200" y1="480" x2="1197" y2="540"/>
+<line class="st deemph" x1="1200" y1="480" x2="1203" y2="540"/>
+<line class="st deemph" x1="1200" y1="480" x2="1263" y2="540"/>
+<line class="st emph" x1="1200" y1="480" x2="1374" y2="540"/>
+<line class="st deemph" x1="1200" y1="480" x2="1386" y2="540"/>
+<line class="d2 emph" x1="1200" y1="480" x2="1137" y2="600"/>
+<line class="st deemph" x1="960" y1="780" x2="960" y2="840"/>
+<line class="st deemph" x1="960" y1="780" x2="1140" y2="840"/>
+<line class="st deemph" x1="1080" y1="660" x2="1080" y2="720"/>
+<line class="st deemph" x1="1080" y1="660" x2="1263" y2="720"/>
+<line class="st emph" x1="1137" y1="600" x2="1134" y2="660"/>
+<line class="st emph" x1="1137" y1="600" x2="1317" y2="660"/>
+<line class="st deemph" x1="1143" y1="600" x2="1146" y2="660"/>
+<line class="st deemph" x1="1143" y1="600" x2="1323" y2="660"/>
+<line class="d2 deemph" x1="1143" y1="600" x2="1080" y2="720"/>
+<line class="st emph" x1="1197" y1="540" x2="1194" y2="600"/>
+<line class="st emph" x1="1197" y1="540" x2="1374" y2="600"/>
+<line class="d2 emph" x1="1197" y1="540" x2="1134" y2="660"/>
+<line class="st deemph" x1="1203" y1="540" x2="1206" y2="600"/>
+<line class="st deemph" x1="1203" y1="540" x2="1386" y2="600"/>
+<line class="st deemph" x1="960" y1="840" x2="1140" y2="900"/>
+<line class="st deemph" x1="1020" y1="780" x2="1083" y2="840"/>
+<line class="st emph" x1="1140" y1="660" x2="1197" y2="720"/>
+<line class="st emph" x1="1200" y1="600" x2="1200" y2="660"/>
+<line class="st emph" x1="1200" y1="600" x2="1380" y2="660"/>
+<line class="st emph" x1="1140" y1="720" x2="1197" y2="780"/>
+<line class="st emph" x1="1200" y1="660" x2="1197" y2="720"/>
+<line class="st deemph" x1="1020" y1="900" x2="1020" y2="960"/>
+<line class="st emph" x1="1020" y1="900" x2="1080" y2="960"/>
+<line class="st deemph" x1="1020" y1="900" x2="1200" y2="960"/>
+<line class="st emph" x1="1077" y1="840" x2="1077" y2="900"/>
+<line class="st emph" x1="1077" y1="840" x2="1260" y2="900"/>
+<line class="st deemph" x1="1083" y1="840" x2="1140" y2="900"/>
+<line class="st deemph" x1="1140" y1="780" x2="1140" y2="840"/>
+<line class="st deemph" x1="1140" y1="780" x2="1323" y2="840"/>
+<line class="st deemph" x1="1203" y1="720" x2="1203" y2="780"/>
+<line class="st deemph" x1="1203" y1="720" x2="1380" y2="780"/>
+<line class="d2 deemph" x1="1203" y1="720" x2="1140" y2="840"/>
+<line class="st deemph" x1="1020" y1="960" x2="1200" y2="1020"/>
+<line class="st emph" x1="1077" y1="900" x2="1080" y2="960"/>
+<line class="st deemph" x1="1077" y1="900" x2="1260" y2="960"/>
+<line class="st deemph" x1="1083" y1="900" x2="1140" y2="960"/>
+<line class="st deemph" x1="1140" y1="840" x2="1140" y2="900"/>
+<line class="d2 deemph" x1="1203" y1="780" x2="1140" y2="900"/>
+<line class="st deemph" x1="1140" y1="960" x2="1200" y2="1020"/>
+<line class="st deemph" x1="1200" y1="900" x2="1200" y2="960"/>
+<line class="st deemph" x1="1200" y1="900" x2="1260" y2="960"/>
+<line class="st deemph" x1="1200" y1="900" x2="1380" y2="960"/>
+<line class="st deemph" x1="1140" y1="1020" x2="1200" y2="1080"/>
+<line class="st deemph" x1="1200" y1="960" x2="1200" y2="1020"/>
+<line class="st deemph" x1="1200" y1="1080" x2="1260" y2="1140"/>
+<circle class="nd" cx="0" cy="240" r="6"/>
+<circle class="nd" cx="0" cy="300" r="6"/>
+<circle class="nd deemph" cx="0" cy="360" r="3.7"/>
+<circle class="nd deemph" cx="60" cy="300" r="3.7"/>
+<circle class="nd" cx="180" cy="240" r="6"/>
+<circle class="nd" cx="60" cy="420" r="6"/>
+<circle class="nd" cx="117" cy="360" r="6"/>
+<circle class="nd deemph" cx="123" cy="360" r="3.7"/>
+<circle class="nd deemph" cx="180" cy="300" r="3.7"/>
+<circle class="nd" cx="240" cy="240" r="6"/>
+<circle class="nd" cx="300" cy="180" r="6"/>
+<circle class="nd deemph" cx="60" cy="480" r="3.7"/>
+<circle class="nd" cx="117" cy="420" r="6"/>
+<circle class="nd deemph" cx="123" cy="420" r="3.7"/>
+<circle class="nd deemph" cx="180" cy="360" r="3.7"/>
+<circle class="nd" cx="237" cy="300" r="6"/>
+<circle class="nd deemph" cx="243" cy="300" r="3.7"/>
+<circle class="nd" cx="300" cy="240" r="6"/>
+<circle class="nd" cx="120" cy="480" r="6"/>
+<circle class="nd deemph" cx="180" cy="420" r="3.7"/>
+<circle class="nd deemph" cx="180" cy="480" r="3.7"/>
+<circle class="nd deemph" cx="240" cy="420" r="3.7"/>
+<circle class="nd" cx="300" cy="360" r="6"/>
+<circle class="nd deemph" cx="360" cy="300" r="3.7"/>
+<circle class="nd deemph" cx="180" cy="540" r="3.7"/>
+<circle class="nd deemph" cx="240" cy="480" r="3.7"/>
+<circle class="nd" cx="300" cy="420" r="6"/>
+<circle class="nd" cx="357" cy="360" r="6"/>
+<circle class="nd deemph" cx="363" cy="360" r="3.7"/>
+<circle class="nd deemph" cx="420" cy="300" r="3.7"/>
+<circle class="nd deemph" cx="480" cy="240" r="3.7"/>
+<circle class="nd deemph" cx="240" cy="540" r="3.7"/>
+<circle class="nd deemph" cx="300" cy="480" r="3.7"/>
+<circle class="nd" cx="360" cy="420" r="6"/>
+<circle class="nd" cx="480" cy="300" r="6"/>
+<circle class="nd" cx="537" cy="240" r="6"/>
+<circle class="nd deemph" cx="543" cy="240" r="3.7"/>
+<circle class="nd deemph" cx="240" cy="600" r="3.7"/>
+<circle class="nd deemph" cx="300" cy="540" r="3.7"/>
+<circle class="nd" cx="360" cy="480" r="6"/>
+<circle class="nd" cx="420" cy="420" r="6"/>
+<circle class="nd" cx="477" cy="360" r="6"/>
+<circle class="nd deemph" cx="483" cy="360" r="3.7"/>
+<circle class="nd" cx="531" cy="300" r="6"/>
+<circle class="nd" cx="537" cy="300" r="6"/>
+<circle class="nd" cx="543" cy="300" r="6"/>
+<circle class="nd deemph" cx="549" cy="300" r="3.7"/>
+<circle class="nd" cx="600" cy="240" r="6"/>
+<circle class="nd deemph" cx="300" cy="600" r="3.7"/>
+<circle class="nd" cx="360" cy="540" r="6"/>
+<circle class="nd deemph" cx="420" cy="480" r="3.7"/>
+<circle class="nd" cx="477" cy="420" r="6"/>
+<circle class="nd deemph" cx="483" cy="420" r="3.7"/>
+<circle class="nd" cx="534" cy="360" r="6"/>
+<circle class="nd" cx="540" cy="360" r="6"/>
+<circle class="nd deemph" cx="546" cy="360" r="3.7"/>
+<circle class="nd" cx="597" cy="300" r="6"/>
+<circle class="nd deemph" cx="603" cy="300" r="3.7"/>
+<circle class="nd deemph" cx="660" cy="240" r="3.7"/>
+<circle class="nd deemph" cx="300" cy="660" r="3.7"/>
+<circle class="nd deemph" cx="360" cy="600" r="3.7"/>
+<circle class="nd" cx="480" cy="480" r="6"/>
+<circle class="nd" cx="540" cy="420" r="6"/>
+<circle class="nd" cx="600" cy="360" r="6"/>
+<circle class="nd deemph" cx="657" cy="300" r="3.7"/>
+<circle class="nd deemph" cx="663" cy="300" r="3.7"/>
+<circle class="nd" cx="720" cy="240" r="6"/>
+<circle class="nd" cx="480" cy="540" r="6"/>
+<circle class="nd deemph" cx="600" cy="420" r="3.7"/>
+<circle class="nd" cx="654" cy="360" r="6"/>
+<circle class="nd deemph" cx="660" cy="360" r="3.7"/>
+<circle class="nd deemph" cx="666" cy="360" r="3.7"/>
+<circle class="nd deemph" cx="717" cy="300" r="3.7"/>
+<circle class="nd deemph" cx="723" cy="300" r="3.7"/>
+<circle class="nd deemph" cx="480" cy="600" r="3.7"/>
+<circle class="nd deemph" cx="540" cy="540" r="3.7"/>
+<circle class="nd deemph" cx="600" cy="480" r="3.7"/>
+<circle class="nd" cx="654" cy="420" r="6"/>
+<circle class="nd" cx="660" cy="420" r="6"/>
+<circle class="nd deemph" cx="666" cy="420" r="3.7"/>
+<circle class="nd" cx="714" cy="360" r="6"/>
+<circle class="nd" cx="720" cy="360" r="6"/>
+<circle class="nd deemph" cx="726" cy="360" r="3.7"/>
+<circle class="nd" cx="780" cy="300" r="6"/>
+<circle class="nd" cx="660" cy="480" r="6"/>
+<circle class="nd" cx="720" cy="420" r="6"/>
+<circle class="nd" cx="780" cy="360" r="6"/>
+<circle class="nd deemph" cx="840" cy="300" r="3.7"/>
+<circle class="nd" cx="540" cy="660" r="6"/>
+<circle class="nd" cx="597" cy="600" r="6"/>
+<circle class="nd deemph" cx="603" cy="600" r="3.7"/>
+<circle class="nd deemph" cx="660" cy="540" r="3.7"/>
+<circle class="nd" cx="717" cy="480" r="6"/>
+<circle class="nd deemph" cx="723" cy="480" r="3.7"/>
+<circle class="nd" cx="777" cy="420" r="6"/>
+<circle class="nd deemph" cx="783" cy="420" r="3.7"/>
+<circle class="nd" cx="840" cy="360" r="6"/>
+<circle class="nd deemph" cx="540" cy="720" r="3.7"/>
+<circle class="nd" cx="597" cy="660" r="6"/>
+<circle class="nd deemph" cx="603" cy="660" r="3.7"/>
+<circle class="nd deemph" cx="660" cy="600" r="3.7"/>
+<circle class="nd" cx="717" cy="540" r="6"/>
+<circle class="nd deemph" cx="723" cy="540" r="3.7"/>
+<circle class="nd" cx="777" cy="480" r="6"/>
+<circle class="nd deemph" cx="783" cy="480" r="3.7"/>
+<circle class="nd" cx="837" cy="420" r="6"/>
+<circle class="nd deemph" cx="843" cy="420" r="3.7"/>
+<circle class="nd deemph" cx="894" cy="360" r="3.7"/>
+<circle class="nd" cx="900" cy="360" r="6"/>
+<circle class="nd" cx="906" cy="360" r="6"/>
+<circle class="nd" cx="957" cy="300" r="6"/>
+<circle class="nd deemph" cx="963" cy="300" r="3.7"/>
+<circle class="nd" cx="600" cy="720" r="6"/>
+<circle class="nd deemph" cx="660" cy="660" r="3.7"/>
+<circle class="nd" cx="897" cy="420" r="6"/>
+<circle class="nd deemph" cx="903" cy="420" r="3.7"/>
+<circle class="nd" cx="960" cy="360" r="6"/>
+<circle class="nd deemph" cx="660" cy="720" r="3.7"/>
+<circle class="nd deemph" cx="720" cy="660" r="3.7"/>
+<circle class="nd" cx="780" cy="600" r="6"/>
+<circle class="nd deemph" cx="840" cy="540" r="3.7"/>
+<circle class="nd deemph" cx="900" cy="480" r="3.7"/>
+<circle class="nd deemph" cx="960" cy="420" r="3.7"/>
+<circle class="nd deemph" cx="1017" cy="360" r="3.7"/>
+<circle class="nd deemph" cx="1023" cy="360" r="3.7"/>
+<circle class="nd" cx="1077" cy="300" r="6"/>
+<circle class="nd deemph" cx="1083" cy="300" r="3.7"/>
+<circle class="nd deemph" cx="660" cy="780" r="3.7"/>
+<circle class="nd deemph" cx="720" cy="720" r="3.7"/>
+<circle class="nd" cx="780" cy="660" r="6"/>
+<circle class="nd" cx="837" cy="600" r="6"/>
+<circle class="nd deemph" cx="843" cy="600" r="3.7"/>
+<circle class="nd deemph" cx="900" cy="540" r="3.7"/>
+<circle class="nd deemph" cx="960" cy="480" r="3.7"/>
+<circle class="nd" cx="1020" cy="420" r="6"/>
+<circle class="nd deemph" cx="1080" cy="360" r="3.7"/>
+<circle class="nd" cx="1140" cy="300" r="6"/>
+<circle class="nd deemph" cx="720" cy="780" r="3.7"/>
+<circle class="nd deemph" cx="780" cy="720" r="3.7"/>
+<circle class="nd" cx="840" cy="660" r="6"/>
+<circle class="nd" cx="960" cy="540" r="6"/>
+<circle class="nd" cx="1017" cy="480" r="6"/>
+<circle class="nd" cx="1023" cy="480" r="6"/>
+<circle class="nd" cx="1077" cy="420" r="6"/>
+<circle class="nd deemph" cx="1083" cy="420" r="3.7"/>
+<circle class="nd" cx="1140" cy="360" r="6"/>
+<circle class="nd deemph" cx="720" cy="840" r="3.7"/>
+<circle class="nd deemph" cx="780" cy="780" r="3.7"/>
+<circle class="nd" cx="840" cy="720" r="6"/>
+<circle class="nd" cx="900" cy="660" r="6"/>
+<circle class="nd" cx="957" cy="600" r="6"/>
+<circle class="nd deemph" cx="963" cy="600" r="3.7"/>
+<circle class="nd" cx="1014" cy="540" r="6"/>
+<circle class="nd" cx="1020" cy="540" r="6"/>
+<circle class="nd deemph" cx="1026" cy="540" r="3.7"/>
+<circle class="nd deemph" cx="1080" cy="480" r="3.7"/>
+<circle class="nd" cx="1140" cy="420" r="6"/>
+<circle class="nd" cx="1197" cy="360" r="6"/>
+<circle class="nd" cx="1203" cy="360" r="6"/>
+<circle class="nd deemph" cx="780" cy="840" r="3.7"/>
+<circle class="nd" cx="840" cy="780" r="6"/>
+<circle class="nd deemph" cx="900" cy="720" r="3.7"/>
+<circle class="nd" cx="957" cy="660" r="6"/>
+<circle class="nd deemph" cx="963" cy="660" r="3.7"/>
+<circle class="nd" cx="1014" cy="600" r="6"/>
+<circle class="nd" cx="1020" cy="600" r="6"/>
+<circle class="nd deemph" cx="1026" cy="600" r="3.7"/>
+<circle class="nd" cx="1077" cy="540" r="6"/>
+<circle class="nd deemph" cx="1083" cy="540" r="3.7"/>
+<circle class="nd deemph" cx="1140" cy="480" r="3.7"/>
+<circle class="nd" cx="1200" cy="420" r="6"/>
+<circle class="nd deemph" cx="780" cy="900" r="3.7"/>
+<circle class="nd deemph" cx="840" cy="840" r="3.7"/>
+<circle class="nd" cx="960" cy="720" r="6"/>
+<circle class="nd" cx="1020" cy="660" r="6"/>
+<circle class="nd" cx="1080" cy="600" r="6"/>
+<circle class="nd" cx="1140" cy="540" r="6"/>
+<circle class="nd" cx="1200" cy="480" r="6"/>
+<circle class="nd" cx="960" cy="780" r="6"/>
+<circle class="nd deemph" cx="1080" cy="660" r="3.7"/>
+<circle class="nd" cx="1137" cy="600" r="6"/>
+<circle class="nd deemph" cx="1143" cy="600" r="3.7"/>
+<circle class="nd" cx="1197" cy="540" r="6"/>
+<circle class="nd deemph" cx="1203" cy="540" r="3.7"/>
+<circle class="nd deemph" cx="960" cy="840" r="3.7"/>
+<circle class="nd deemph" cx="1020" cy="780" r="3.7"/>
+<circle class="nd deemph" cx="1080" cy="720" r="3.7"/>
+<circle class="nd" cx="1134" cy="660" r="6"/>
+<circle class="nd" cx="1140" cy="660" r="6"/>
+<circle class="nd deemph" cx="1146" cy="660" r="3.7"/>
+<circle class="nd" cx="1194" cy="600" r="6"/>
+<circle class="nd" cx="1200" cy="600" r="6"/>
+<circle class="nd deemph" cx="1206" cy="600" r="3.7"/>
+<circle class="nd" cx="1140" cy="720" r="6"/>
+<circle class="nd" cx="1200" cy="660" r="6"/>
+<circle class="nd" cx="1020" cy="900" r="6"/>
+<circle class="nd" cx="1077" cy="840" r="6"/>
+<circle class="nd deemph" cx="1083" cy="840" r="3.7"/>
+<circle class="nd deemph" cx="1140" cy="780" r="3.7"/>
+<circle class="nd" cx="1197" cy="720" r="6"/>
+<circle class="nd deemph" cx="1203" cy="720" r="3.7"/>
+<circle class="nd deemph" cx="1020" cy="960" r="3.7"/>
+<circle class="nd" cx="1077" cy="900" r="6"/>
+<circle class="nd deemph" cx="1083" cy="900" r="3.7"/>
+<circle class="nd deemph" cx="1140" cy="840" r="3.7"/>
+<circle class="nd" cx="1197" cy="780" r="6"/>
+<circle class="nd deemph" cx="1203" cy="780" r="3.7"/>
+<circle class="nd" cx="1080" cy="960" r="6"/>
+<circle class="nd deemph" cx="1140" cy="900" r="3.7"/>
+<circle class="nd deemph" cx="1140" cy="960" r="3.7"/>
+<circle class="nd deemph" cx="1200" cy="900" r="3.7"/>
+<circle class="nd deemph" cx="1140" cy="1020" r="3.7"/>
+<circle class="nd deemph" cx="1200" cy="960" r="3.7"/>
+<circle class="nd deemph" cx="1200" cy="1020" r="3.7"/>
+<circle class="nd deemph" cx="1200" cy="1080" r="3.7"/>
+</g></g>
+<text class="ax" x="70" y="1248" text-anchor="middle">14</text>
+<text class="ax" x="130" y="1248" text-anchor="middle">15</text>
+<text class="ax" x="430" y="1248" text-anchor="middle">20</text>
+<text class="ax" x="730" y="1248" text-anchor="middle">25</text>
+<text class="ax" x="1030" y="1248" text-anchor="middle">30</text>
+<text class="ax" x="1270" y="1248" text-anchor="middle">34</text>
+<text class="ttl" x="2020" y="48" text-anchor="middle">E₂(S¹¹)</text>
+<g transform="translate(1420 74)" clip-path="url(#clip-mocha)">
+<line class="g" x1="0" y1="0" x2="0" y2="1140"/>
+<line class="g" x1="60" y1="0" x2="60" y2="1140"/>
+<line class="g" x1="120" y1="0" x2="120" y2="1140"/>
+<line class="g" x1="180" y1="0" x2="180" y2="1140"/>
+<line class="g" x1="240" y1="0" x2="240" y2="1140"/>
+<line class="g" x1="300" y1="0" x2="300" y2="1140"/>
+<line class="g" x1="360" y1="0" x2="360" y2="1140"/>
+<line class="g" x1="420" y1="0" x2="420" y2="1140"/>
+<line class="g" x1="480" y1="0" x2="480" y2="1140"/>
+<line class="g" x1="540" y1="0" x2="540" y2="1140"/>
+<line class="g" x1="600" y1="0" x2="600" y2="1140"/>
+<line class="g" x1="660" y1="0" x2="660" y2="1140"/>
+<line class="g" x1="720" y1="0" x2="720" y2="1140"/>
+<line class="g" x1="780" y1="0" x2="780" y2="1140"/>
+<line class="g" x1="840" y1="0" x2="840" y2="1140"/>
+<line class="g" x1="900" y1="0" x2="900" y2="1140"/>
+<line class="g" x1="960" y1="0" x2="960" y2="1140"/>
+<line class="g" x1="1020" y1="0" x2="1020" y2="1140"/>
+<line class="g" x1="1080" y1="0" x2="1080" y2="1140"/>
+<line class="g" x1="1140" y1="0" x2="1140" y2="1140"/>
+<line class="g" x1="1200" y1="0" x2="1200" y2="1140"/>
+<line class="g" x1="0" y1="0" x2="1200" y2="0"/>
+<line class="g" x1="0" y1="60" x2="1200" y2="60"/>
+<line class="g" x1="0" y1="120" x2="1200" y2="120"/>
+<line class="g" x1="0" y1="180" x2="1200" y2="180"/>
+<line class="g" x1="0" y1="240" x2="1200" y2="240"/>
+<line class="g" x1="0" y1="300" x2="1200" y2="300"/>
+<line class="g" x1="0" y1="360" x2="1200" y2="360"/>
+<line class="g" x1="0" y1="420" x2="1200" y2="420"/>
+<line class="g" x1="0" y1="480" x2="1200" y2="480"/>
+<line class="g" x1="0" y1="540" x2="1200" y2="540"/>
+<line class="g" x1="0" y1="600" x2="1200" y2="600"/>
+<line class="g" x1="0" y1="660" x2="1200" y2="660"/>
+<line class="g" x1="0" y1="720" x2="1200" y2="720"/>
+<line class="g" x1="0" y1="780" x2="1200" y2="780"/>
+<line class="g" x1="0" y1="840" x2="1200" y2="840"/>
+<line class="g" x1="0" y1="900" x2="1200" y2="900"/>
+<line class="g" x1="0" y1="960" x2="1200" y2="960"/>
+<line class="g" x1="0" y1="1020" x2="1200" y2="1020"/>
+<line class="g" x1="0" y1="1080" x2="1200" y2="1080"/>
+<g transform="matrix(1,0,0,-1,0,1140)">
+<line class="st emph" x1="0" y1="120" x2="0" y2="180"/>
+<line class="st deemph" x1="0" y1="240" x2="0" y2="300"/>
+<line class="st deemph" x1="0" y1="240" x2="57" y2="300"/>
+<line class="st deemph" x1="0" y1="240" x2="180" y2="300"/>
+<line class="st emph" x1="0" y1="300" x2="0" y2="360"/>
+<line class="st emph" x1="0" y1="300" x2="180" y2="360"/>
+<line class="st emph" x1="0" y1="360" x2="180" y2="420"/>
+<line class="st emph" x1="57" y1="300" x2="120" y2="360"/>
+<line class="st emph" x1="63" y1="300" x2="60" y2="360"/>
+<line class="st emph" x1="63" y1="300" x2="120" y2="360"/>
+<line class="st emph" x1="63" y1="300" x2="240" y2="360"/>
+<line class="st emph" x1="60" y1="360" x2="60" y2="420"/>
+<line class="st emph" x1="180" y1="240" x2="180" y2="300"/>
+<line class="st emph" x1="180" y1="240" x2="243" y2="300"/>
+<line class="st emph" x1="180" y1="240" x2="360" y2="300"/>
+<line class="d2 emph" x1="180" y1="240" x2="120" y2="360"/>
+<line class="st emph" x1="240" y1="180" x2="246" y2="240"/>
+<line class="st emph" x1="240" y1="180" x2="300" y2="240"/>
+<line class="st emph" x1="60" y1="420" x2="60" y2="480"/>
+<line class="st emph" x1="120" y1="360" x2="180" y2="420"/>
+<line class="st emph" x1="180" y1="300" x2="180" y2="360"/>
+<line class="st emph" x1="180" y1="300" x2="363" y2="360"/>
+<line class="st emph" x1="234" y1="240" x2="237" y2="300"/>
+<line class="st emph" x1="234" y1="240" x2="300" y2="300"/>
+<line class="st emph" x1="234" y1="240" x2="417" y2="300"/>
+<line class="st emph" x1="240" y1="240" x2="243" y2="300"/>
+<line class="st emph" x1="240" y1="240" x2="423" y2="300"/>
+<line class="d2 emph" x1="240" y1="240" x2="180" y2="360"/>
+<line class="st emph" x1="300" y1="180" x2="483" y2="240"/>
+<line class="st deemph" x1="120" y1="420" x2="180" y2="480"/>
+<line class="st emph" x1="180" y1="360" x2="180" y2="420"/>
+<line class="st emph" x1="237" y1="300" x2="240" y2="360"/>
+<line class="st emph" x1="237" y1="300" x2="420" y2="360"/>
+<line class="d2 emph" x1="243" y1="300" x2="180" y2="420"/>
+<line class="st emph" x1="240" y1="360" x2="420" y2="420"/>
+<line class="st emph" x1="300" y1="300" x2="357" y2="360"/>
+<line class="st deemph" x1="360" y1="240" x2="360" y2="300"/>
+<line class="st deemph" x1="360" y1="240" x2="423" y2="300"/>
+<line class="st deemph" x1="360" y1="240" x2="540" y2="300"/>
+<line class="st emph" x1="360" y1="300" x2="363" y2="360"/>
+<line class="st emph" x1="360" y1="300" x2="540" y2="360"/>
+<line class="st deemph" x1="180" y1="540" x2="240" y2="600"/>
+<line class="st emph" x1="357" y1="360" x2="420" y2="420"/>
+<line class="st emph" x1="417" y1="300" x2="420" y2="360"/>
+<line class="st emph" x1="417" y1="300" x2="600" y2="360"/>
+<line class="st deemph" x1="477" y1="240" x2="480" y2="300"/>
+<line class="st deemph" x1="477" y1="240" x2="657" y2="300"/>
+<line class="st deemph" x1="477" y1="240" x2="663" y2="300"/>
+<line class="d2 deemph" x1="477" y1="240" x2="420" y2="360"/>
+<line class="st emph" x1="483" y1="240" x2="663" y2="300"/>
+<line class="st deemph" x1="540" y1="180" x2="600" y2="240"/>
+<line class="st deemph" x1="540" y1="180" x2="720" y2="240"/>
+<line class="st emph" x1="360" y1="420" x2="420" y2="480"/>
+<line class="st emph" x1="420" y1="360" x2="420" y2="420"/>
+<line class="st emph" x1="480" y1="300" x2="480" y2="360"/>
+<line class="d2 emph" x1="480" y1="300" x2="420" y2="420"/>
+<line class="st deemph" x1="540" y1="240" x2="603" y2="300"/>
+<line class="st emph" x1="240" y1="600" x2="300" y2="660"/>
+<line class="st emph" x1="300" y1="540" x2="300" y2="600"/>
+<line class="st emph" x1="300" y1="540" x2="480" y2="600"/>
+<line class="st emph" x1="480" y1="360" x2="480" y2="420"/>
+<line class="st emph" x1="540" y1="300" x2="540" y2="360"/>
+<line class="st emph" x1="540" y1="300" x2="720" y2="360"/>
+<line class="st deemph" x1="600" y1="240" x2="663" y2="300"/>
+<line class="st deemph" x1="660" y1="180" x2="840" y2="240"/>
+<line class="st emph" x1="300" y1="600" x2="300" y2="660"/>
+<line class="st emph" x1="597" y1="300" x2="600" y2="360"/>
+<line class="st emph" x1="597" y1="300" x2="780" y2="360"/>
+<line class="st emph" x1="660" y1="240" x2="663" y2="300"/>
+<line class="st deemph" x1="480" y1="480" x2="480" y2="540"/>
+<line class="st deemph" x1="480" y1="480" x2="537" y2="540"/>
+<line class="st deemph" x1="480" y1="480" x2="660" y2="540"/>
+<line class="st deemph" x1="657" y1="300" x2="840" y2="360"/>
+<line class="st deemph" x1="720" y1="240" x2="897" y2="300"/>
+<line class="st emph" x1="480" y1="540" x2="480" y2="600"/>
+<line class="st emph" x1="480" y1="540" x2="660" y2="600"/>
+<line class="st emph" x1="780" y1="240" x2="840" y2="300"/>
+<line class="st emph" x1="480" y1="600" x2="660" y2="660"/>
+<line class="st emph" x1="537" y1="540" x2="600" y2="600"/>
+<line class="st emph" x1="543" y1="540" x2="540" y2="600"/>
+<line class="st emph" x1="543" y1="540" x2="600" y2="600"/>
+<line class="st emph" x1="543" y1="540" x2="720" y2="600"/>
+<line class="st deemph" x1="780" y1="300" x2="780" y2="360"/>
+<line class="st deemph" x1="780" y1="300" x2="840" y2="360"/>
+<line class="st deemph" x1="780" y1="300" x2="960" y2="360"/>
+<line class="st emph" x1="540" y1="600" x2="540" y2="660"/>
+<line class="st emph" x1="660" y1="480" x2="660" y2="540"/>
+<line class="st emph" x1="660" y1="480" x2="723" y2="540"/>
+<line class="st emph" x1="660" y1="480" x2="840" y2="540"/>
+<line class="d2 emph" x1="660" y1="480" x2="600" y2="600"/>
+<line class="st emph" x1="717" y1="420" x2="780" y2="480"/>
+<line class="st emph" x1="723" y1="420" x2="723" y2="480"/>
+<line class="st emph" x1="723" y1="420" x2="900" y2="480"/>
+<line class="d2 emph" x1="723" y1="420" x2="660" y2="540"/>
+<line class="st deemph" x1="900" y1="240" x2="903" y2="300"/>
+<line class="st deemph" x1="900" y1="240" x2="960" y2="300"/>
+<line class="st emph" x1="540" y1="660" x2="540" y2="720"/>
+<line class="st emph" x1="600" y1="600" x2="660" y2="660"/>
+<line class="st emph" x1="660" y1="540" x2="660" y2="600"/>
+<line class="st emph" x1="660" y1="540" x2="843" y2="600"/>
+<line class="st emph" x1="717" y1="480" x2="717" y2="540"/>
+<line class="st emph" x1="717" y1="480" x2="780" y2="540"/>
+<line class="st emph" x1="717" y1="480" x2="897" y2="540"/>
+<line class="st emph" x1="723" y1="480" x2="723" y2="540"/>
+<line class="st emph" x1="723" y1="480" x2="903" y2="540"/>
+<line class="d2 emph" x1="723" y1="480" x2="660" y2="600"/>
+<line class="st emph" x1="903" y1="300" x2="900" y2="360"/>
+<line class="st deemph" x1="600" y1="660" x2="660" y2="720"/>
+<line class="st emph" x1="660" y1="600" x2="660" y2="660"/>
+<line class="st emph" x1="717" y1="540" x2="720" y2="600"/>
+<line class="st emph" x1="717" y1="540" x2="900" y2="600"/>
+<line class="d2 emph" x1="723" y1="540" x2="660" y2="660"/>
+<line class="st emph" x1="720" y1="600" x2="900" y2="660"/>
+<line class="st emph" x1="780" y1="540" x2="837" y2="600"/>
+<line class="st emph" x1="840" y1="480" x2="840" y2="540"/>
+<line class="st emph" x1="840" y1="480" x2="903" y2="540"/>
+<line class="st emph" x1="840" y1="480" x2="1020" y2="540"/>
+<line class="st emph" x1="900" y1="420" x2="900" y2="480"/>
+<line class="st emph" x1="900" y1="420" x2="1083" y2="480"/>
+<line class="d2 emph" x1="900" y1="420" x2="840" y2="540"/>
+<line class="st emph" x1="960" y1="360" x2="1134" y2="420"/>
+<line class="st emph" x1="1020" y1="300" x2="1203" y2="360"/>
+<line class="st emph" x1="840" y1="540" x2="843" y2="600"/>
+<line class="st emph" x1="840" y1="540" x2="1020" y2="600"/>
+<line class="st emph" x1="900" y1="480" x2="903" y2="540"/>
+<line class="st emph" x1="900" y1="480" x2="1083" y2="540"/>
+<line class="d2 emph" x1="900" y1="480" x2="843" y2="600"/>
+<line class="st emph" x1="960" y1="420" x2="960" y2="480"/>
+<line class="st emph" x1="960" y1="420" x2="1140" y2="480"/>
+<line class="d2 emph" x1="960" y1="420" x2="897" y2="540"/>
+<line class="st deemph" x1="660" y1="780" x2="720" y2="840"/>
+<line class="st emph" x1="837" y1="600" x2="900" y2="660"/>
+<line class="st emph" x1="897" y1="540" x2="900" y2="600"/>
+<line class="st emph" x1="897" y1="540" x2="1080" y2="600"/>
+<line class="st emph" x1="960" y1="480" x2="960" y2="540"/>
+<line class="st emph" x1="960" y1="480" x2="1140" y2="540"/>
+<line class="d2 emph" x1="960" y1="480" x2="900" y2="600"/>
+<line class="st deemph" x1="1080" y1="360" x2="1146" y2="420"/>
+<line class="st deemph" x1="1080" y1="360" x2="1257" y2="420"/>
+<line class="st emph" x1="1140" y1="300" x2="1140" y2="360"/>
+<line class="st emph" x1="1140" y1="300" x2="1197" y2="360"/>
+<line class="st emph" x1="840" y1="660" x2="900" y2="720"/>
+<line class="st emph" x1="900" y1="600" x2="900" y2="660"/>
+<line class="st emph" x1="960" y1="540" x2="960" y2="600"/>
+<line class="d2 emph" x1="960" y1="540" x2="900" y2="660"/>
+<line class="st emph" x1="1020" y1="480" x2="1020" y2="540"/>
+<line class="st emph" x1="1020" y1="480" x2="1083" y2="540"/>
+<line class="st emph" x1="1020" y1="480" x2="1200" y2="540"/>
+<line class="st emph" x1="1080" y1="420" x2="1083" y2="480"/>
+<line class="st emph" x1="1080" y1="420" x2="1263" y2="480"/>
+<line class="d2 emph" x1="1080" y1="420" x2="1020" y2="540"/>
+<line class="st emph" x1="1140" y1="360" x2="1134" y2="420"/>
+<line class="st emph" x1="720" y1="840" x2="780" y2="900"/>
+<line class="st emph" x1="780" y1="780" x2="780" y2="840"/>
+<line class="st emph" x1="780" y1="780" x2="960" y2="840"/>
+<line class="st emph" x1="960" y1="600" x2="960" y2="660"/>
+<line class="st emph" x1="1020" y1="540" x2="1020" y2="600"/>
+<line class="st emph" x1="1020" y1="540" x2="1200" y2="600"/>
+<line class="st emph" x1="1077" y1="480" x2="1077" y2="540"/>
+<line class="st emph" x1="1077" y1="480" x2="1140" y2="540"/>
+<line class="st emph" x1="1077" y1="480" x2="1257" y2="540"/>
+<line class="st emph" x1="1083" y1="480" x2="1083" y2="540"/>
+<line class="st emph" x1="1083" y1="480" x2="1263" y2="540"/>
+<line class="d2 emph" x1="1083" y1="480" x2="1020" y2="600"/>
+<line class="st emph" x1="1140" y1="420" x2="1140" y2="480"/>
+<line class="st emph" x1="1140" y1="420" x2="1320" y2="480"/>
+<line class="d2 emph" x1="1140" y1="420" x2="1077" y2="540"/>
+<line class="st emph" x1="1197" y1="360" x2="1257" y2="420"/>
+<line class="st emph" x1="1203" y1="360" x2="1377" y2="420"/>
+<line class="st emph" x1="780" y1="840" x2="780" y2="900"/>
+<line class="st emph" x1="1077" y1="540" x2="1080" y2="600"/>
+<line class="st emph" x1="1077" y1="540" x2="1260" y2="600"/>
+<line class="st emph" x1="1140" y1="480" x2="1140" y2="540"/>
+<line class="st emph" x1="1140" y1="480" x2="1320" y2="540"/>
+<line class="d2 emph" x1="1140" y1="480" x2="1080" y2="600"/>
+<line class="st deemph" x1="960" y1="720" x2="960" y2="780"/>
+<line class="st deemph" x1="960" y1="720" x2="1017" y2="780"/>
+<line class="st deemph" x1="960" y1="720" x2="1140" y2="780"/>
+<line class="st emph" x1="1200" y1="480" x2="1200" y2="540"/>
+<line class="st emph" x1="1200" y1="480" x2="1263" y2="540"/>
+<line class="st emph" x1="1200" y1="480" x2="1380" y2="540"/>
+<line class="st emph" x1="960" y1="780" x2="960" y2="840"/>
+<line class="st emph" x1="960" y1="780" x2="1140" y2="840"/>
+<line class="st emph" x1="1200" y1="540" x2="1200" y2="600"/>
+<line class="st emph" x1="1200" y1="540" x2="1380" y2="600"/>
+<line class="st emph" x1="960" y1="840" x2="1140" y2="900"/>
+<line class="st emph" x1="1017" y1="780" x2="1080" y2="840"/>
+<line class="st emph" x1="1023" y1="780" x2="1020" y2="840"/>
+<line class="st emph" x1="1023" y1="780" x2="1080" y2="840"/>
+<line class="st emph" x1="1023" y1="780" x2="1200" y2="840"/>
+<line class="st emph" x1="1020" y1="840" x2="1020" y2="900"/>
+<line class="st emph" x1="1140" y1="720" x2="1140" y2="780"/>
+<line class="st emph" x1="1140" y1="720" x2="1203" y2="780"/>
+<line class="st emph" x1="1140" y1="720" x2="1320" y2="780"/>
+<line class="d2 emph" x1="1140" y1="720" x2="1080" y2="840"/>
+<line class="st emph" x1="1197" y1="660" x2="1260" y2="720"/>
+<line class="st emph" x1="1203" y1="660" x2="1203" y2="720"/>
+<line class="st emph" x1="1203" y1="660" x2="1380" y2="720"/>
+<line class="d2 emph" x1="1203" y1="660" x2="1140" y2="780"/>
+<line class="st emph" x1="1020" y1="900" x2="1020" y2="960"/>
+<line class="st emph" x1="1080" y1="840" x2="1140" y2="900"/>
+<line class="st emph" x1="1140" y1="780" x2="1140" y2="840"/>
+<line class="st emph" x1="1140" y1="780" x2="1323" y2="840"/>
+<line class="st emph" x1="1197" y1="720" x2="1197" y2="780"/>
+<line class="st emph" x1="1197" y1="720" x2="1260" y2="780"/>
+<line class="st emph" x1="1197" y1="720" x2="1377" y2="780"/>
+<line class="st emph" x1="1203" y1="720" x2="1203" y2="780"/>
+<line class="st emph" x1="1203" y1="720" x2="1383" y2="780"/>
+<line class="d2 emph" x1="1203" y1="720" x2="1140" y2="840"/>
+<line class="st deemph" x1="1080" y1="900" x2="1140" y2="960"/>
+<line class="st emph" x1="1140" y1="840" x2="1140" y2="900"/>
+<line class="st emph" x1="1197" y1="780" x2="1200" y2="840"/>
+<line class="st emph" x1="1197" y1="780" x2="1380" y2="840"/>
+<line class="d2 emph" x1="1203" y1="780" x2="1140" y2="900"/>
+<line class="st emph" x1="1200" y1="840" x2="1380" y2="900"/>
+<line class="st deemph" x1="1140" y1="1020" x2="1200" y2="1080"/>
+<line class="st emph" x1="1200" y1="1080" x2="1260" y2="1140"/>
+<circle class="nd" cx="0" cy="120" r="6"/>
+<circle class="nd" cx="0" cy="180" r="6"/>
+<circle class="nd deemph" cx="0" cy="240" r="3.7"/>
+<circle class="nd" cx="0" cy="300" r="6"/>
+<circle class="nd" cx="0" cy="360" r="6"/>
+<circle class="nd" cx="57" cy="300" r="6"/>
+<circle class="nd" cx="63" cy="300" r="6"/>
+<circle class="nd" cx="60" cy="360" r="6"/>
+<circle class="nd" cx="180" cy="240" r="6"/>
+<circle class="nd" cx="240" cy="180" r="6"/>
+<circle class="nd" cx="60" cy="420" r="6"/>
+<circle class="nd" cx="120" cy="360" r="6"/>
+<circle class="nd" cx="180" cy="300" r="6"/>
+<circle class="nd" cx="234" cy="240" r="6"/>
+<circle class="nd" cx="240" cy="240" r="6"/>
+<circle class="nd" cx="246" cy="240" r="6"/>
+<circle class="nd" cx="300" cy="180" r="6"/>
+<circle class="nd" cx="60" cy="480" r="6"/>
+<circle class="nd deemph" cx="120" cy="420" r="3.7"/>
+<circle class="nd" cx="180" cy="360" r="6"/>
+<circle class="nd" cx="237" cy="300" r="6"/>
+<circle class="nd" cx="243" cy="300" r="6"/>
+<circle class="nd" cx="300" cy="240" r="6"/>
+<circle class="nd" cx="180" cy="420" r="6"/>
+<circle class="nd" cx="240" cy="360" r="6"/>
+<circle class="nd" cx="300" cy="300" r="6"/>
+<circle class="nd deemph" cx="360" cy="240" r="3.7"/>
+<circle class="nd" cx="420" cy="180" r="6"/>
+<circle class="nd" cx="180" cy="480" r="6"/>
+<circle class="nd" cx="360" cy="300" r="6"/>
+<circle class="nd deemph" cx="180" cy="540" r="3.7"/>
+<circle class="nd" cx="357" cy="360" r="6"/>
+<circle class="nd" cx="363" cy="360" r="6"/>
+<circle class="nd" cx="417" cy="300" r="6"/>
+<circle class="nd" cx="423" cy="300" r="6"/>
+<circle class="nd deemph" cx="477" cy="240" r="3.7"/>
+<circle class="nd" cx="483" cy="240" r="6"/>
+<circle class="nd deemph" cx="540" cy="180" r="3.7"/>
+<circle class="nd" cx="360" cy="420" r="6"/>
+<circle class="nd" cx="420" cy="360" r="6"/>
+<circle class="nd" cx="480" cy="300" r="6"/>
+<circle class="nd deemph" cx="540" cy="240" r="3.7"/>
+<circle class="nd" cx="240" cy="600" r="6"/>
+<circle class="nd" cx="300" cy="540" r="6"/>
+<circle class="nd" cx="420" cy="420" r="6"/>
+<circle class="nd" cx="480" cy="360" r="6"/>
+<circle class="nd" cx="540" cy="300" r="6"/>
+<circle class="nd deemph" cx="600" cy="240" r="3.7"/>
+<circle class="nd deemph" cx="660" cy="180" r="3.7"/>
+<circle class="nd" cx="300" cy="600" r="6"/>
+<circle class="nd" cx="420" cy="480" r="6"/>
+<circle class="nd" cx="480" cy="420" r="6"/>
+<circle class="nd" cx="540" cy="360" r="6"/>
+<circle class="nd" cx="597" cy="300" r="6"/>
+<circle class="nd" cx="603" cy="300" r="6"/>
+<circle class="nd" cx="660" cy="240" r="6"/>
+<circle class="nd" cx="300" cy="660" r="6"/>
+<circle class="nd deemph" cx="480" cy="480" r="3.7"/>
+<circle class="nd" cx="600" cy="360" r="6"/>
+<circle class="nd deemph" cx="657" cy="300" r="3.7"/>
+<circle class="nd" cx="663" cy="300" r="6"/>
+<circle class="nd deemph" cx="720" cy="240" r="3.7"/>
+<circle class="nd" cx="480" cy="540" r="6"/>
+<circle class="nd" cx="780" cy="240" r="6"/>
+<circle class="nd" cx="480" cy="600" r="6"/>
+<circle class="nd" cx="537" cy="540" r="6"/>
+<circle class="nd" cx="543" cy="540" r="6"/>
+<circle class="nd" cx="720" cy="360" r="6"/>
+<circle class="nd deemph" cx="780" cy="300" r="3.7"/>
+<circle class="nd" cx="840" cy="240" r="6"/>
+<circle class="nd" cx="540" cy="600" r="6"/>
+<circle class="nd" cx="660" cy="480" r="6"/>
+<circle class="nd" cx="717" cy="420" r="6"/>
+<circle class="nd" cx="723" cy="420" r="6"/>
+<circle class="nd" cx="780" cy="360" r="6"/>
+<circle class="nd" cx="840" cy="300" r="6"/>
+<circle class="nd deemph" cx="900" cy="240" r="3.7"/>
+<circle class="nd" cx="540" cy="660" r="6"/>
+<circle class="nd" cx="600" cy="600" r="6"/>
+<circle class="nd" cx="660" cy="540" r="6"/>
+<circle class="nd" cx="717" cy="480" r="6"/>
+<circle class="nd" cx="723" cy="480" r="6"/>
+<circle class="nd" cx="840" cy="360" r="6"/>
+<circle class="nd" cx="897" cy="300" r="6"/>
+<circle class="nd" cx="903" cy="300" r="6"/>
+<circle class="nd" cx="960" cy="240" r="6"/>
+<circle class="nd" cx="540" cy="720" r="6"/>
+<circle class="nd deemph" cx="600" cy="660" r="3.7"/>
+<circle class="nd" cx="660" cy="600" r="6"/>
+<circle class="nd" cx="717" cy="540" r="6"/>
+<circle class="nd" cx="723" cy="540" r="6"/>
+<circle class="nd" cx="780" cy="480" r="6"/>
+<circle class="nd" cx="900" cy="360" r="6"/>
+<circle class="nd deemph" cx="960" cy="300" r="3.7"/>
+<circle class="nd" cx="660" cy="660" r="6"/>
+<circle class="nd" cx="720" cy="600" r="6"/>
+<circle class="nd" cx="780" cy="540" r="6"/>
+<circle class="nd" cx="840" cy="480" r="6"/>
+<circle class="nd" cx="900" cy="420" r="6"/>
+<circle class="nd" cx="960" cy="360" r="6"/>
+<circle class="nd" cx="1020" cy="300" r="6"/>
+<circle class="nd deemph" cx="1080" cy="240" r="3.7"/>
+<circle class="nd" cx="660" cy="720" r="6"/>
+<circle class="nd" cx="840" cy="540" r="6"/>
+<circle class="nd" cx="900" cy="480" r="6"/>
+<circle class="nd" cx="960" cy="420" r="6"/>
+<circle class="nd deemph" cx="660" cy="780" r="3.7"/>
+<circle class="nd" cx="837" cy="600" r="6"/>
+<circle class="nd" cx="843" cy="600" r="6"/>
+<circle class="nd" cx="897" cy="540" r="6"/>
+<circle class="nd" cx="903" cy="540" r="6"/>
+<circle class="nd" cx="960" cy="480" r="6"/>
+<circle class="nd deemph" cx="1080" cy="360" r="3.7"/>
+<circle class="nd" cx="1140" cy="300" r="6"/>
+<circle class="nd" cx="840" cy="660" r="6"/>
+<circle class="nd" cx="900" cy="600" r="6"/>
+<circle class="nd" cx="960" cy="540" r="6"/>
+<circle class="nd" cx="1020" cy="480" r="6"/>
+<circle class="nd" cx="1080" cy="420" r="6"/>
+<circle class="nd" cx="1140" cy="360" r="6"/>
+<circle class="nd" cx="720" cy="840" r="6"/>
+<circle class="nd" cx="780" cy="780" r="6"/>
+<circle class="nd" cx="900" cy="660" r="6"/>
+<circle class="nd" cx="960" cy="600" r="6"/>
+<circle class="nd" cx="1020" cy="540" r="6"/>
+<circle class="nd" cx="1077" cy="480" r="6"/>
+<circle class="nd" cx="1083" cy="480" r="6"/>
+<circle class="nd" cx="1134" cy="420" r="6"/>
+<circle class="nd" cx="1140" cy="420" r="6"/>
+<circle class="nd" cx="1146" cy="420" r="6"/>
+<circle class="nd" cx="1197" cy="360" r="6"/>
+<circle class="nd" cx="1203" cy="360" r="6"/>
+<circle class="nd" cx="780" cy="840" r="6"/>
+<circle class="nd" cx="900" cy="720" r="6"/>
+<circle class="nd" cx="960" cy="660" r="6"/>
+<circle class="nd" cx="1020" cy="600" r="6"/>
+<circle class="nd" cx="1077" cy="540" r="6"/>
+<circle class="nd" cx="1083" cy="540" r="6"/>
+<circle class="nd" cx="1140" cy="480" r="6"/>
+<circle class="nd" cx="780" cy="900" r="6"/>
+<circle class="nd deemph" cx="960" cy="720" r="3.7"/>
+<circle class="nd" cx="1080" cy="600" r="6"/>
+<circle class="nd" cx="1140" cy="540" r="6"/>
+<circle class="nd" cx="1200" cy="480" r="6"/>
+<circle class="nd" cx="960" cy="780" r="6"/>
+<circle class="nd" cx="1200" cy="540" r="6"/>
+<circle class="nd" cx="960" cy="840" r="6"/>
+<circle class="nd" cx="1017" cy="780" r="6"/>
+<circle class="nd" cx="1023" cy="780" r="6"/>
+<circle class="nd" cx="1200" cy="600" r="6"/>
+<circle class="nd" cx="1020" cy="840" r="6"/>
+<circle class="nd" cx="1140" cy="720" r="6"/>
+<circle class="nd" cx="1197" cy="660" r="6"/>
+<circle class="nd" cx="1203" cy="660" r="6"/>
+<circle class="nd" cx="1020" cy="900" r="6"/>
+<circle class="nd" cx="1080" cy="840" r="6"/>
+<circle class="nd" cx="1140" cy="780" r="6"/>
+<circle class="nd" cx="1197" cy="720" r="6"/>
+<circle class="nd" cx="1203" cy="720" r="6"/>
+<circle class="nd" cx="1020" cy="960" r="6"/>
+<circle class="nd deemph" cx="1080" cy="900" r="3.7"/>
+<circle class="nd" cx="1140" cy="840" r="6"/>
+<circle class="nd" cx="1197" cy="780" r="6"/>
+<circle class="nd" cx="1203" cy="780" r="6"/>
+<circle class="nd" cx="1140" cy="900" r="6"/>
+<circle class="nd" cx="1200" cy="840" r="6"/>
+<circle class="nd" cx="1140" cy="960" r="6"/>
+<circle class="nd deemph" cx="1140" cy="1020" r="3.7"/>
+<circle class="nd" cx="1200" cy="1080" r="6"/>
+</g></g>
+<text class="ax" x="1420" y="1248" text-anchor="middle">14</text>
+<text class="ax" x="1480" y="1248" text-anchor="middle">15</text>
+<text class="ax" x="1780" y="1248" text-anchor="middle">20</text>
+<text class="ax" x="2080" y="1248" text-anchor="middle">25</text>
+<text class="ax" x="2380" y="1248" text-anchor="middle">30</text>
+<text class="ax" x="2620" y="1248" text-anchor="middle">34</text>
+<defs><marker id="ah-mocha" markerWidth="9" markerHeight="9" refX="7" refY="3" orient="auto"><path d="M0,0 L7,3 L0,6 Z" fill="#a6adc8"/></marker></defs>
+<line x1="1288" y1="644" x2="1402" y2="644" stroke="#a6adc8" stroke-width="2.5" marker-end="url(#ah-mocha)"/>
+<text class="hmap" x="1345" y="628" text-anchor="middle">H</text>
+</svg>

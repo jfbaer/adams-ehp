@@ -1,0 +1,959 @@
+<!-- template_sidebyside.html.jinja — source/target side-by-side view with map-image highlighting -->
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ theme }}">
+
+<head>
+  <meta charset="UTF-8" />
+  <title>{{ so_title }} / {{ sphere_title }} — Side-by-Side</title>
+
+  <!-- Apply the persisted theme before first paint (see single-chart template). -->
+  <script>
+    (function () {
+      try {
+        var t = localStorage.getItem('seqsee-theme') || sessionStorage.getItem('seqsee-theme');
+        if (t) document.documentElement.dataset.theme = t;
+      } catch (e) {}
+    })();
+  </script>
+
+  <!-- Per-theme CSS variable blocks (from themes.json via build_theme_css).
+       Runtime theme switching = flipping data-theme on <html>. -->
+  <style>
+{{ theme_css }}
+    html {
+      background-color: var(--bg-color);
+    }
+    body {
+      background-color: var(--bg-color) !important;
+      color: var(--text-color) !important;
+    }
+    .grid {
+      stroke: var(--grid-color) !important;
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.2/dist/katex.min.css" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/dreampulse/computer-modern-web-font@master/fonts.css" />
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.2/dist/katex.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.2/dist/contrib/auto-render.min.js" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/svg-pan-zoom@3.6.1/dist/svg-pan-zoom.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/hammerjs@2.0.8/hammer.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/path-data-polyfill@1.0.6/path-data-polyfill.min.js"></script>
+  <style>
+    body {
+      font-family: "Computer Modern Serif", serif;
+      font-size: 20pt;
+      margin: 0;
+      overflow: hidden;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+    }
+
+    .katex { font-size: 1em !important; }
+
+    #split-container {
+      display: flex;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    .panel {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      border-right: 1px solid var(--grid-color);
+    }
+
+    .panel:last-child { border-right: none; }
+
+    .panel-title {
+      position: absolute;
+      top: 10px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 5;
+      pointer-events: none;
+      font-size: 18px;
+      font-weight: bold;
+      color: var(--text-color);
+      background-color: var(--bg-color);
+      border: 1px solid var(--surface-color);
+      padding: 8px 16px;
+      border-radius: 6px;
+      box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+      white-space: nowrap;
+    }
+
+    .panel svg {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Dynamically generated CSS styles */
+    {{ so_css_styles }}
+    {{ sphere_css_styles }}
+
+    #controls-container {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      z-index: 10;
+      display: flex;
+      gap: 6px;
+      pointer-events: auto;
+    }
+
+    .control-button {
+      background-color: var(--button-bg);
+      color: var(--button-text);
+      border: 1px solid var(--text-color);
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 13px;
+      user-select: none;
+    }
+
+    .control-button:hover { background-color: var(--button-hover); }
+    .control-button.active {
+      background-color: var(--text-color);
+      color: var(--bg-color);
+    }
+
+    /* Transient indicator shown when cycling themes (t / T) */
+    #theme-toast {
+      position: fixed;
+      bottom: 34px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: var(--surface-color);
+      color: var(--text-color);
+      border: 1px solid var(--grid-color);
+      border-radius: 6px;
+      padding: 6px 14px;
+      font-family: sans-serif;
+      font-size: 14px;
+      opacity: 0;
+      transition: opacity 0.25s ease;
+      pointer-events: none;
+      z-index: 200;
+    }
+    #theme-toast.visible {
+      opacity: 1;
+    }
+
+    #tooltip {
+      position: absolute;
+      display: none;
+      pointer-events: none;
+      background-color: var(--surface-color);
+      border: 1px solid var(--text-color);
+      color: var(--text-color);
+      padding: 5px;
+      z-index: 20;
+      border-radius: 4px;
+    }
+
+    .axis {
+      stroke: var(--text-color);
+      stroke-width: 2px;
+    }
+
+    .tick {
+      font-size: 12pt;
+      fill: var(--text-color);
+    }
+
+    .x-tick { text-anchor: middle; dominant-baseline: hanging; }
+    .y-tick { text-anchor: end; dominant-baseline: middle; }
+
+    /* Map highlight styles — hover (source node + its image targets) */
+    .map-highlight,
+    .map-source-highlight {
+      stroke: var(--highlight-color) !important;
+      stroke-width: 3px !important;
+    }
+
+    /* Persistent click highlights (few elements, so the filter is cheap) */
+    .map-highlight-persistent,
+    .map-source-persistent {
+      filter: drop-shadow(0 0 6px var(--highlight-color));
+      stroke: var(--highlight-color) !important;
+      stroke-width: 3px !important;
+    }
+
+    .map-label {
+      font-family: "Computer Modern Serif", serif;
+      font-size: 10px;
+      font-weight: bold;
+      fill: var(--highlight-color);
+      pointer-events: none;
+      text-anchor: middle;
+      dominant-baseline: central;
+    }
+
+    .map-label-bg {
+      fill: var(--bg-color);
+      stroke: var(--highlight-color);
+      stroke-width: 1px;
+      pointer-events: none;
+    }
+
+    /*
+     * "Show full map image" mode (toggled with the map's shift key).
+     * A single .map-image-mode class on #right-panel drives everything
+     * via descendant selectors — no per-element JS class toggling needed.
+     * Uses cheap stroke/opacity instead of SVG filters.
+     */
+    #left-panel.map-image-mode .defaultNode,
+    #left-panel.map-image-mode .defaultEdge,
+    #left-panel.map-image-mode .node-text,
+    #right-panel.map-image-mode .defaultNode,
+    #right-panel.map-image-mode .defaultEdge,
+    #right-panel.map-image-mode .node-text {
+      opacity: 0.13;
+    }
+    /* Elements pre-marked data-emph are the map image (right panel) and its
+       sources (left panel). They stay at full strength in their NATIVE color,
+       slightly larger and bolder — the emphasis is by opacity/size against the
+       faded rest, not by recoloring. */
+    #left-panel.map-image-mode [data-emph],
+    #right-panel.map-image-mode [data-emph] {
+      opacity: 1 !important;
+    }
+    #left-panel.map-image-mode circle[data-emph],
+    #right-panel.map-image-mode circle[data-emph] {
+      r: 6px;
+    }
+    #left-panel.map-image-mode .defaultEdge[data-emph],
+    #right-panel.map-image-mode .defaultEdge[data-emph] {
+      stroke-width: 3.4px !important;
+    }
+
+    #status-bar {
+      position: absolute;
+      bottom: 8px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      font-size: 12px;
+      color: var(--text-color);
+      opacity: 0.7;
+      background-color: var(--bg-color);
+      padding: 4px 10px;
+      border-radius: 4px;
+      border: 1px solid var(--surface-color);
+    }
+
+    .divider {
+      width: 3px;
+      background: var(--grid-color);
+      cursor: col-resize;
+      z-index: 5;
+    }
+  </style>
+</head>
+
+<body style="visibility: hidden; background-color: var(--bg-color); color: var(--text-color)">
+  <div id="controls-container">
+    <button class="control-button active" id="sync-toggle" onclick="toggleSync()">Synced</button>
+    <button class="control-button" id="theme-toggle" onclick="toggleTheme()" title="Cycle theme (t / T)">
+      {{ theme_label | default(theme) }}
+    </button>
+    <button class="control-button" id="back-button" onclick="goBack()">Back</button>
+  </div>
+
+  <div id="split-container">
+    <!-- Left panel: SO chart -->
+    <div class="panel" id="left-panel">
+      <div class="panel-title" id="left-title">{{ so_title }}</div>
+      <svg id="svg-left" width="100%" height="100%">
+        <defs>
+          <marker id='arrow-simple-left' orient="auto" markerWidth='3' markerHeight='4' refX='0.1' refY='2'
+            fill="context-fill" stroke="context-stroke">
+            <path d='M0,0 V4 L2,2 Z' />
+          </marker>
+          <pattern id="grid-left" width="{{ 2*so_spacing }}" height="{{ 2*so_spacing }}" patternUnits="userSpaceOnUse">
+            <path id="grid-path-left" d="M {{ 2*so_spacing }} 0 L 0 0 0 {{ 2*so_spacing }}" class="grid" style="fill: none;"/>
+          </pattern>
+        </defs>
+        <g id="content-group-left" class="svg-pan-zoom_viewport">
+          <g id="origin-translate-left" transform="translate({{ so_data.header.chart.width.min * so_spacing }} {{ -so_data.header.chart.height.min * so_spacing }})">
+            <rect id="grid-background-left"
+              width="{{ (so_data.header.chart.width.max - so_data.header.chart.width.min) * so_spacing }}px"
+              height="{{ (so_data.header.chart.height.max - so_data.header.chart.height.min) * so_spacing }}px"
+              fill="url(#grid-left)" />
+          </g>
+          {{ so_svg_content }}
+        </g>
+        <g id="axes-group-left">
+          <line id="x-axis-left" class="axis" />
+          <line id="y-axis-left" class="axis" />
+          <rect id="x-block-left" x="0" y="0" fill="var(--bg-color)" />
+          <rect id="y-block-left" x="0" y="0" fill="var(--bg-color)" />
+          <g id="ticks-left" class="tick">
+            <g id="x-ticks-left" class="x-tick">
+              {%- for i in range(so_data.header.chart.width.min, so_data.header.chart.width.max + 1, so_axis_interval) %}
+                <text x="{{ i * so_spacing }}" y="{{ 0.5 * so_spacing }}">{{ i }}</text>
+              {%- endfor %}
+            </g>
+            <g id="y-ticks-left" class="y-tick">
+              {%- for j in range(so_data.header.chart.height.min, so_data.header.chart.height.max + 1, so_axis_interval) %}
+                <text x="{{ 0.5 * so_spacing }}" y="{{ j * so_spacing }}">{{ j }}</text>
+              {%- endfor %}
+            </g>
+          </g>
+        </g>
+      </svg>
+    </div>
+
+    <div class="divider" id="divider"></div>
+
+    <!-- Right panel: Sphere chart -->
+    <div class="panel" id="right-panel">
+      <div class="panel-title" id="right-title">{{ sphere_title }}</div>
+      <svg id="svg-right" width="100%" height="100%">
+        <defs>
+          <marker id='arrow-simple-right' orient="auto" markerWidth='3' markerHeight='4' refX='0.1' refY='2'
+            fill="context-fill" stroke="context-stroke">
+            <path d='M0,0 V4 L2,2 Z' />
+          </marker>
+          <pattern id="grid-right" width="{{ 2*sphere_spacing }}" height="{{ 2*sphere_spacing }}" patternUnits="userSpaceOnUse">
+            <path id="grid-path-right" d="M {{ 2*sphere_spacing }} 0 L 0 0 0 {{ 2*sphere_spacing }}" class="grid" style="fill: none;"/>
+          </pattern>
+        </defs>
+        <g id="content-group-right" class="svg-pan-zoom_viewport">
+          <g id="origin-translate-right" transform="translate({{ sphere_data.header.chart.width.min * sphere_spacing }} {{ -sphere_data.header.chart.height.min * sphere_spacing }})">
+            <rect id="grid-background-right"
+              width="{{ (sphere_data.header.chart.width.max - sphere_data.header.chart.width.min) * sphere_spacing }}px"
+              height="{{ (sphere_data.header.chart.height.max - sphere_data.header.chart.height.min) * sphere_spacing }}px"
+              fill="url(#grid-right)" />
+          </g>
+          {{ sphere_svg_content }}
+        </g>
+        <g id="axes-group-right">
+          <line id="x-axis-right" class="axis" />
+          <line id="y-axis-right" class="axis" />
+          <rect id="x-block-right" x="0" y="0" fill="var(--bg-color)" />
+          <rect id="y-block-right" x="0" y="0" fill="var(--bg-color)" />
+          <g id="ticks-right" class="tick">
+            <g id="x-ticks-right" class="x-tick">
+              {%- for i in range(sphere_data.header.chart.width.min, sphere_data.header.chart.width.max + 1, sphere_axis_interval) %}
+                <text x="{{ i * sphere_spacing }}" y="{{ 0.5 * sphere_spacing }}">{{ i }}</text>
+              {%- endfor %}
+            </g>
+            <g id="y-ticks-right" class="y-tick">
+              {%- for j in range(sphere_data.header.chart.height.min, sphere_data.header.chart.height.max + 1, sphere_axis_interval) %}
+                <text x="{{ 0.5 * sphere_spacing }}" y="{{ j * sphere_spacing }}">{{ j }}</text>
+              {%- endfor %}
+            </g>
+          </g>
+        </g>
+      </svg>
+    </div>
+  </div>
+
+  <div id="tooltip"></div>
+  <div id="status-bar">Synced pan/zoom | hover a source class for its image | {{ shift_key }} = full image | {{ map_open_key }}/Esc to return</div>
+
+  <script>
+    // All theme colors live in per-theme CSS variable blocks in <head>
+    // (generated from themes.json); switching is a data-theme flip on <html>.
+    const THEME_NAMES = {{ theme_names_json }};
+    const THEME_LABELS = {{ theme_labels_json }};
+
+    let currentTheme = localStorage.getItem('seqsee-theme')
+      || sessionStorage.getItem('seqsee-theme')
+      || "{{ theme }}";
+    if (!THEME_NAMES.includes(currentTheme)) currentTheme = "{{ theme }}";
+    let syncEnabled = true;
+    let persistentHighlights = new Map(); // targetId -> { number, sourceId }
+    let persistentSources = new Map();    // sourceId -> number
+    let nextLabelNumber = 1;
+    let suppressSync = false;
+    let mapImageShown = false;
+
+    // Map identity for this view (E/H/P/C2/J) — drives keys + sibling filenames.
+    const MAP_KEY = "{{ map_key }}";
+    const MAP_OPEN_KEY = "{{ map_open_key }}";
+    const MAP_SHIFT_KEY = "{{ shift_key }}";
+    const NAV_STEP = {{ nav_step }};
+    const MIN_N = {{ min_n }};
+    const MAX_N = {{ max_n }};
+
+    // Back URL for returning to single chart
+    const backUrl = "{{ back_url }}";
+
+    function goBack() {
+      if (backUrl) {
+        window.location.href = backUrl;
+      } else {
+        window.history.back();
+      }
+    }
+
+    function toggleSync() {
+      syncEnabled = !syncEnabled;
+      const btn = document.getElementById("sync-toggle");
+      btn.textContent = syncEnabled ? "Synced" : "Independent";
+      btn.classList.toggle("active", syncEnabled);
+      const hint = " pan/zoom | hover a source class for its image | " + MAP_SHIFT_KEY
+        + " = full image | " + MAP_OPEN_KEY + "/Esc to return";
+      document.getElementById("status-bar").textContent =
+        (syncEnabled ? "Synced" : "Independent") + hint;
+    }
+
+    function applyTheme() {
+      document.documentElement.dataset.theme = currentTheme;
+      const button = document.getElementById("theme-toggle");
+      if (button) button.textContent = THEME_LABELS[currentTheme] || currentTheme;
+    }
+
+    function showThemeToast() {
+      let el = document.getElementById('theme-toast');
+      if (!el) {
+        el = document.createElement('div');
+        el.id = 'theme-toast';
+        document.body.appendChild(el);
+      }
+      el.textContent = 'Theme: ' + (THEME_LABELS[currentTheme] || currentTheme)
+        + ' (' + (THEME_NAMES.indexOf(currentTheme) + 1) + '/' + THEME_NAMES.length + ')';
+      el.classList.add('visible');
+      clearTimeout(el._hideTimer);
+      el._hideTimer = setTimeout(() => el.classList.remove('visible'), 1600);
+    }
+
+    function cycleTheme(step) {
+      const i = THEME_NAMES.indexOf(currentTheme);
+      currentTheme = THEME_NAMES[(i + step + THEME_NAMES.length) % THEME_NAMES.length];
+      localStorage.setItem('seqsee-theme', currentTheme);
+      sessionStorage.setItem('seqsee-theme', currentTheme);
+      applyTheme();
+      showThemeToast();
+    }
+
+    function toggleTheme() { cycleTheme(1); }
+
+    // Kept for compatibility with callers: colors are CSS variables now.
+    function updateThemeColors() { applyTheme(); }
+
+    // t = next theme, T = previous theme
+    document.addEventListener('keydown', function (e) {
+      if (e.ctrlKey || e.metaKey || e.altKey) return;
+      const tag = (e.target.tagName || '').toLowerCase();
+      if (tag === 'input' || tag === 'textarea' || e.target.isContentEditable) return;
+      if (e.key === 't') { cycleTheme(1); e.preventDefault(); }
+      else if (e.key === 'T') { cycleTheme(-1); e.preventDefault(); }
+    });
+
+    // ——— SVG coordinate helpers (shared with single-chart template) ———
+    function applyFunctionToPath(path, fn) {
+      let pathData = [];
+      for (let seg of path.getPathData()) {
+        if (seg.type === "M") { let [x,y]=seg.values; pathData.push({type:"M",values:fn(x,y)}); }
+        else if (seg.type === "L") { let [x,y]=seg.values; pathData.push({type:"L",values:fn(x,y)}); }
+        else if (seg.type === "C") { let [x1,y1,x2,y2,x,y]=seg.values; pathData.push({type:"C",values:[...fn(x1,y1),...fn(x2,y2),...fn(x,y)]}); }
+        else if (seg.type === "Q") { let [x1,y1,x,y]=seg.values; pathData.push({type:"Q",values:[...fn(x1,y1),...fn(x,y)]}); }
+      }
+      path.setPathData(pathData);
+    }
+    function applyFunctionToElement(el, attr, fn) { el.setAttribute(attr, fn(parseFloat(el.getAttribute(attr)))); }
+    const applyOffsetToElement = (el, attr, offset) => applyFunctionToElement(el, attr, v => v + offset);
+    const negateValueInElement = (el, attr) => applyFunctionToElement(el, attr, v => -v);
+    const applyYOffsetToPath = (path, offset) => applyFunctionToPath(path, (x,y) => [x, y+offset]);
+    const negateYValuesInPath = (path) => applyFunctionToPath(path, (x,y) => [x, -y]);
+
+    // ——— Per-panel initialization ———
+    function initPanel(side, spacing) {
+      const contentSel = `#content-group-${side}`;
+      const axesSel = `#axes-group-${side}`;
+      const axisSpacing = 0.6 * spacing;
+      let canvasHeight = 0, canvasWidth = 0;
+
+      const gridPath = document.getElementById(`grid-path-${side}`);
+      const half_grid_width = parseFloat(window.getComputedStyle(gridPath).strokeWidth) / 2;
+      applyFunctionToPath(gridPath, (x,y) => [x+half_grid_width, y+half_grid_width]);
+
+      // Negate y-coordinates
+      document.querySelectorAll(`${contentSel} *`).forEach(el => {
+        if (el.tagName === "line") { negateValueInElement(el,"y1"); negateValueInElement(el,"y2"); }
+        else if (el.tagName === "circle") { negateValueInElement(el,"cy"); }
+        else if (el.tagName === "rect") {
+          const h=parseFloat(el.getAttribute("height")), cy=parseFloat(el.getAttribute("y"))+h/2;
+          el.setAttribute("y", (-cy - h/2).toString());
+        }
+        else if (el.tagName === "text") { negateValueInElement(el,"y"); }
+        else if (el.tagName === "path") { negateYValuesInPath(el); }
+      });
+
+      // Axes
+      document.querySelectorAll(`${axesSel} line`).forEach(el => {
+        if (el.id === `x-axis-${side}`) { el.setAttribute("x1",axisSpacing); el.setAttribute("y1",-axisSpacing); el.setAttribute("x2",canvasWidth); el.setAttribute("y2",-axisSpacing); }
+        else if (el.id === `y-axis-${side}`) { el.setAttribute("x1",axisSpacing); el.setAttribute("y1",-axisSpacing); el.setAttribute("x2",axisSpacing); el.setAttribute("y2",canvasHeight); }
+      });
+
+      document.querySelectorAll(`${axesSel} rect`).forEach(el => {
+        if (el.id === `x-block-${side}`) { el.setAttribute("width",canvasWidth); el.setAttribute("height",axisSpacing); el.setAttribute("y",-axisSpacing); }
+        else if (el.id === `y-block-${side}`) { el.setAttribute("width",axisSpacing); el.setAttribute("height",0); }
+      });
+
+      document.querySelectorAll(`${axesSel} text`).forEach(el => { negateValueInElement(el,"y"); });
+
+      function onResize() {
+        const panel = document.getElementById(`${side}-panel`);
+        const newH = panel.clientHeight, newW = panel.clientWidth;
+        const yOff = newH - canvasHeight, xOff = newW - canvasWidth;
+
+        document.querySelectorAll(`${contentSel} *`).forEach(el => {
+          if (el.tagName === "line") { applyOffsetToElement(el,"y1",yOff); applyOffsetToElement(el,"y2",yOff); }
+          else if (el.tagName === "circle") { applyOffsetToElement(el,"cy",yOff); }
+          else if (el.tagName === "rect") {
+            const h=parseFloat(el.getAttribute("height")), cy=parseFloat(el.getAttribute("y"))+h/2;
+            el.setAttribute("y", (cy+yOff-h/2).toString());
+          }
+          else if (el.tagName === "text") { applyOffsetToElement(el,"y",yOff); }
+          else if (el.tagName === "path") { applyYOffsetToPath(el,yOff); }
+        });
+
+        document.getElementById(`grid-background-${side}`).setAttribute("transform",
+          `scale(1 -1) translate(${-half_grid_width} ${-half_grid_width}) translate(0 ${-newH})`);
+
+        document.querySelectorAll(`${axesSel} line`).forEach(el => {
+          if (el.id === `x-axis-${side}`) { applyOffsetToElement(el,"y1",yOff); applyOffsetToElement(el,"x2",xOff); applyOffsetToElement(el,"y2",yOff); }
+          else if (el.id === `y-axis-${side}`) { applyOffsetToElement(el,"y1",yOff); }
+        });
+        document.querySelectorAll(`${axesSel} rect`).forEach(el => {
+          if (el.id === `x-block-${side}`) { applyOffsetToElement(el,"width",xOff); applyOffsetToElement(el,"y",yOff); }
+          else if (el.id === `y-block-${side}`) { applyOffsetToElement(el,"height",yOff); }
+        });
+        document.querySelectorAll(`${axesSel} text`).forEach(el => { applyOffsetToElement(el,"y",yOff); });
+
+        // Try to restore saved viewport, otherwise reset to default
+        const pzInst = window[`panZoom_${side}`];
+        const stored = sessionStorage.getItem('seqsee_sbs_viewport');
+        if (stored && side === "left") {
+          try {
+            const vp = JSON.parse(stored);
+            pzInst.zoom(vp.zoom);
+            pzInst.pan({ x: vp.x, y: vp.y });
+          } catch (e) {
+            pzInst.reset();
+            pzInst.panBy({ x: 2*axisSpacing, y: -2*axisSpacing });
+          }
+        } else if (!stored) {
+          pzInst.reset();
+          pzInst.panBy({ x: 2*axisSpacing, y: -2*axisSpacing });
+        }
+
+        canvasHeight = newH;
+        canvasWidth = newW;
+      }
+
+      function handleCTM(ctm) {
+        const sc = ctm.a, xt = ctm.e, yt = ctm.f;
+        document.querySelectorAll(`#x-ticks-${side}`).forEach(el => { el.setAttribute("transform", `translate(${xt} 0)`); });
+        document.querySelectorAll(`#x-ticks-${side} text`).forEach(el => {
+          el.setAttribute("x", parseInt(el.textContent) * spacing * sc);
+        });
+        document.querySelectorAll(`#y-ticks-${side}`).forEach(el => { el.setAttribute("transform", `translate(0 ${yt})`); });
+        document.querySelectorAll(`#y-ticks-${side} text`).forEach(el => {
+          el.setAttribute("y", (canvasHeight - parseInt(el.textContent) * spacing) * sc);
+        });
+      }
+
+      // Hammer.js touch handler
+      const hammerHandler = {
+        haltEventListeners: ['touchstart','touchend','touchmove','touchleave','touchcancel'],
+        init: function(options) {
+          var inst = options.instance, initScale = 1, px = 0, py = 0;
+          this.hammer = Hammer(options.svgElement, {
+            inputClass: Hammer.SUPPORT_POINTER_EVENTS ? Hammer.PointerEventInput : Hammer.TouchInput
+          });
+          this.hammer.get('pinch').set({enable: true});
+          this.hammer.on('doubletap', ev => { inst.zoomAtPoint(ev.center.x, ev.center.y); });
+          var lastPinchTime;
+          this.hammer.on('panstart panmove', ev => {
+            if (Date.now() - lastPinchTime < 200) return;
+            if (ev.type === 'panstart') { px = 0; py = 0; }
+            inst.panBy({x: ev.deltaX - px, y: ev.deltaY - py});
+            px = ev.deltaX; py = ev.deltaY;
+          });
+          this.hammer.on('pinchstart pinchmove', ev => {
+            lastPinchTime = Date.now();
+            if (ev.type === 'pinchstart') { initScale = inst.getZoom(); }
+            inst.zoomAtPoint(initScale * ev.scale, {x: ev.center.x, y: ev.center.y});
+          });
+          options.svgElement.addEventListener('touchmove', e => { e.preventDefault(); });
+        },
+        destroy: function() { this.hammer.destroy(); }
+      };
+
+      // Initialize svg-pan-zoom
+      const pz = svgPanZoom(`#svg-${side}`, {
+        zoomEnabled: true,
+        panEnabled: true,
+        mouseWheelZoomEnabled: false,
+        fit: false,
+        center: false,
+        minZoom: 0.1,
+        maxZoom: 10,
+        zoomScaleSensitivity: 0.15,
+        onUpdatedCTM: function(ctm) {
+          handleCTM(ctm);
+          // Sync to the other panel
+          if (syncEnabled && !suppressSync) {
+            const otherSide = side === "left" ? "right" : "left";
+            const other = window[`panZoom_${otherSide}`];
+            if (other) {
+              suppressSync = true;
+              other.zoom(pz.getZoom());
+              other.pan(pz.getPan());
+              suppressSync = false;
+            }
+          }
+        },
+        customEventsHandler: hammerHandler,
+      });
+      window[`panZoom_${side}`] = pz;
+
+      // Custom wheel handler
+      document.getElementById(`svg-${side}`).addEventListener("wheel", function(event) {
+        event.preventDefault();
+        if (event.ctrlKey) {
+          const rect = event.currentTarget.getBoundingClientRect();
+          const point = { x: event.clientX - rect.left, y: event.clientY - rect.top };
+          const zoomFactor = Math.pow(1.02, -event.deltaY);
+          pz.zoomAtPoint(pz.getZoom() * zoomFactor, point);
+        } else {
+          pz.panBy({ x: -event.deltaX, y: -event.deltaY });
+        }
+      }, { passive: false });
+
+      return { onResize, handleCTM };
+    }
+
+    // ——— Map-image highlighting ———
+    function highlightMapTargets(sourceEl, mapStr) {
+      if (!mapStr) return;
+      // Highlight the source node itself
+      if (!persistentSources.has(sourceEl.id)) {
+        sourceEl.classList.add("map-source-highlight");
+      }
+      // Highlight the target(s) in the right (target) panel
+      const targets = mapStr.split(";");
+      targets.forEach(targetId => {
+        const targetEl = document.getElementById(targetId);
+        if (targetEl && !persistentHighlights.has(targetId)) {
+          targetEl.classList.add("map-highlight");
+        }
+      });
+    }
+
+    function clearMapHighlights() {
+      document.querySelectorAll(".map-highlight").forEach(el => {
+        el.classList.remove("map-highlight");
+      });
+      document.querySelectorAll(".map-source-highlight").forEach(el => {
+        el.classList.remove("map-source-highlight");
+      });
+    }
+
+    function addLabel(svgId, targetEl, number) {
+      const svg = document.getElementById(svgId);
+      const ns = "http://www.w3.org/2000/svg";
+
+      // Get position of the target element
+      let cx, cy;
+      if (targetEl.tagName === "circle") {
+        cx = parseFloat(targetEl.getAttribute("cx"));
+        cy = parseFloat(targetEl.getAttribute("cy"));
+      } else if (targetEl.tagName === "rect") {
+        cx = parseFloat(targetEl.getAttribute("x")) + parseFloat(targetEl.getAttribute("width")) / 2;
+        cy = parseFloat(targetEl.getAttribute("y")) + parseFloat(targetEl.getAttribute("height")) / 2;
+      } else {
+        return;
+      }
+
+      // Offset the label slightly above-right of the node
+      const r = parseFloat(window.getComputedStyle(targetEl).r || "3") || 3;
+      const lx = cx + r + 4;
+      const ly = cy - r - 4;
+
+      const numStr = String(number);
+      const bgW = 8 + numStr.length * 5;
+      const bgH = 12;
+
+      // Background rect
+      const bg = document.createElementNS(ns, "rect");
+      bg.setAttribute("x", lx - bgW / 2);
+      bg.setAttribute("y", ly - bgH / 2);
+      bg.setAttribute("width", bgW);
+      bg.setAttribute("height", bgH);
+      bg.setAttribute("rx", "2");
+      bg.classList.add("map-label-bg");
+      bg.dataset.mapLabel = targetEl.id;
+
+      // Text
+      const txt = document.createElementNS(ns, "text");
+      txt.setAttribute("x", lx);
+      txt.setAttribute("y", ly);
+      txt.textContent = number;
+      txt.classList.add("map-label");
+      txt.dataset.mapLabel = targetEl.id;
+
+      // Append into the content group so they pan/zoom with the chart
+      const contentGroup = svg.querySelector("[id^='content-group-']");
+      contentGroup.appendChild(bg);
+      contentGroup.appendChild(txt);
+    }
+
+    function removeLabelsFor(elementId) {
+      document.querySelectorAll(`[data-map-label="${elementId}"]`).forEach(el => el.remove());
+    }
+
+    function togglePersistentHighlight(sourceEl, mapStr) {
+      if (!mapStr) return;
+      const sourceId = sourceEl.id;
+      const targets = mapStr.split(";");
+      const alreadyMarked = persistentSources.has(sourceId);
+
+      if (alreadyMarked) {
+        // Remove: clear source
+        persistentSources.delete(sourceId);
+        sourceEl.classList.remove("map-source-persistent");
+        removeLabelsFor(sourceId);
+
+        // Clear targets
+        targets.forEach(targetId => {
+          persistentHighlights.delete(targetId);
+          const targetEl = document.getElementById(targetId);
+          if (targetEl) {
+            targetEl.classList.remove("map-highlight-persistent");
+            removeLabelsFor(targetId);
+          }
+        });
+      } else {
+        // Add: mark source
+        const num = nextLabelNumber++;
+        persistentSources.set(sourceId, num);
+        sourceEl.classList.add("map-source-persistent");
+        addLabel("svg-left", sourceEl, num);
+
+        // Mark targets
+        targets.forEach(targetId => {
+          persistentHighlights.set(targetId, { number: num, sourceId });
+          const targetEl = document.getElementById(targetId);
+          if (targetEl) {
+            targetEl.classList.add("map-highlight-persistent");
+            addLabel("svg-right", targetEl, num);
+          }
+        });
+      }
+    }
+
+    function toggleMapImage() {
+      // Just toggle one class on each panel — CSS descendant selectors do the rest
+      mapImageShown = !mapImageShown;
+      document.getElementById("left-panel").classList.toggle("map-image-mode", mapImageShown);
+      document.getElementById("right-panel").classList.toggle("map-image-mode", mapImageShown);
+      sessionStorage.setItem('seqsee_sbs_map', mapImageShown ? '1' : '0');
+    }
+
+    // ——— Initialize ———
+    window.addEventListener("DOMContentLoaded", () => {
+      const soSpacing = {{ so_spacing }};
+      const sphereSpacing = {{ sphere_spacing }};
+
+      const leftPanel = initPanel("left", soSpacing);
+      const rightPanel = initPanel("right", sphereSpacing);
+
+      // Resize both panels
+      function onResizeBoth() {
+        leftPanel.onResize();
+        rightPanel.onResize();
+      }
+      window.addEventListener("resize", onResizeBoth);
+      onResizeBoth();
+
+      // The stored viewport intentionally persists (like the single-chart
+      // seqsee_viewport key) so the view stays fixed while stepping through
+      // sphere dimensions/pages — useful for watching a map's image change.
+
+      // Render LaTeX in titles
+      document.querySelectorAll(".panel-title").forEach(el => {
+        window.renderMathInElement(el, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false},
+            {left: '\\(', right: '\\)', display: false},
+            {left: '\\[', right: '\\]', display: true}
+          ],
+          throwOnError: false
+        });
+      });
+
+      // Pre-mark, for "full image" mode, the elements to EMPHASIZE (data-emph):
+      // on the right the map's image (target nodes + every edge between two of
+      // them), on the left the map's sources (nodes + edges between two of
+      // them). Everything else de-emphasizes. One-time cost at init.
+      const imageNodes = new Set();
+      const sourceNodes = new Set();
+      document.querySelectorAll("#content-group-left [data-map]").forEach(node => {
+        sourceNodes.add(node.id);
+        node.setAttribute("data-emph", "");
+        node.getAttribute("data-map").split(";").forEach(id => {
+          if (id) {
+            const target = document.getElementById(id);
+            if (target) {
+              target.setAttribute("data-emph", "");
+              imageNodes.add(id);
+            }
+          }
+        });
+      });
+      // Edges between two emphasized classes are emphasized too — INCLUDING
+      // differentials (d{r}) and unknown differentials (n{r}). They keep their
+      // native d_r color now (no recoloring), so they read correctly.
+      const markEdges = (selector, members) =>
+        document.querySelectorAll(selector).forEach(edge => {
+          if (members.has(edge.getAttribute("data-source")) &&
+              members.has(edge.getAttribute("data-target"))) {
+            edge.setAttribute("data-emph", "");
+          }
+        });
+      markEdges("#content-group-right .defaultEdge[data-source][data-target]", imageNodes);
+      markEdges("#content-group-left .defaultEdge[data-source][data-target]", sourceNodes);
+
+      // Restore image mode if it was active before navigation
+      if (sessionStorage.getItem('seqsee_sbs_map') === '1') {
+        mapImageShown = true;
+        document.getElementById("left-panel").classList.add("map-image-mode");
+        document.getElementById("right-panel").classList.add("map-image-mode");
+      }
+
+      // Set up map-image highlighting on the left (source) panel nodes
+      const tooltip = document.getElementById("tooltip");
+      document.querySelectorAll("#content-group-left circle, #content-group-left rect").forEach(node => {
+        node.addEventListener("mouseover", function(event) {
+          // Show tooltip
+          const label = this.getAttribute("data-label");
+          if (label) {
+            tooltip.innerHTML = label;
+            window.renderMathInElement(tooltip, {
+              delimiters: [{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false}],
+              throwOnError: false
+            });
+            tooltip.style.display = "block";
+          }
+          // Highlight source + its map image targets
+          const mapTargets = this.getAttribute("data-map");
+          highlightMapTargets(this, mapTargets);
+        });
+        node.addEventListener("mousemove", function(event) {
+          tooltip.style.left = event.clientX + 10 + "px";
+          tooltip.style.top = event.clientY + 10 + "px";
+        });
+        node.addEventListener("mouseout", function() {
+          tooltip.style.display = "none";
+          clearMapHighlights();
+        });
+        node.addEventListener("click", function() {
+          const mapTargets = this.getAttribute("data-map");
+          togglePersistentHighlight(this, mapTargets);
+        });
+      });
+
+      // Also add tooltips to right panel nodes
+      document.querySelectorAll("#content-group-right circle, #content-group-right rect").forEach(node => {
+        node.addEventListener("mouseover", function(event) {
+          const label = this.getAttribute("data-label");
+          if (label) {
+            tooltip.innerHTML = label;
+            window.renderMathInElement(tooltip, {
+              delimiters: [{left:'$',right:'$',display:false},{left:'\\(',right:'\\)',display:false}],
+              throwOnError: false
+            });
+            tooltip.style.display = "block";
+          }
+        });
+        node.addEventListener("mousemove", function(event) {
+          tooltip.style.left = event.clientX + 10 + "px";
+          tooltip.style.top = event.clientY + 10 + "px";
+        });
+        node.addEventListener("mouseout", function() { tooltip.style.display = "none"; });
+      });
+
+      // Side-by-side navigation: parse the SOURCE n and page r from the filename
+      // (S{n}_E{r}_{K}sbs{_dark}.html). Target n is baked into the file, so
+      // sibling nav only needs to re-key on the source n.
+      function parseSideBySideLocation() {
+        const filename = window.location.pathname.split('/').pop();
+        const match = filename.match(/S(\d+)_E(\d+)_[A-Za-z0-9]+sbs(_dark)?\.html/);
+        if (match) return { n: parseInt(match[1]), r: parseInt(match[2]), isDark: !!match[3] };
+        return null;
+      }
+
+      function storeViewport() {
+        if (window.panZoom_left) {
+          const pan = window.panZoom_left.getPan();
+          const zoom = window.panZoom_left.getZoom();
+          sessionStorage.setItem('seqsee_sbs_viewport', JSON.stringify({ x: pan.x, y: pan.y, zoom }));
+        }
+      }
+      // The EHP REPL's injected WASD navigation calls this before leaving the
+      // page, so the view survives stepping between sibling map views.
+      window.storeViewport = storeViewport;
+
+      function navigateSideBySide(dir) {
+        const loc = parseSideBySideLocation();
+        if (!loc) return;
+        const newN = loc.n + dir * NAV_STEP;
+        if (newN < MIN_N || newN > MAX_N) return;
+        storeViewport();
+        const suffix = loc.isDark ? '_dark' : '';
+        const target = `S${newN}_E${loc.r}_${MAP_KEY}sbs${suffix}.html`;
+        window.location.href = target;
+      }
+
+      function navigatePage(delta) {
+        const loc = parseSideBySideLocation();
+        if (!loc) return;
+        const newR = loc.r + delta;
+        if (newR < 2 || newR > 8) return;
+        storeViewport();
+        const suffix = loc.isDark ? '_dark' : '';
+        const target = `S${loc.n}_E${newR}_${MAP_KEY}sbs${suffix}.html`;
+        window.location.href = target;
+      }
+
+      // Keyboard shortcuts
+      window.addEventListener("keydown", function(event) {
+        const panSpeed = soSpacing;
+        // The map's own key returns to the single chart; its shift variant
+        // toggles the full-image highlight (mirrors the legacy j / J behavior).
+        if (event.key === MAP_OPEN_KEY) { event.preventDefault(); goBack(); return; }
+        if (event.key === MAP_SHIFT_KEY) { event.preventDefault(); toggleMapImage(); return; }
+        switch (event.key) {
+          case "ArrowUp": event.preventDefault(); window.panZoom_left.panBy({x:0,y:panSpeed}); break;
+          case "ArrowDown": event.preventDefault(); window.panZoom_left.panBy({x:0,y:-panSpeed}); break;
+          case "ArrowLeft": event.preventDefault(); window.panZoom_left.panBy({x:panSpeed,y:0}); break;
+          case "ArrowRight": event.preventDefault(); window.panZoom_left.panBy({x:-panSpeed,y:0}); break;
+          case "+": case "=": event.preventDefault(); window.panZoom_left.zoomIn(); break;
+          case "-": case "_": event.preventDefault(); window.panZoom_left.zoomOut(); break;
+          case "Backspace": case "0": case ")": event.preventDefault(); onResizeBoth(); break;
+          case "Escape": event.preventDefault(); goBack(); break;
+          case "s": case "S": event.preventDefault(); navigateSideBySide(1); break;
+          case "w": case "W": event.preventDefault(); navigateSideBySide(-1); break;
+          case "a": case "A": event.preventDefault(); navigatePage(-1); break;
+          case "d": case "D": event.preventDefault(); navigatePage(1); break;
+        }
+      });
+
+      // Apply theme
+      updateThemeColors();
+
+      // Show the page
+      document.body.style.visibility = "visible";
+    });
+  </script>
+</body>
+</html>

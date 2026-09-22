@@ -1,0 +1,5 @@
+% Empty datamodel extension for the alphabetic biblatex style. biblatex
+% probes for <style>.dbx and logs "file 'alphabetic.dbx' not found" without
+% it, which arXiv's AutoTeX scanner treats as a missing file. The standard
+% data model applies unchanged.
+\ProvidesFile{alphabetic.dbx}[2026/09/20 empty datamodel stub for arXiv]

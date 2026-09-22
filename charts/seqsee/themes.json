@@ -1,0 +1,132 @@
+{
+  "_comment": "Single source of truth for chart theme palettes. Read by main.py (CSS variable blocks in generated charts) and by the EHP REPL (ehp_chart.rs: differential overlay palettes, panel CSS, index page). Palette keys follow Catppuccin role names so downstream code is palette-agnostic. d_r color slots: d2=teal d3=red d4=green d5=blue d6=yellow d7=peach d8=mauve. 'order' is the cycling order in the chart UI.",
+  "order": ["light", "dark", "linen", "teak", "nord-light", "nord", "eldritch", "access", "access-dark"],
+  "themes": {
+    "light": {
+      "dark": false,
+      "label": "Catppuccin Latte",
+      "palette": {
+        "base": "#eff1f5", "mantle": "#e6e9ef", "crust": "#dce0e8",
+        "text": "#4c4f69", "subtext0": "#6c6f85", "subtext1": "#5c5f77",
+        "surface0": "#ccd0da", "surface1": "#bcc0cc", "surface2": "#acb0be",
+        "overlay0": "#9ca0b0", "overlay1": "#8c8fa1", "overlay2": "#7c7f93",
+        "blue": "#1e66f5", "lavender": "#7287fd", "sapphire": "#209fb5", "sky": "#04a5e5",
+        "teal": "#179299", "green": "#40a02b", "yellow": "#df8e1d", "peach": "#fe640b",
+        "maroon": "#e64553", "red": "#d20f39", "mauve": "#8839ef", "pink": "#ea76cb",
+        "flamingo": "#dd7878", "rosewater": "#dc8a78"
+      }
+    },
+    "dark": {
+      "dark": true,
+      "label": "Catppuccin Mocha",
+      "palette": {
+        "base": "#1e1e2e", "mantle": "#181825", "crust": "#11111b",
+        "text": "#cdd6f4", "subtext0": "#a6adc8", "subtext1": "#bac2de",
+        "surface0": "#313244", "surface1": "#45475a", "surface2": "#585b70",
+        "overlay0": "#6c7086", "overlay1": "#7f849c", "overlay2": "#9399b2",
+        "blue": "#89b4fa", "lavender": "#b4befe", "sapphire": "#74c7ec", "sky": "#89dceb",
+        "teal": "#94e2d5", "green": "#a6e3a1", "yellow": "#f9e2af", "peach": "#fab387",
+        "maroon": "#eba0ac", "red": "#f38ba8", "mauve": "#cba6f7", "pink": "#f5c2e7",
+        "flamingo": "#f2cdcd", "rosewater": "#f5e0dc"
+      }
+    },
+    "linen": {
+      "dark": false,
+      "label": "Finn Juhl Linen",
+      "palette": {
+        "base": "#eeeae2", "mantle": "#e4e0d8", "crust": "#dad6ce",
+        "text": "#2a2620", "subtext0": "#5f584e", "subtext1": "#443e36",
+        "surface0": "#d2cec4", "surface1": "#c3beb4", "surface2": "#b2aca2",
+        "overlay0": "#9e988e", "overlay1": "#8a847a", "overlay2": "#767066",
+        "blue": "#233ca2", "lavender": "#695096", "sapphire": "#348298", "sky": "#2a7da2",
+        "teal": "#37846c", "green": "#4b6934", "yellow": "#a8761e", "peach": "#b2552d",
+        "maroon": "#a24b37", "red": "#af3e0f", "mauve": "#8c5580", "pink": "#b65237",
+        "flamingo": "#b65237", "rosewater": "#b2986c"
+      }
+    },
+    "teak": {
+      "dark": true,
+      "label": "Finn Juhl Teak",
+      "palette": {
+        "base": "#282521", "mantle": "#201e1a", "crust": "#181613",
+        "text": "#e1dacd", "subtext0": "#a59e91", "subtext1": "#c3bcaf",
+        "surface0": "#322f29", "surface1": "#403c35", "surface2": "#524d45",
+        "overlay0": "#645f56", "overlay1": "#787268", "overlay2": "#8e887d",
+        "blue": "#506ed0", "lavender": "#a091c6", "sapphire": "#73b4c8", "sky": "#69b2d4",
+        "teal": "#78b9a0", "green": "#829e62", "yellow": "#d7a048", "peach": "#dc8055",
+        "maroon": "#c8735a", "red": "#da6637", "mauve": "#b684aa", "pink": "#d47a62",
+        "flamingo": "#d47a62", "rosewater": "#ebdab9"
+      }
+    },
+    "nord-light": {
+      "dark": false,
+      "label": "Nord Light",
+      "palette": {
+        "base": "#eceff4", "mantle": "#e5e9f0", "crust": "#d8dee9",
+        "text": "#2e3440", "subtext0": "#4c566a", "subtext1": "#3b4252",
+        "surface0": "#d8dee9", "surface1": "#cbd3de", "surface2": "#bcc5d2",
+        "overlay0": "#aab4c2", "overlay1": "#97a3b4", "overlay2": "#8593a6",
+        "blue": "#4c6e9e", "lavender": "#695d8f", "sapphire": "#3f7192", "sky": "#3f7192",
+        "teal": "#3f7573", "green": "#5e7f45", "yellow": "#96742c", "peach": "#a85a3d",
+        "maroon": "#9c4a52", "red": "#a54049", "mauve": "#85607f", "pink": "#8f5a86",
+        "flamingo": "#a85a3d", "rosewater": "#a89a86"
+      }
+    },
+    "nord": {
+      "dark": true,
+      "label": "Nord",
+      "palette": {
+        "base": "#2e3440", "mantle": "#292e39", "crust": "#232831",
+        "text": "#eceff4", "subtext0": "#d8dee9", "subtext1": "#e5e9f0",
+        "surface0": "#3b4252", "surface1": "#434c5e", "surface2": "#4c566a",
+        "overlay0": "#616e88", "overlay1": "#7b88a1", "overlay2": "#8892a4",
+        "blue": "#81a1c1", "lavender": "#b48ead", "sapphire": "#88c0d0", "sky": "#88c0d0",
+        "teal": "#8fbcbb", "green": "#a3be8c", "yellow": "#ebcb8b", "peach": "#d08770",
+        "maroon": "#bf616a", "red": "#bf616a", "mauve": "#b48ead", "pink": "#b48ead",
+        "flamingo": "#d08770", "rosewater": "#d8dee9"
+      }
+    },
+    "eldritch": {
+      "dark": true,
+      "label": "Eldritch",
+      "palette": {
+        "base": "#212337", "mantle": "#1a1c2e", "crust": "#141526",
+        "text": "#ebfafa", "subtext0": "#a8b5d8", "subtext1": "#d5e8ea",
+        "surface0": "#323449", "surface1": "#3b3e58", "surface2": "#454866",
+        "overlay0": "#565b7e", "overlay1": "#666b90", "overlay2": "#7081d0",
+        "blue": "#7081d0", "lavender": "#a48cf2", "sapphire": "#04d1f9", "sky": "#04d1f9",
+        "teal": "#04d1f9", "green": "#37f499", "yellow": "#f1fc79", "peach": "#f7c67f",
+        "maroon": "#f16c75", "red": "#f16c75", "mauve": "#a48cf2", "pink": "#f265b5",
+        "flamingo": "#f7c67f", "rosewater": "#ebfafa"
+      }
+    },
+    "access": {
+      "dark": false,
+      "label": "Okabe-Ito Light",
+      "palette": {
+        "base": "#ffffff", "mantle": "#f4f4f4", "crust": "#e8e8e8",
+        "text": "#1a1a1a", "subtext0": "#5c5c5c", "subtext1": "#3d3d3d",
+        "surface0": "#ececec", "surface1": "#d9d9d9", "surface2": "#c4c4c4",
+        "overlay0": "#a8a8a8", "overlay1": "#8f8f8f", "overlay2": "#767676",
+        "blue": "#0072B2", "lavender": "#CC79A7", "sapphire": "#56B4E9", "sky": "#56B4E9",
+        "teal": "#56B4E9", "green": "#009E73", "yellow": "#9F9100", "peach": "#E69F00",
+        "maroon": "#D55E00", "red": "#D55E00", "mauve": "#CC79A7", "pink": "#CC79A7",
+        "flamingo": "#E69F00", "rosewater": "#d9d9d9"
+      }
+    },
+    "access-dark": {
+      "dark": true,
+      "label": "Okabe-Ito Dark",
+      "palette": {
+        "base": "#1c1c1c", "mantle": "#161616", "crust": "#101010",
+        "text": "#ececec", "subtext0": "#a8a8a8", "subtext1": "#c9c9c9",
+        "surface0": "#2a2a2a", "surface1": "#3a3a3a", "surface2": "#4a4a4a",
+        "overlay0": "#5c5c5c", "overlay1": "#707070", "overlay2": "#858585",
+        "blue": "#3A8FD1", "lavender": "#CC79A7", "sapphire": "#56B4E9", "sky": "#56B4E9",
+        "teal": "#56B4E9", "green": "#00C08F", "yellow": "#F0E442", "peach": "#E69F00",
+        "maroon": "#E8752B", "red": "#E8752B", "mauve": "#CC79A7", "pink": "#CC79A7",
+        "flamingo": "#E69F00", "rosewater": "#4a4a4a"
+      }
+    }
+  }
+}
